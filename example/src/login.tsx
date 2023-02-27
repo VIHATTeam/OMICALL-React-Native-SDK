@@ -16,6 +16,7 @@ import { initCall } from 'omikit-plugin';
 // import { requestNotification } from './notification';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
+import { requestNotification } from './notification';
 
 export const LoginScreen = () => {
   const [isVideo, setIsVideo] = useState(false);

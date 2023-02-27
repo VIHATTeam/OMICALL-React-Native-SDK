@@ -48,16 +48,18 @@ class OmikitPluginModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun updateToken(data: HashMap<String, Any>, promise: Promise) {
-    val deviceTokenAndroid = data["fcmToken"] as String
-    val appId = data["appId"] as String
-    val deviceId = data["deviceId"] as String
-    OmiClient.instance.updatePushToken(
-      "",
-      deviceTokenAndroid,
-      deviceId,
-      appId
-    )
+  fun updateToken(data: Dynamic, promise: Promise) {
+    if (data is HashMap<*, *>) {
+      val deviceTokenAndroid = data["fcmToken"] as String
+      val appId = data["appId"] as String
+      val deviceId = data["deviceId"] as String
+      OmiClient.instance.updatePushToken(
+        "",
+        deviceTokenAndroid,
+        deviceId,
+        appId
+      )
+    }
     promise.resolve(true)
   }
 
