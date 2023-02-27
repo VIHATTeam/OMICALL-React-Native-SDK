@@ -13,9 +13,35 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        jcenter() // Warning: this repository is going to shut down soon
+        maven {
+          url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
+          credentials {
+            username = "downloader"
+            password = "Omi@2022"
+          }
+        }
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.3.1")
         classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath 'com.google.gms:google-services:4.3.13'
     }
 }
+
+
+allprojects {
+  repositories {
+    google()
+    mavenCentral()
+    jcenter() // Warning: this repository is going to shut down soon
+    maven {
+      url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
+      credentials {
+        username = "downloader"
+        password = "Omi@2022"
+      }
+    }
+  }
+}
+

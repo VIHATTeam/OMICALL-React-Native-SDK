@@ -1,5 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: "com.facebook.react"
+apply plugin: 'com.google.gms.google-services'
 
 import com.android.build.OutputFile
 
@@ -95,7 +96,7 @@ android {
 
     namespace "com.omikitpluginexample"
     defaultConfig {
-        applicationId "com.omikitpluginexample"
+        applicationId "omicall.concung.dev"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

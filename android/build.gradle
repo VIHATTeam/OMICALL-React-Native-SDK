@@ -5,12 +5,22 @@ buildscript {
   repositories {
     google()
     mavenCentral()
+    maven {
+      url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
+      credentials {
+        username = "downloader"
+        password = "Omi@2022"
+      }
+    }
   }
 
   dependencies {
     classpath "com.android.tools.build:gradle:7.2.1"
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath 'com.google.dagger:hilt-android-gradle-plugin:2.39.1'
+    classpath 'com.github.kezong:fat-aar:1.3.8'
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.29.3"
   }
 }
 
@@ -20,6 +30,8 @@ def isNewArchitectureEnabled() {
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
 
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
@@ -61,7 +73,31 @@ android {
 repositories {
   mavenCentral()
   google()
+  jcenter() // Warning: this repository is going to shut down soon
+  maven {
+    url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
+    credentials {
+      username = "downloader"
+      password = "Omi@2022"
+    }
+  }
 }
+
+allprojects {
+  repositories {
+    google()
+    mavenCentral()
+    jcenter() // Warning: this repository is going to shut down soon
+    maven {
+      url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
+      credentials {
+        username = "downloader"
+        password = "Omi@2022"
+      }
+    }
+  }
+}
+
 
 def kotlin_version = getExtOrDefault("kotlinVersion")
 
@@ -71,6 +107,22 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+  api 'vn.vihat.omicall:omi-sdk:0.9.12'
+
+  implementation 'androidx.core:core-ktx:1.7.0'
+  implementation 'androidx.fragment:fragment-ktx:1.4.0'
+  implementation 'androidx.activity:activity-ktx:1.4.0'
+  implementation 'androidx.appcompat:appcompat:1.5.0'
+  implementation 'com.google.android.material:material:1.6.1'
+  implementation 'com.google.firebase:firebase-messaging-ktx:23.0.8'
+  implementation 'com.google.android.flexbox:flexbox:3.0.0'
+  implementation "com.google.code.gson:gson:2.8.6"
+  def lifecycle_version = "2.4.0"
+  implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
+  implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
+  implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.0"
 }
 
 if (isNewArchitectureEnabled()) {

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "682956500665",
+    "project_id": "concung-5772a",
+    "storage_bucket": "concung-5772a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:682956500665:android:7847a05fd9acf8c5d9f568",
+        "android_client_info": {
+          "package_name": "omicall.concung.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC22nNQ2MPkN7n_MVOUTHtNbzQhNZyrSME"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
