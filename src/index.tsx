@@ -20,3 +20,11 @@ const OmikitPlugin = NativeModules.OmikitPlugin
 export function multiply(a: number, b: number): Promise<number> {
   return OmikitPlugin.multiply(a, b);
 }
+
+export function updateToken(data: any): Promise<void> {
+  return OmikitPlugin.updateToken(data);
+}
+
+export function initCall(data: any): Promise<boolean> {
+  return OmikitPlugin.initCall(data);
+}

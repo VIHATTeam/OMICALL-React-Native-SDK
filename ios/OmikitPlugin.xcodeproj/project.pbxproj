@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5E555C0D2413F4C50049A1A2 /* OmikitPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* OmikitPlugin.m */; };
-		F4FF95D7245B92E800C19C63 /*  OmikitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /*  OmikitPlugin.swift */; };
+		C861229629A6239000F012BB /* OmikitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C861229529A6239000F012BB /* OmikitPlugin.swift */; };
+		F4FF95D7245B92E800C19C63 /* OmikitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* OmikitPlugin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,6 +26,13 @@
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libOmikitPlugin.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOmikitPlugin.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B3E7B5891CC2AC0600A0062D /* OmikitPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OmikitPlugin.m; sourceTree = "<group>"; };
+		C861229529A6239000F012BB /* OmikitPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OmikitPlugin.swift; sourceTree = "<group>"; };
+		C8FBCFCE29A5F49600AA4A22 /* CallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallManager.swift; sourceTree = "<group>"; };
+		C8FBCFCF29A5F49600AA4A22 /* StringUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringUtils.swift; sourceTree = "<group>"; };
+		C8FBCFD029A5F49600AA4A22 /* NSUserActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSUserActivity.swift; sourceTree = "<group>"; };
+		C8FBCFD229A5F49600AA4A22 /* FLLocalCameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLLocalCameraView.swift; sourceTree = "<group>"; };
+		C8FBCFD329A5F49600AA4A22 /* FLRemoteCameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLRemoteCameraView.swift; sourceTree = "<group>"; };
+		C8FBCFD529A5F49600AA4A22 /* Constant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constant.swift; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* OmikitPlugin-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OmikitPlugin-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* OmikitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmikitPlugin.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -52,11 +59,42 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				C861229529A6239000F012BB /* OmikitPlugin.swift */,
+				C8FBCFCD29A5F49600AA4A22 /* CallProcess */,
+				C8FBCFD429A5F49600AA4A22 /* Constant */,
+				C8FBCFD129A5F49600AA4A22 /* VideoCall */,
 				F4FF95D6245B92E800C19C63 /* OmikitPlugin.swift */,
 				B3E7B5891CC2AC0600A0062D /* OmikitPlugin.m */,
 				F4FF95D5245B92E700C19C63 /* OmikitPlugin-Bridging-Header.h */,
 				134814211AA4EA7D00B7C361 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		C8FBCFCD29A5F49600AA4A22 /* CallProcess */ = {
+			isa = PBXGroup;
+			children = (
+				C8FBCFCE29A5F49600AA4A22 /* CallManager.swift */,
+				C8FBCFCF29A5F49600AA4A22 /* StringUtils.swift */,
+				C8FBCFD029A5F49600AA4A22 /* NSUserActivity.swift */,
+			);
+			path = CallProcess;
+			sourceTree = "<group>";
+		};
+		C8FBCFD129A5F49600AA4A22 /* VideoCall */ = {
+			isa = PBXGroup;
+			children = (
+				C8FBCFD229A5F49600AA4A22 /* FLLocalCameraView.swift */,
+				C8FBCFD329A5F49600AA4A22 /* FLRemoteCameraView.swift */,
+			);
+			path = VideoCall;
+			sourceTree = "<group>";
+		};
+		C8FBCFD429A5F49600AA4A22 /* Constant */ = {
+			isa = PBXGroup;
+			children = (
+				C8FBCFD529A5F49600AA4A22 /* Constant.swift */,
+			);
+			path = Constant;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -117,7 +155,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F4FF95D7245B92E800C19C63 /* OmikitPlugin.swift in Sources */,
-				B3E7B58A1CC2AC0600A0062D /* OmikitPlugin.m in Sources */,
+				C861229629A6239000F012BB /* OmikitPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
