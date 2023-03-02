@@ -54,7 +54,8 @@ const styles = StyleSheet.create({
   background: {
     backgroundColor: 'rgba(51,51,51,0.05)',
     borderRadius: 6,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   textInput: {
     fontSize: 15,

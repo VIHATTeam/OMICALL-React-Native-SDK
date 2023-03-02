@@ -34,6 +34,7 @@ export const LoginScreen = () => {
   const updateTokenCallback = useCallback(async () => {
     console.log(userName);
     console.log(password);
+    navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
     setLoading(true);
     const result = await initCall({
       userName: userName,
@@ -83,7 +84,7 @@ export const LoginScreen = () => {
             style={styles.checkbox}
           />
           <CustomButton
-            title="Login"
+            title="LOGIN"
             callback={updateTokenCallback}
             style={styles.button}
           />

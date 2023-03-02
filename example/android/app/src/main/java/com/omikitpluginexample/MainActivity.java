@@ -4,6 +4,10 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactActivityDelegate;
+import com.omikitplugin.OmikitPluginModule;
+
+import vn.vihat.omicall.omisdk.OmiClient;
+import vn.vihat.omicall.omisdk.OmiSDKUtils;
 
 public class MainActivity extends ReactActivity {
 
@@ -31,5 +35,17 @@ public class MainActivity extends ReactActivity {
         // If you opted-in for the New Architecture, we enable Concurrent React (i.e. React 18).
         DefaultNewArchitectureEntryPoint.getConcurrentReactEnabled() // concurrentRootEnabled
         );
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    OmikitPluginModule.Companion.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    OmikitPluginModule.Companion.onDestroy();
   }
 }

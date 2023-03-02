@@ -45,7 +45,6 @@ class CallManager {
             if let isVideoCall = params["isVideo"] as? Bool {
                 isSupportVideoCall = isVideoCall
             }
-    //        omiLib.callManager.audioController.configureAudioSession()
             OmiClient.startOmiService(isSupportVideoCall)
             if (isSupportVideoCall) {
                 OmiClient.registerAccount()
