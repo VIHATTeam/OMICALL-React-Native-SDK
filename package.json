@@ -41,7 +41,10 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/stevennguyenn/omikit-plugin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevennguyenn/omikit-plugin.git"
+  },
   "author": "ViHAT Group <chaunguyen4297@gmail.com> (https://github.com/chauminhienglish)",
   "license": "MIT",
   "bugs": {
@@ -157,5 +160,7 @@
       ]
     ]
   },
-  "dependencies": {}
+  "directories": {
+    "example": "example"
+  }
 }

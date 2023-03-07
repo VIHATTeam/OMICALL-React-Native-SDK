@@ -40,11 +40,13 @@ export const LoginScreen = () => {
       password: password,
       realm: 'thaonguyennguyen1197',
     });
-    setLoading(false);
-    if (result) {
-      //navigation to home
-      navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
-    }
+    setTimeout(async () => {
+      setLoading(false);
+      if (result) {
+        //navigation to home
+        navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
+      }
+    }, 2000);
   }, [password, userName, navigation]);
 
   const _videoTrigger = useCallback(() => {

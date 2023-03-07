@@ -68,7 +68,7 @@ export const CallScreen = () => {
   return (
     <KeyboardAvoid>
       <View style={styles.background}>
-        <Text style={styles.phone}>{'0961046493'}</Text>
+        <Text style={styles.phone}>{'Phone number'}</Text>
         {showTimer ? (
           <CustomTimer />
         ) : (
@@ -134,6 +134,7 @@ const styles = StyleSheet.create({
   background: {
     paddingHorizontal: 24,
     paddingVertical: 36,
+    marginTop: 24,
     alignItems: 'center',
     flex: 1,
   },

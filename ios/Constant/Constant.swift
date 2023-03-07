@@ -36,12 +36,12 @@ let SETINPUT = "SET_INPUT"
 let SETOUTPUT = "SET_OUTPUT"
 
 //LISTENER
-let onCallEstablished = "CALL_ESTABLISHED"
-let onCallEnd = "CALL_END"
-let incomingReceived = "INCOMING_RECEIVED"
-let onRinging = "RINGING"
-let onConnectionTimeout = "CONNECTION_TIMEOUT"
-let onHold = "HOLD"
-let onMuted = "MUTED"
+let onCallEstablished = "onCallEstablished"
+let onCallEnd = "onCallEnd"
+let incomingReceived = "incomingReceived"
+let onRinging = "onRinging"
+let onConnectionTimeout = "onConnectionTimeout"
+let onHold = "onHold"
+let onMuted = "onMuted"
 
 
