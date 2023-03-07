@@ -170,7 +170,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext) :
   }
 
   override fun onHold(isHold: Boolean) {
-
+    sendEvent("onHold", null)
   }
 
   override fun onMuted(isMuted: Boolean) {

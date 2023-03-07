@@ -14,7 +14,7 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		7699B88040F8A987B510C191 /* libPods-OmikitPluginExample-OmikitPluginExampleTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-OmikitPluginExample-OmikitPluginExampleTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		C8DCC8A929A8C97E00F1CBF2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C8DCC8A829A8C97E00F1CBF2 /* GoogleService-Info.plist */; };
+		C8A5C2E829B6F6F900301470 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C8A5C2E729B6F6F900301470 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,7 +44,7 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-OmikitPluginExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OmikitPluginExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = OmikitPluginExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig"; path = "Target Support Files/Pods-OmikitPluginExample-OmikitPluginExampleTests/Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig"; sourceTree = "<group>"; };
-		C8DCC8A829A8C97E00F1CBF2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "OmikitPluginExample/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		C8A5C2E729B6F6F900301470 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		C8FBCFCC29A5D6C600AA4A22 /* OmikitPluginExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = OmikitPluginExample.entitlements; path = OmikitPluginExample/OmikitPluginExample.entitlements; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -89,7 +89,6 @@
 		13B07FAE1A68108700A75B9A /* OmikitPluginExample */ = {
 			isa = PBXGroup;
 			children = (
-				C8DCC8A829A8C97E00F1CBF2 /* GoogleService-Info.plist */,
 				C8FBCFCC29A5D6C600AA4A22 /* OmikitPluginExample.entitlements */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
@@ -121,6 +120,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				C8A5C2E729B6F6F900301470 /* GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* OmikitPluginExample */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				00E356EF1AD99517003FC87E /* OmikitPluginExampleTests */,
@@ -250,7 +250,7 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
-				C8DCC8A929A8C97E00F1CBF2 /* GoogleService-Info.plist in Resources */,
+				C8A5C2E829B6F6F900301470 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -507,9 +507,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = OmikitPluginExample/OmikitPluginExample.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = ZD8A96Y6GA;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = ZD8A96Y6GA;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = OmikitPluginExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -532,6 +534,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = vn.vihat.omikit;
 				PRODUCT_NAME = OmikitPluginExample;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Developer_vn.vihat.omikit;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";

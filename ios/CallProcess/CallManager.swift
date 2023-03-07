@@ -78,7 +78,7 @@ class CallManager {
         }
         if (call.callState == .disconnected) {
             DispatchQueue.main.async {
-//                SwiftOmikitPlugin.instance?.sendEvent(onCallEnd, [:])
+                OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
                 self.currentConfirmedCall = nil
             }
         }
@@ -95,7 +95,7 @@ class CallManager {
         case .calling:
             if (!call.isIncoming) {
                 NSLog("Outgoing call, in CALLING state, with UUID \(call.uuid)")
-//                SwiftOmikitPlugin.instance?.sendEvent(onRinging, [:])
+                OmikitPlugin.instance.sendEvent(withName: onRinging, body: [:])
             }
             break
         case .early:
@@ -112,15 +112,14 @@ class CallManager {
             DispatchQueue.main.async {
                 if (!call.isIncoming) {
                     NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
-//                    SwiftOmikitPlugin.instance?.sendEvent(onCallEstablished, [:])
-//                    SwiftOmikitPlugin.instance?.sendEvent(onMuted, ["isMuted": call.muted])
+                    OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: [:])
+                    OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])
                     self.currentConfirmedCall = call
                     return
                 }
-                //call video
                 NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
-//                SwiftOmikitPlugin.instance?.sendEvent(onCallEstablished, [:])
-//                SwiftOmikitPlugin.instance?.sendEvent(onMuted, ["isMuted": call.muted])
+                OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: [:])
+                OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])
                 self.currentConfirmedCall = call
             }
             break
@@ -133,30 +132,24 @@ class CallManager {
             print(omiLib.getCurrentCall()?.uuid.uuidString)
             print(call.uuid.uuidString)
             if let currentActiveCall = currentConfirmedCall, currentActiveCall.uuid.uuidString == call.uuid.uuidString {
-//                SwiftOmikitPlugin.instance?.sendEvent(onCallEnd, [:])
+                OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
                 currentConfirmedCall = nil
                 break
             }
             if currentConfirmedCall == nil {
-//                SwiftOmikitPlugin.instance?.sendEvent(onCallEnd, [:])
+                OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
                 break
             }
             print(omiLib.getNewestCall()?.uuid.uuidString)
             break
         case .incoming:
-//            SwiftOmikitPlugin.instance?.sendEvent(incomingReceived, [
-//                "callerId": call.callId,
-//                "phoneNumber": call.callerNumber
-//            ])SwiftOmikitPlugin.instance?.sendEvent(incomingReceived, [
-//                "callerId": call.callId,
-//                "phoneNumber": call.callerNumber
-//            ])
+            OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["callerId": call.callId,"phoneNumber": call.callerNumber])
             break
         case .muted:
-//            SwiftOmikitPlugin.instance?.sendEvent(onMuted, ["isMuted": call.muted])
+            OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])
             break
         case .hold:
-//            SwiftOmikitPlugin.instance?.sendEvent(onHold, ["isHold": call.onHold])
+            OmikitPlugin.instance.sendEvent(withName: onHold, body: ["isHold": call.onHold])
             break
         @unknown default:
             NSLog("Default call state")
@@ -202,7 +195,7 @@ class CallManager {
     
     func endAllCalls() {
         omiLib.callManager.endAllCalls()
-//        SwiftOmikitPlugin.instance?.sendEvent("onCallEnd", [:])
+        OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
         NotificationCenter.default.removeObserver(self)
     }
     
