@@ -32,4 +32,28 @@ export function startCall(data: any): Promise<boolean> {
   return OmikitPlugin.startCall(data);
 }
 
+export function endCall(): Promise<boolean> {
+  return OmikitPlugin.endCall();
+}
+
+export function toggleMute(): Promise<boolean> {
+  return OmikitPlugin.toggleMute();
+}
+
+export function toggleSpeak(data: any): Promise<boolean> {
+  return OmikitPlugin.toggleMute(data);
+}
+
+export function onHold(data: any): Promise<boolean> {
+  return OmikitPlugin.onHold(data);
+}
+
+export function onMute(data: any): Promise<boolean> {
+  return OmikitPlugin.onMute(data);
+}
+
+export function sendDTMF(data: any): Promise<boolean> {
+  return OmikitPlugin.sendDTMF(data);
+}
+
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);

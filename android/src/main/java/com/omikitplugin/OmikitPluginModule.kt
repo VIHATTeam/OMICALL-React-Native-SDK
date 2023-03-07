@@ -64,6 +64,75 @@ class OmikitPluginModule(reactContext: ReactApplicationContext) :
     }
   }
 
+  @ReactMethod
+  fun endCall(promise: Promise) {
+    OmiClient.instance.hangUp()
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun toggleMute(promise: Promise) {
+    OmiClient.instance.toggleMute()
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun toggleSpeak(data: ReadableMap, promise: Promise) {
+    val useSpeaker = data.getBoolean("useSpeaker")
+    OmiClient.instance.toggleSpeaker(useSpeaker)
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun decline(promise: Promise) {
+    OmiClient.instance.decline()
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun hangup(data: ReadableMap, promise: Promise) {
+    val callId = data.getInt("callId")
+    OmiClient.instance.hangUp(callId)
+    promise.resolve(true)
+  }
+
+
+  @ReactMethod
+  fun onCallStart(data: ReadableMap, promise: Promise) {
+    val callId = data.getInt("callId")
+    OmiClient.instance.onCallStarted(callId)
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun onHold(data: ReadableMap, promise: Promise) {
+    val isHold = data.getBoolean("isHold")
+    OmiClient.instance.onHold(isHold)
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun onMute(data: ReadableMap, promise: Promise) {
+    val isMute = data.getBoolean("isMute")
+    OmiClient.instance.onMuted(isMute)
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun sendDTMF(data: ReadableMap, promise: Promise) {
+    val character = data.getString("character")
+    var characterCode: Int? = character?.toIntOrNull()
+    if (character == "*") {
+      characterCode = 10
+    }
+    if (character == "#") {
+      characterCode = 11
+    }
+    if (characterCode != null) {
+      OmiClient.instance.sendDtmf(characterCode)
+    }
+    promise.resolve(true)
+  }
 
   companion object {
     const val NAME = "OmikitPlugin"

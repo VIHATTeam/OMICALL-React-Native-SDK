@@ -30,6 +30,7 @@ export const HomeScreen = () => {
   };
 
   const call = async () => {
+    // navigation.navigate('Call' as never);
     if (phone.trim().length === 0) {
       return;
     }
