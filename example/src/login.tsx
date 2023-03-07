@@ -34,7 +34,6 @@ export const LoginScreen = () => {
   const updateTokenCallback = useCallback(async () => {
     console.log(userName);
     console.log(password);
-    navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
     setLoading(true);
     const result = await initCall({
       userName: userName,
