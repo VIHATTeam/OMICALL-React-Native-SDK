@@ -1,13 +1,14 @@
-#import <RCTAppDelegate.h>
-#import <UIKit/UIKit.h>
+#import <React/RCTBridgeDelegate.h>
 #import <UIKit/UIKit.h>
 #import <UserNotifications/UserNotifications.h>
 #import <OmiKit/OmiKit-umbrella.h>
 #import <UserNotifications/UserNotifications.h>
 
-@interface AppDelegate : RCTAppDelegate<UIApplicationDelegate>{
-  PushKitManager *pushkitManager;
-  CallKitProviderDelegate * provider;
-  PKPushRegistry * voipRegistry;
-}
+@interface AppDelegate : UIResponder <UIApplicationDelegate, RCTBridgeDelegate>
+
+@property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, strong) PushKitManager *pushkitManager;
+@property (nonatomic, strong) CallKitProviderDelegate * provider;
+@property (nonatomic, strong) PKPushRegistry * voipRegistry;
+
 @end

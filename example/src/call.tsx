@@ -1,7 +1,13 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CustomTimer, KeyboardAvoid, UIColors } from './components';
 import React, { useCallback, useEffect, useState } from 'react';
-import { endCall, omiEmitter, toggleMute, toggleSpeak } from 'omikit-plugin';
+import {
+  endCall,
+  omiEmitter,
+  sendDTMF,
+  toggleMute,
+  toggleSpeak,
+} from 'omikit-plugin';
 import { UIImages } from './../assets';
 import { useNavigation } from '@react-navigation/native';
 import { CustomKeyboard } from './components/custom_view/custom_keyboard';
@@ -46,6 +52,9 @@ export const CallScreen = () => {
   const pressKeyCap = useCallback(
     (text: string) => {
       setTitle(title + text);
+      sendDTMF({
+        character: text,
+      });
     },
     [title]
   );

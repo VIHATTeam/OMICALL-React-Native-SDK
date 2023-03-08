@@ -176,6 +176,7 @@ class CallManager {
                 NSLog("error hanging up call(\(call.uuid.uuidString)): \(error!)")
             }
         }
+        OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -189,6 +190,7 @@ class CallManager {
                 NSLog("error hanging up call(\(call.uuid.uuidString)): \(error!)")
             }
         }
+        OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
         NotificationCenter.default.removeObserver(self)
     }
     
