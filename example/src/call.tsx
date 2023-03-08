@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CustomTimer, KeyboardAvoid, UIColors } from './components';
 import React, { useCallback, useEffect, useState } from 'react';
-import { endCall, omiEmitter, toggleMute } from 'omikit-plugin';
+import { endCall, omiEmitter, toggleMute, toggleSpeak } from 'omikit-plugin';
 import { UIImages } from './../assets';
 import { useNavigation } from '@react-navigation/native';
 import { CustomKeyboard } from './components/custom_view/custom_keyboard';
@@ -50,6 +50,17 @@ export const CallScreen = () => {
     [title]
   );
 
+  const triggerSpeak = useCallback(() => {
+    const newStatus = !audioOn;
+    setAudioOn((prev) => !prev);
+    toggleSpeak({ useSpeaker: newStatus });
+  }, [audioOn]);
+
+  const triggerMute = useCallback(() => {
+    setMicOn((prev) => !prev);
+    toggleMute();
+  }, []);
+
   useEffect(() => {
     omiEmitter.addListener('incomingReceived', incomingReceived);
     omiEmitter.addListener('onCallEstablished', onCallEstablished);
@@ -87,13 +98,7 @@ export const CallScreen = () => {
           </View>
         ) : (
           <View style={styles.feature}>
-            <TouchableOpacity
-              onPress={() => {
-                const newMic = !micOn;
-                toggleMute();
-                setMicOn(newMic);
-              }}
-            >
+            <TouchableOpacity onPress={triggerMute}>
               <Image
                 source={micOn ? UIImages.micOn : UIImages.micOff}
                 style={styles.featureImage}
@@ -106,11 +111,7 @@ export const CallScreen = () => {
             >
               <Image source={UIImages.comment} style={styles.featureImage} />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                setAudioOn(true);
-              }}
-            >
+            <TouchableOpacity onPress={triggerSpeak}>
               <Image
                 source={audioOn ? UIImages.audioOn : UIImages.audioOff}
                 style={styles.featureImage}

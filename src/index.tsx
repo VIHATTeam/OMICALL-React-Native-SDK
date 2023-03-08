@@ -41,15 +41,11 @@ export function toggleMute(): Promise<boolean> {
 }
 
 export function toggleSpeak(data: any): Promise<boolean> {
-  return OmikitPlugin.toggleMute(data);
+  return OmikitPlugin.toggleSpeak(data);
 }
 
 export function onHold(data: any): Promise<boolean> {
   return OmikitPlugin.onHold(data);
-}
-
-export function onMute(data: any): Promise<boolean> {
-  return OmikitPlugin.onMute(data);
 }
 
 export function sendDTMF(data: any): Promise<boolean> {

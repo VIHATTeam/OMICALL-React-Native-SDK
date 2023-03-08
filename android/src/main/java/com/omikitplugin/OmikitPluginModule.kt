@@ -1,8 +1,10 @@
 package com.omikitplugin
 
 import android.Manifest
+import android.os.Handler
 import androidx.core.app.ActivityCompat
 import com.facebook.react.ReactActivity
+import com.facebook.react.ReactInstanceManager
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.RCTNativeAppEventEmitter
 import vn.vihat.omicall.omisdk.OmiClient
@@ -10,47 +12,51 @@ import vn.vihat.omicall.omisdk.OmiListener
 import vn.vihat.omicall.omisdk.OmiSDKUtils
 
 
-class OmikitPluginModule(reactContext: ReactApplicationContext) :
+class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   ReactContextBaseJavaModule(reactContext), OmiListener {
 
   override fun getName(): String {
     return NAME
   }
 
-
   @ReactMethod
   fun initCall(data: ReadableMap, promise: Promise) {
-    val userName = data.getString("userName") as String
-    val password = data.getString("password") as String
-    val realm = data.getString("realm") as String
-    OmiClient.register(reactApplicationContext!!, userName, password, realm)
-    ActivityCompat.requestPermissions(
-      currentActivity!!,
-      arrayOf(
-        Manifest.permission.USE_SIP,
-        Manifest.permission.CALL_PHONE,
-        Manifest.permission.CAMERA,
-        Manifest.permission.MODIFY_AUDIO_SETTINGS,
-        Manifest.permission.RECORD_AUDIO,
-      ),
-      0,
-    )
-    OmiClient.instance.setListener(this)
-    promise.resolve(true)
+    currentActivity?.runOnUiThread {
+      val userName = data.getString("userName") as String
+      val password = data.getString("password") as String
+      val realm = data.getString("realm") as String
+      OmiClient.register(reactApplicationContext, userName, password, realm)
+      ActivityCompat.requestPermissions(
+        currentActivity!!,
+        arrayOf(
+          Manifest.permission.USE_SIP,
+          Manifest.permission.CALL_PHONE,
+          Manifest.permission.POST_NOTIFICATIONS,
+          Manifest.permission.CAMERA,
+          Manifest.permission.MODIFY_AUDIO_SETTINGS,
+          Manifest.permission.RECORD_AUDIO,
+        ),
+        0,
+      )
+      OmiClient.instance.setListener(this)
+      promise.resolve(true)
+    }
   }
 
   @ReactMethod
   fun updateToken(data: ReadableMap, promise: Promise) {
-    val deviceTokenAndroid = data.getString("fcmToken") as String
-    val appId = data.getString("appId") as String
-    val deviceId = data.getString("deviceId") as String
-    OmiClient.instance.updatePushToken(
-      "",
-      deviceTokenAndroid,
-      deviceId,
-      appId
-    )
-    promise.resolve(true)
+    currentActivity?.runOnUiThread {
+      val deviceTokenAndroid = data.getString("fcmToken") as String
+      val appId = data.getString("appId") as String
+      val deviceId = data.getString("deviceId") as String
+      OmiClient.instance.updatePushToken(
+        "",
+        deviceTokenAndroid,
+        deviceId,
+        appId
+      )
+      promise.resolve(true)
+    }
   }
 
 
@@ -146,7 +152,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext) :
       grantResults: IntArray,
       act: ReactActivity,
     ) {
-      OmiSDKUtils.handlePermissionRequest(requestCode, permissions, grantResults, act)
+      act.runOnUiThread {
+        OmiSDKUtils.handlePermissionRequest(requestCode, permissions, grantResults, act)
+      }
     }
   }
 
