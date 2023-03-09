@@ -7,7 +7,8 @@ import { startCall, updateToken } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 
 export const HomeScreen = () => {
-  var phone = '3497702';
+  ///need add call phone
+  var phone = '';
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -46,7 +47,8 @@ export const HomeScreen = () => {
         <CustomTextField
           placeHolder="Phone number"
           keyboardType="phone-pad"
-          value="3497702"
+          ///need add call phone
+          value=""
           returnKey={'done'}
           onChange={(text: string) => {
             phone = text;

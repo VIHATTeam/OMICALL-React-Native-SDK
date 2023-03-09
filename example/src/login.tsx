@@ -23,8 +23,8 @@ export const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const phoneFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var userName = '100';
-  var password = 'ConCung100';
+  var userName = '';
+  var password = '';
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -38,7 +38,8 @@ export const LoginScreen = () => {
     const result = await initCall({
       userName: userName,
       password: password,
-      realm: 'thaonguyennguyen1197',
+      realm: '',
+      ///need add realm
     });
     setTimeout(async () => {
       setLoading(false);
