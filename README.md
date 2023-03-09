@@ -121,11 +121,11 @@ Omicall need two certificates: VOIP Push Certificate & User Push Notification Ce
 
 - Set up Firebase Messaging: <a href="https://rnfirebase.io/messaging/usage">messaging</a> plugin.
 
-````
+```
 //if you use only on Android. you only implement for Android.
 //because we use APNS to push notification on iOS so you don't need add Firebase for iOS.
 //But you can use firebase-messaging to get APNS token for iOS.
-```d
+```
 
 - Call actions:
 
@@ -136,24 +136,24 @@ Omicall need two certificates: VOIP Push Certificate & User Push Notification Ce
   * `toggleMute` : toggle the microphone status.
   * `toggleSpeaker` : toggle the voice status. You need send Object value with `useSpeaker`.
   * `sendDTMF` : send DTMF for call server. You need send Object value with `character` value.
+```
 
 * Event listener:
 
-````
-
+```
 useEffect(() => {
-omiEmitter.addListener('incomingReceived', incomingReceived);
-omiEmitter.addListener('onCallEstablished', onCallEstablished);
-omiEmitter.addListener('onCallEnd', onCallEnd);
-omiEmitter.addListener('onMuted', onMuted);
-omiEmitter.addListener('onRinging', onRinging);
-return () => {
-omiEmitter.removeAllListeners('incomingReceived');
-omiEmitter.removeAllListeners('onCallEstablished');
-omiEmitter.removeAllListeners('onCallEnd');
-omiEmitter.removeAllListeners('onMuted');
-omiEmitter.removeAllListeners('onRinging');
-};
+    omiEmitter.addListener('incomingReceived', incomingReceived);
+    omiEmitter.addListener('onCallEstablished', onCallEstablished);
+    omiEmitter.addListener('onCallEnd', onCallEnd);
+    omiEmitter.addListener('onMuted', onMuted);
+    omiEmitter.addListener('onRinging', onRinging);
+    return () => {
+        omiEmitter.removeAllListeners('incomingReceived');
+        omiEmitter.removeAllListeners('onCallEstablished');
+        omiEmitter.removeAllListeners('onCallEnd');
+        omiEmitter.removeAllListeners('onMuted');
+        omiEmitter.removeAllListeners('onRinging');
+    };
 }, []);
 
 ```
@@ -164,4 +164,3 @@ omiEmitter.removeAllListeners('onRinging');
   * `onRinging`: Trigger when the phone is ringing.
   * `onHold`: Trigger when user hold the call. From parameters, you can reviceved correct status from server through `isHold`
   * `onMuted`: Trigger when user muted the call. From parameters, you can reviceved correct status from server through `isMuted`
-```
