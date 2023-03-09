@@ -1,10 +1,8 @@
 package com.omikitplugin
 
 import android.Manifest
-import android.os.Handler
 import androidx.core.app.ActivityCompat
 import com.facebook.react.ReactActivity
-import com.facebook.react.ReactInstanceManager
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.RCTNativeAppEventEmitter
 import vn.vihat.omicall.omisdk.OmiClient
@@ -159,10 +157,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun incomingReceived(callerId: Int, phoneNumber: String?) {
-    sendEvent("incomingReceived", mapOf(
-      "callerId" to callerId,
-      "phoneNumber" to phoneNumber,
-    ))
+    val map: WritableMap = WritableNativeMap()
+    map.putInt("callerId", callerId)
+    sendEvent("phoneNumber", phoneNumber)
   }
 
   override fun onCallEnd() {
@@ -182,9 +179,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onMuted(isMuted: Boolean) {
-    sendEvent("onMuted", mapOf(
-      "isMuted" to isMuted,
-    ))
+    val map: WritableMap = WritableNativeMap()
+    map.putBoolean("isMuted", isMuted)
+    sendEvent("onMuted", map)
   }
 
   override fun onRinging() {
@@ -192,7 +189,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   private fun sendEvent(eventName: String?, params: Any?) {
-    reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
-      .emit(eventName, params)
+    currentActivity?.runOnUiThread {
+      reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
+        .emit(eventName, params)
+    }
   }
 }
