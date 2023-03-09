@@ -136,7 +136,6 @@ Omicall need two certificates: VOIP Push Certificate & User Push Notification Ce
   * `toggleMute` : toggle the microphone status.
   * `toggleSpeaker` : toggle the voice status. You need send Object value with `useSpeaker`.
   * `sendDTMF` : send DTMF for call server. You need send Object value with `character` value.
-```
 
 * Event listener:
 
