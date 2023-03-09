@@ -40,10 +40,12 @@ export const CallScreen = () => {
     [navigation]
   );
 
-  const onMuted = (data: any) => {
+  const onMuted = useCallback((data: any) => {
     console.log('onMuted');
-    console.log(data);
-  };
+    const isMuted = data.isMuted;
+    console.log('is muted ' + isMuted);
+    // setMicOn(isMuted);
+  }, []);
 
   const onRinging = () => {
     console.log('onRinging');
@@ -83,7 +85,7 @@ export const CallScreen = () => {
       omiEmitter.removeAllListeners('onMuted');
       omiEmitter.removeAllListeners('onRinging');
     };
-  }, [onCallEnd]);
+  }, [onCallEnd, onMuted]);
 
   return (
     <KeyboardAvoid>
