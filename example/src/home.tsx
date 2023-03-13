@@ -1,10 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 import { CustomButton, CustomTextField, KeyboardAvoid } from './components';
 import React, { useEffect } from 'react';
-import { apns, fcm } from './notification';
-import DeviceInfo from 'react-native-device-info';
-import { startCall, updateToken } from 'omikit-plugin';
+import { startCall } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
+import { prepareForUpdateToken } from './notification';
 
 export const HomeScreen = () => {
   ///need add call phone
@@ -14,21 +13,6 @@ export const HomeScreen = () => {
   useEffect(() => {
     prepareForUpdateToken();
   }, []);
-
-  const prepareForUpdateToken = async () => {
-    const fcmToken = await fcm;
-    console.log(fcmToken);
-    const apnsToken = await apns;
-
-    const deviceId = DeviceInfo.getDeviceId();
-    const appId = DeviceInfo.getBundleId();
-    updateToken({
-      apnsToken: apnsToken,
-      fcmToken: fcmToken,
-      deviceId: deviceId,
-      appId: appId,
-    });
-  };
 
   const call = async () => {
     // navigation.navigate('Call' as never);

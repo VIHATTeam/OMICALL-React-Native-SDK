@@ -13,7 +13,12 @@ import { CallScreen } from './call';
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
+interface AppProps {
+  isLogin: boolean;
+}
+
+export const App = (props: AppProps) => {
+  const { isLogin } = props;
   const navigationRef = useNavigationContainerRef();
 
   useEffect(() => {
@@ -27,7 +32,7 @@ export default function App() {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName={isLogin ? 'Home' : 'Login'}
         screenOptions={{
           headerStyle: { backgroundColor: UIColors.mainColor },
           headerTintColor: '#fff',
@@ -64,7 +69,7 @@ export default function App() {
     //   <Text>Result: {result}</Text>
     // </View>
   );
-}
+};
 
 // const styles = StyleSheet.create({
 //   container: {
