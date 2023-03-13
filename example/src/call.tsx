@@ -20,11 +20,6 @@ export const CallScreen = () => {
   const [keyboardOn, setKeyboardOn] = useState(false);
   const [title, setTitle] = useState('');
 
-  const incomingReceived = (data: any) => {
-    console.log('incomingReceived');
-    console.log(data);
-  };
-
   const onCallEstablished = () => {
     console.log('onCallEstablished');
     setShowTimer(true);
@@ -44,12 +39,8 @@ export const CallScreen = () => {
     console.log('onMuted');
     const isMuted = data.isMuted;
     console.log('is muted ' + isMuted);
-    // setMicOn(isMuted);
+    setMicOn(isMuted);
   }, []);
-
-  const onRinging = () => {
-    console.log('onRinging');
-  };
 
   const pressKeyCap = useCallback(
     (text: string) => {
@@ -73,17 +64,13 @@ export const CallScreen = () => {
   }, []);
 
   useEffect(() => {
-    omiEmitter.addListener('incomingReceived', incomingReceived);
     omiEmitter.addListener('onCallEstablished', onCallEstablished);
     omiEmitter.addListener('onCallEnd', onCallEnd);
     omiEmitter.addListener('onMuted', onMuted);
-    omiEmitter.addListener('onRinging', onRinging);
     return () => {
-      omiEmitter.removeAllListeners('incomingReceived');
       omiEmitter.removeAllListeners('onCallEstablished');
       omiEmitter.removeAllListeners('onCallEnd');
       omiEmitter.removeAllListeners('onMuted');
-      omiEmitter.removeAllListeners('onRinging');
     };
   }, [onCallEnd, onMuted]);
 

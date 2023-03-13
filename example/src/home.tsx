@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { CustomButton, CustomTextField, KeyboardAvoid } from './components';
-import React, { useEffect } from 'react';
-import { startCall } from 'omikit-plugin';
+import React, { useCallback, useEffect } from 'react';
+import { omiEmitter, startCall } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 
@@ -13,6 +13,23 @@ export const HomeScreen = () => {
   useEffect(() => {
     prepareForUpdateToken();
   }, []);
+
+  const incomingReceived = useCallback(
+    (data: any) => {
+      console.log('incomingReceived');
+      console.log(data);
+      // const { isVideo, callerNumber, isIncoming } = data;
+      navigation.navigate('Call' as never, data as never);
+    },
+    [navigation]
+  );
+
+  useEffect(() => {
+    omiEmitter.addListener('incomingReceived', incomingReceived);
+    return () => {
+      omiEmitter.removeAllListeners('incomingReceived');
+    };
+  }, [incomingReceived]);
 
   const call = async () => {
     // navigation.navigate('Call' as never);
