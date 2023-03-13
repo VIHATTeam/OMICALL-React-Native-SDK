@@ -109,19 +109,10 @@ class CallManager {
             }
             break
         case .confirmed:
-            DispatchQueue.main.async {
-                if (!call.isIncoming) {
-                    NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
-                    OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: [:])
-                    OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])
-                    self.currentConfirmedCall = call
-                    return
-                }
-                NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
-                OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: [:])
-                OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])
-                self.currentConfirmedCall = call
-            }
+            NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
+            OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: ["isVideo": call.isVideo != 0, "callerNumber": call.callerNumber, "isIncoming": call.isIncoming])
+            OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])
+            self.currentConfirmedCall = call
             break
         case .disconnected:
             if (!call.connected) {
@@ -143,7 +134,7 @@ class CallManager {
             print(omiLib.getNewestCall()?.uuid.uuidString)
             break
         case .incoming:
-            OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["callerId": call.callId,"phoneNumber": call.callerNumber])
+            OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["isVideo": call.isVideo != 0, "callerNumber": "0961046493", "isIncoming": call.isIncoming])
             break
         case .muted:
             OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])

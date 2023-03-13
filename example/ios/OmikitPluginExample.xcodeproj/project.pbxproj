@@ -44,8 +44,8 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-OmikitPluginExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OmikitPluginExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = OmikitPluginExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig"; path = "Target Support Files/Pods-OmikitPluginExample-OmikitPluginExampleTests/Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig"; sourceTree = "<group>"; };
-		C8FBCFCC29A5D6C600AA4A22 /* OmikitPluginExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = OmikitPluginExample.entitlements; path = OmikitPluginExample/OmikitPluginExample.entitlements; sourceTree = "<group>"; };
 		C84851CC29B869CA00E9E28D /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		C8FBCFCC29A5D6C600AA4A22 /* OmikitPluginExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = OmikitPluginExample.entitlements; path = OmikitPluginExample/OmikitPluginExample.entitlements; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -616,7 +616,6 @@
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -689,7 +688,6 @@
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;

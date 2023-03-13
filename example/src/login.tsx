@@ -17,38 +17,46 @@ import { initCall } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
 import { requestNotification } from './notification';
+import { localStorage } from './local_storage';
 
 export const LoginScreen = () => {
   const [isVideo, setIsVideo] = useState(false);
   const [loading, setLoading] = useState(false);
   const phoneFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var userName = '';
-  var password = '';
+  const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
+  var userName = '101';
+  var password = 'Kunkun12345';
+  var realm = 'dky';
   const navigation = useNavigation();
 
   useEffect(() => {
     requestNotification();
   }, []);
 
-  const updateTokenCallback = useCallback(async () => {
+  const loginUser = useCallback(async () => {
     console.log(userName);
     console.log(password);
     setLoading(true);
-    const result = await initCall({
+    const loginInfo = {
       userName: userName,
       password: password,
-      realm: '',
-      ///need add realm
-    });
+      realm: realm,
+      isVideo: isVideo,
+    };
+    console.log(loginInfo);
+    const result = await initCall(loginInfo);
+    //save login info
     setTimeout(async () => {
       setLoading(false);
       if (result) {
-        //navigation to home
+        const loginInfoString = JSON.stringify(loginInfo);
+        localStorage.set('login_info', loginInfoString);
+        // navigation to home
         navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
       }
     }, 2000);
-  }, [password, userName, navigation]);
+  }, [password, userName, navigation, realm, isVideo]);
 
   const _videoTrigger = useCallback(() => {
     setIsVideo(!isVideo);
@@ -79,6 +87,16 @@ export const LoginScreen = () => {
               password = text;
             }}
           />
+          <CustomTextField
+            placeHolder="Realm"
+            style={styles.passwordInput}
+            value={realm}
+            isPassword={true}
+            currentFocus={realmFocus}
+            onChange={(text: string) => {
+              realm = text;
+            }}
+          />
           <CustomCheckBox
             title="Video call"
             checked={isVideo}
@@ -87,7 +105,7 @@ export const LoginScreen = () => {
           />
           <CustomButton
             title="LOGIN"
-            callback={updateTokenCallback}
+            callback={loginUser}
             style={styles.button}
           />
           {loading ? <CustomLoading /> : null}
