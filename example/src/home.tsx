@@ -38,7 +38,11 @@ export const HomeScreen = () => {
     }
     const result = await startCall({ phoneNumber: phone, isVideo: false });
     if (result) {
-      navigation.navigate('Call' as never);
+      const data = {
+        callerNumber: phone,
+        isVideo: false,
+      };
+      navigation.navigate('DialCall' as never, data as never);
     }
   };
 

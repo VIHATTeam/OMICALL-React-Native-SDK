@@ -151,11 +151,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   @ReactMethod
-  fun toggleSpeak(data: ReadableMap, promise: Promise) {
-    val useSpeaker = data.getBoolean("useSpeaker")
-    OmiClient.instance.toggleSpeaker(useSpeaker)
-    promise.resolve(true)
+  fun toggleSpeak(promise: Promise) {
     icSpeaker = !icSpeaker
+    OmiClient.instance.toggleSpeaker(icSpeaker)
+    promise.resolve(true)
     sendEvent(SPEAKER, icSpeaker)
   }
 

@@ -16,8 +16,8 @@ RCT_EXTERN_METHOD(endCall:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(toggleMute:
                  (RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
-RCT_EXTERN_METHOD(toggleSpeak:(id)data
-                 withResolver: (RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(toggleSpeak:
+                 (RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(sendDTMF:(id)data
                   withResolver: (RCTPromiseResolveBlock)resolve

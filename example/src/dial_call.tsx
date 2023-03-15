@@ -41,16 +41,16 @@ export const DialCallScreen = ({ route }: any) => {
 
   const onMuted = useCallback((data: any) => {
     console.log('onMuted');
-    const isMuted = data.isMuted;
-    console.log('is muted ' + isMuted);
-    setMuted(isMuted);
+    // const isMuted = data.isMuted;
+    console.log('is muted ' + data);
+    setMuted(data);
   }, []);
 
   const onSpeaker = useCallback((data: any) => {
-    console.log('onMuted');
-    const isSpeaker = data.isSpeaker;
-    console.log('is speaker ' + isSpeaker);
-    setMicOn(isSpeaker);
+    console.log('onSpeaker');
+    // const isSpeaker = data.isSpeaker;
+    console.log('is speaker ' + data);
+    setMicOn(data);
   }, []);
 
   const pressKeyCap = useCallback(
@@ -64,10 +64,8 @@ export const DialCallScreen = ({ route }: any) => {
   );
 
   const triggerSpeak = useCallback(() => {
-    const newStatus = !micOn;
-    // setAudioOn((prev) => !prev);
-    toggleSpeak({ useSpeaker: newStatus });
-  }, [micOn]);
+    toggleSpeak();
+  }, []);
 
   const triggerMute = useCallback(() => {
     // setMicOn((prev) => !prev);

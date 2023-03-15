@@ -40,8 +40,8 @@ export function toggleMute(): Promise<boolean> {
   return OmikitPlugin.toggleMute();
 }
 
-export function toggleSpeak(data: any): Promise<boolean> {
-  return OmikitPlugin.toggleSpeak(data);
+export function toggleSpeak(): Promise<boolean> {
+  return OmikitPlugin.toggleSpeak();
 }
 
 export function onHold(data: any): Promise<boolean> {
