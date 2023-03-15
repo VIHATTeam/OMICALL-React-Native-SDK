@@ -19,7 +19,7 @@ class CallManager {
     private var numberRetry: Int = 0
     var isCallError: Bool = false  // check when call error
     private let omiLib = OMISIPLib.sharedInstance()
-    private var isSpeaker = false
+    var isSpeaker = false
     var currentConfirmedCall : OMICall?
     var videoManager: OMIVideoViewManager?
     
@@ -95,7 +95,6 @@ class CallManager {
         case .calling:
             if (!call.isIncoming) {
                 NSLog("Outgoing call, in CALLING state, with UUID \(call.uuid)")
-                OmikitPlugin.instance.sendEvent(withName: onRinging, body: [:])
             }
             break
         case .early:
@@ -110,9 +109,9 @@ class CallManager {
             break
         case .confirmed:
             NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
-            OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: ["isVideo": call.isVideo != 0, "callerNumber": call.callerNumber, "isIncoming": call.isIncoming])
-            OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])
+            OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: ["isVideo": false, "callerNumber": call.callerNumber])
             self.currentConfirmedCall = call
+            OmikitPlugin.instance.sendOnMuteStatus()
             break
         case .disconnected:
             if (!call.connected) {
@@ -134,13 +133,11 @@ class CallManager {
             print(omiLib.getNewestCall()?.uuid.uuidString)
             break
         case .incoming:
-            OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["isVideo": call.isVideo != 0, "callerNumber": "0961046493", "isIncoming": call.isIncoming])
+            OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["isVideo": false, "callerNumber": call.callerNumber ?? "", "isIncoming": call.isIncoming])
             break
         case .muted:
-            OmikitPlugin.instance.sendEvent(withName: onMuted, body: ["isMuted": call.muted])
             break
         case .hold:
-            OmikitPlugin.instance.sendEvent(withName: onHold, body: ["isHold": call.onHold])
             break
         @unknown default:
             NSLog("Default call state")
@@ -149,7 +146,7 @@ class CallManager {
     
     /// Start call
     func startCall(_ phoneNumber: String, isVideo: Bool) {
-        registerNotificationCenter()
+//        registerNotificationCenter()
         if (isVideo) {
             OmiClient.startVideoCall(phoneNumber)
             return
@@ -157,39 +154,25 @@ class CallManager {
         OmiClient.startCall(phoneNumber)
     }
     
-    /// End call
-    func endNewestCall() {
-        guard let call = omiLib.getNewestCall() else {
-            return
-        }
-        omiLib.callManager.end(call) { error in
-            if error != nil {
-                NSLog("error hanging up call(\(call.uuid.uuidString)): \(error!)")
-            }
-        }
-        OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
-        NotificationCenter.default.removeObserver(self)
-    }
-    
     func endCurrentConfirmCall() {
-        guard let call = omiLib.getCurrentCall() else {
-            endNewestCall()
+        var currentCall = omiLib.getCurrentCall()
+        if (currentCall == nil) {
+            currentCall = omiLib.getNewestCall()
+        }
+        if (currentCall == nil) {
+            OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
             return
         }
-        omiLib.callManager.end(call) { error in
-            if error != nil {
-                NSLog("error hanging up call(\(call.uuid.uuidString)): \(error!)")
-            }
-        }
-        OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
-        NotificationCenter.default.removeObserver(self)
+        omiLib.callManager.end(currentCall!)
+        //        SwiftOmikitPlugin.instance?.sendEvent(onCallEnd, [:])
+        //        NotificationCenter.default.removeObserver(self)
     }
     
     
     func endAllCalls() {
         omiLib.callManager.endAllCalls()
-        OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
-        NotificationCenter.default.removeObserver(self)
+        //        SwiftOmikitPlugin.instance?.sendEvent(onCallEnd, [:])
+        //        NotificationCenter.default.removeObserver(self)
     }
     
     func sendDTMF(character: String) {
@@ -207,9 +190,7 @@ class CallManager {
         }
         
         omiLib.callManager.toggleMute(for: omicall) { error in
-            if error != nil {
-                NSLog("toggle mute error:  \(error))")
-            }
+            
         }
         
     }
@@ -246,22 +227,22 @@ class CallManager {
             }
         } catch (let error){
             NSLog("Error toogleSpeaker current call: \(error)")
-
+            
         }
     }
     
     
     func inputs() -> [[String: String]] {
-          let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
-          let results = inputs.map { item in
-              return [
-                  "name": item.portName,
-                  "id": item.uid,
-              ]
-          }
-          return results
+        let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
+        let results = inputs.map { item in
+            return [
+                "name": item.portName,
+                "id": item.uid,
+            ]
+        }
+        return results
     }
-      
+    
     func setInput(id: String) {
         let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
         if let newOutput = inputs.first(where: {$0.uid == id}) {
@@ -272,10 +253,10 @@ class CallManager {
     func outputs() -> [[String: String]] {
         let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
         var results = outputs.map { item in
-           return [
-              "name": item.portName,
-              "id": item.uid,
-           ]
+            return [
+                "name": item.portName,
+                "id": item.uid,
+            ]
         }
         let hasSpeaker = results.contains{ $0["name"] == "Speaker" }
         if (!hasSpeaker) {
@@ -325,29 +306,29 @@ class CallManager {
         }
     }
     
-//    func getLocalPreviewView(callback: @escaping (UIView) -> Void) {
-//        guard let videoManager = videoManager  else { return }
-//        videoManager.localView {previewView in
-//            DispatchQueue.main.async {
-//                if (previewView != nil) {
-//                    previewView!.contentMode = .scaleAspectFill
-//                    callback(previewView!)
-//                }
-//            }
-//        }
-//    }
-//
-//    func getRemotePreviewView(callback: @escaping (UIView) -> Void) {
-//        guard let videoManager = videoManager  else { return }
-//        videoManager.remoteView { previewView in
-//            DispatchQueue.main.async {
-//                if (previewView != nil) {
-//                    previewView!.contentMode = .scaleAspectFill
-//                    callback(previewView!)
-//                }
-//            }
-//        }
-//    }
+    //    func getLocalPreviewView(callback: @escaping (UIView) -> Void) {
+    //        guard let videoManager = videoManager  else { return }
+    //        videoManager.localView {previewView in
+    //            DispatchQueue.main.async {
+    //                if (previewView != nil) {
+    //                    previewView!.contentMode = .scaleAspectFill
+    //                    callback(previewView!)
+    //                }
+    //            }
+    //        }
+    //    }
+    //
+    //    func getRemotePreviewView(callback: @escaping (UIView) -> Void) {
+    //        guard let videoManager = videoManager  else { return }
+    //        videoManager.remoteView { previewView in
+    //            DispatchQueue.main.async {
+    //                if (previewView != nil) {
+    //                    previewView!.contentMode = .scaleAspectFill
+    //                    callback(previewView!)
+    //                }
+    //            }
+    //        }
+    //    }
 }
 
 

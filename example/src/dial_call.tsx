@@ -3,22 +3,26 @@ import { CustomTimer, KeyboardAvoid, UIColors } from './components';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   endCall,
+  OmiCallEvent,
   omiEmitter,
   sendDTMF,
   toggleMute,
   toggleSpeak,
 } from 'omikit-plugin';
-import { UIImages } from './../assets';
+import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
 import { CustomKeyboard } from './components/custom_view/custom_keyboard';
 
-export const CallScreen = () => {
+export const DialCallScreen = ({ route }: any) => {
+  const callerNumber = route.params.callerNumber;
   const navigation = useNavigation();
-  const [micOn, setMicOn] = useState(true);
-  const [audioOn, setAudioOn] = useState(false);
+  const [micOn, setMicOn] = useState(false);
+  const [muted, setMuted] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [keyboardOn, setKeyboardOn] = useState(false);
   const [title, setTitle] = useState('');
+
+  useEffect(() => {}, []);
 
   const onCallEstablished = () => {
     console.log('onCallEstablished');
@@ -39,7 +43,14 @@ export const CallScreen = () => {
     console.log('onMuted');
     const isMuted = data.isMuted;
     console.log('is muted ' + isMuted);
-    setMicOn(isMuted);
+    setMuted(isMuted);
+  }, []);
+
+  const onSpeaker = useCallback((data: any) => {
+    console.log('onMuted');
+    const isSpeaker = data.isSpeaker;
+    console.log('is speaker ' + isSpeaker);
+    setMicOn(isSpeaker);
   }, []);
 
   const pressKeyCap = useCallback(
@@ -53,35 +64,37 @@ export const CallScreen = () => {
   );
 
   const triggerSpeak = useCallback(() => {
-    const newStatus = !audioOn;
-    setAudioOn((prev) => !prev);
+    const newStatus = !micOn;
+    // setAudioOn((prev) => !prev);
     toggleSpeak({ useSpeaker: newStatus });
-  }, [audioOn]);
+  }, [micOn]);
 
   const triggerMute = useCallback(() => {
-    setMicOn((prev) => !prev);
+    // setMicOn((prev) => !prev);
     toggleMute();
   }, []);
 
   useEffect(() => {
-    omiEmitter.addListener('onCallEstablished', onCallEstablished);
-    omiEmitter.addListener('onCallEnd', onCallEnd);
-    omiEmitter.addListener('onMuted', onMuted);
+    omiEmitter.addListener(OmiCallEvent.onCallEstablished, onCallEstablished);
+    omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
+    omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
+    omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     return () => {
-      omiEmitter.removeAllListeners('onCallEstablished');
-      omiEmitter.removeAllListeners('onCallEnd');
-      omiEmitter.removeAllListeners('onMuted');
+      omiEmitter.removeAllListeners(OmiCallEvent.onCallEstablished);
+      omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
+      omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
+      omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
     };
-  }, [onCallEnd, onMuted]);
+  }, [onCallEnd, onMuted, onSpeaker]);
 
   return (
     <KeyboardAvoid>
       <View style={styles.background}>
-        <Text style={styles.phone}>{'Phone number'}</Text>
+        <Text style={styles.phone}>{callerNumber ?? ''}</Text>
         {showTimer ? (
           <CustomTimer />
         ) : (
-          <Text style={styles.calling}>{'Calling mobile...'}</Text>
+          <Text style={styles.calling}>{'Calling...'}</Text>
         )}
         {keyboardOn ? (
           <View style={styles.keyboard}>
@@ -98,7 +111,7 @@ export const CallScreen = () => {
           <View style={styles.feature}>
             <TouchableOpacity onPress={triggerMute}>
               <Image
-                source={micOn ? UIImages.micOn : UIImages.micOff}
+                source={!muted ? UIImages.micOn : UIImages.micOff}
                 style={styles.featureImage}
               />
             </TouchableOpacity>
@@ -111,7 +124,7 @@ export const CallScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity onPress={triggerSpeak}>
               <Image
-                source={audioOn ? UIImages.audioOn : UIImages.audioOff}
+                source={micOn ? UIImages.audioOn : UIImages.audioOff}
                 style={styles.featureImage}
               />
             </TouchableOpacity>
