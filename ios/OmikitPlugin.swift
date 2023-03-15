@@ -58,8 +58,8 @@ class OmikitPlugin: RCTEventEmitter {
         resolve(true)
     }
     
-    @objc(toggleSpeak:withResolver:withRejecter:)
-    func toggleSpeak(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    @objc(toggleSpeak:withRejecter:)
+    func toggleSpeak(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().toogleSpeaker()
         sendOnSpeakerStatus()
         resolve(true)
