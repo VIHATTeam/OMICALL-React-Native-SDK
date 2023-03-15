@@ -53,3 +53,11 @@ export function sendDTMF(data: any): Promise<boolean> {
 }
 
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
+
+export const OmiCallEvent = {
+  onCallEstablished: 'CALL_ESTABLISHED',
+  onCallEnd: 'CALL_END',
+  incomingReceived: 'INCOMING_RECEIVED',
+  onSpeaker: 'SPEAKER',
+  onMuted: 'MUTED',
+};

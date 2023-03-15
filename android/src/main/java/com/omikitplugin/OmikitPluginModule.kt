@@ -1,20 +1,83 @@
 package com.omikitplugin
 
 import android.Manifest
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.RCTNativeAppEventEmitter
+import com.omikitplugin.constants.*
 import vn.vihat.omicall.omisdk.OmiClient
 import vn.vihat.omicall.omisdk.OmiListener
-import vn.vihat.omicall.omisdk.OmiSDKUtils
+import vn.vihat.omicall.omisdk.utils.OmiSDKUtils
 
 
 class OmikitPluginModule(reactContext: ReactApplicationContext?) :
-  ReactContextBaseJavaModule(reactContext), OmiListener {
+  ReactContextBaseJavaModule(reactContext) {
+
+
+  private var icSpeaker = false
+  private var isMute = false
+
+  private val callListener = object : OmiListener {
+
+    override fun incomingReceived(callerId: Int, phoneNumber: String?) {
+      val map: WritableMap = WritableNativeMap()
+      map.putBoolean("isVideo", false)
+      map.putString("callerNumber", phoneNumber)
+      sendEvent(INCOMING_RECEIVED, map)
+      Log.d("omikit", "incomingReceived: ")
+    }
+
+    override fun onCallEstablished() {
+      val map: WritableMap = WritableNativeMap()
+      val sipNumber = OmiClient.instance.callUUID
+      map.putString("callerNumber", sipNumber)
+      map.putBoolean("isVideo", false)
+      sendEvent(CALL_ESTABLISHED, map)
+    }
+
+    override fun onCallEnd() {
+      sendEvent(CALL_END, null)
+    }
+
+    override fun onConnectionTimeout() {
+//      sendEvent("onConnectionTimeout", null)
+    }
+
+    override fun onHold(isHold: Boolean) {
+      val map: WritableMap = WritableNativeMap()
+      map.putBoolean("isHold", isHold)
+      sendEvent(HOLD, map)
+    }
+
+    override fun onMuted(isMuted: Boolean) {
+//      val map: WritableMap = WritableNativeMap()
+//      map.putBoolean("isMuted", isMuted)
+//      sendEvent(MUTED, map)
+    }
+
+    override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
+
+    }
+
+    override fun onRinging() {
+//      sendEvent("onRinging", null)
+    }
+
+    override fun onVideoSize(width: Int, height: Int) {
+
+    }
+  }
 
   override fun getName(): String {
     return NAME
+  }
+
+  override fun initialize() {
+    super.initialize()
+    OmiClient(reactApplicationContext!!)
+    OmiClient.instance.setListener(callListener)
   }
 
   @ReactMethod
@@ -23,7 +86,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val userName = data.getString("userName") as String
       val password = data.getString("password") as String
       val realm = data.getString("realm") as String
-      OmiClient.register(reactApplicationContext, userName, password, realm)
+      OmiClient.register(
+        reactApplicationContext!!,
+        userName,
+        password,
+        false,
+        realm,
+        customUI = true,
+        isTcp = true
+      )
       ActivityCompat.requestPermissions(
         currentActivity!!,
         arrayOf(
@@ -36,7 +107,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         ),
         0,
       )
-      OmiClient.instance.setListener(this)
       promise.resolve(true)
     }
   }
@@ -51,7 +121,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         "",
         deviceTokenAndroid,
         deviceId,
-        appId
+        appId,
       )
       promise.resolve(true)
     }
@@ -62,10 +132,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun startCall(data: ReadableMap, promise: Promise) {
     val phoneNumber = data.getString("phoneNumber") as String
     val isVideo = data.getBoolean("isVideo")
-    if (!isVideo) {
-      OmiClient.instance.startCall(phoneNumber)
-      promise.resolve(true)
-    }
+    OmiClient.instance.startCall(phoneNumber, isVideo)
+    promise.resolve(true)
   }
 
   @ReactMethod
@@ -78,6 +146,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun toggleMute(promise: Promise) {
     OmiClient.instance.toggleMute()
     promise.resolve(true)
+    isMute = !isMute
+    sendEvent(MUTED, isMute)
   }
 
   @ReactMethod
@@ -85,6 +155,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     val useSpeaker = data.getBoolean("useSpeaker")
     OmiClient.instance.toggleSpeaker(useSpeaker)
     promise.resolve(true)
+    icSpeaker = !icSpeaker
+    sendEvent(SPEAKER, icSpeaker)
   }
 
   @ReactMethod
@@ -154,38 +226,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         OmiSDKUtils.handlePermissionRequest(requestCode, permissions, grantResults, act)
       }
     }
-  }
-
-  override fun incomingReceived(callerId: Int, phoneNumber: String?) {
-    val map: WritableMap = WritableNativeMap()
-    map.putInt("callerId", callerId)
-    sendEvent("phoneNumber", phoneNumber)
-  }
-
-  override fun onCallEnd() {
-    sendEvent("onCallEnd", false)
-  }
-
-  override fun onCallEstablished() {
-    sendEvent("onCallEstablished", null)
-  }
-
-  override fun onConnectionTimeout() {
-    sendEvent("onConnectionTimeout", null)
-  }
-
-  override fun onHold(isHold: Boolean) {
-    sendEvent("onHold", null)
-  }
-
-  override fun onMuted(isMuted: Boolean) {
-    val map: WritableMap = WritableNativeMap()
-    map.putBoolean("isMuted", isMuted)
-    sendEvent("onMuted", map)
-  }
-
-  override fun onRinging() {
-    sendEvent("onRinging", null)
   }
 
   private fun sendEvent(eventName: String?, params: Any?) {

@@ -1,5 +1,6 @@
 import Foundation
 import React
+import OmiKit
 
 @objc(OmikitPlugin)
 class OmikitPlugin: RCTEventEmitter {
@@ -37,6 +38,7 @@ class OmikitPlugin: RCTEventEmitter {
                 isVideo = isVideoCall
             }
             CallManager.shareInstance().startCall(phoneNumber, isVideo: isVideo)
+            sendOnMuteStatus()
             resolve(true)
         }
     }
@@ -52,12 +54,14 @@ class OmikitPlugin: RCTEventEmitter {
         CallManager.shareInstance().toggleMute {
             NSLog("done toggle mute")
         }
+        sendOnMuteStatus()
         resolve(true)
     }
     
     @objc(toggleSpeak:withResolver:withRejecter:)
     func toggleSpeak(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().toogleSpeaker()
+        sendOnSpeakerStatus()
         resolve(true)
     }
     
@@ -69,14 +73,23 @@ class OmikitPlugin: RCTEventEmitter {
         }
     }
     
+    func sendOnMuteStatus() {
+        if let call = CallManager.shareInstance().currentConfirmedCall, let isMuted = call.muted as? Bool {
+            sendEvent(withName: onMuted, body: ["isMuted": isMuted])
+        }
+    }
+    
+    func sendOnSpeakerStatus() {
+        sendEvent(withName: onSpeaker, body: ["isSpeaker": CallManager.shareInstance().isSpeaker])
+    }
+    
     override func supportedEvents() -> [String]! {
         return [
-            "incomingReceived",
-            "onCallEnd",
-            "onCallEstablished",
-            "onConnectionTimeout",
-            "onMuted",
-            "onRinging"
+            incomingReceived,
+            onCallEstablished,
+            onCallEnd,
+            onMuted,
+            onSpeaker
         ]
     }
 }

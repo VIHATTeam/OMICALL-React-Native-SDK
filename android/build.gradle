@@ -109,7 +109,7 @@ dependencies {
   implementation "com.facebook.react:react-native:+" // From node_modules
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-  api 'vn.vihat.omicall:omi-sdk:0.9.12'
+  api 'vn.vihat.omicall:omi-sdk:1.0.2'
 
   implementation 'androidx.core:core-ktx:1.7.0'
   implementation 'androidx.fragment:fragment-ktx:1.4.0'
@@ -124,6 +124,14 @@ dependencies {
   implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
   implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
   implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.0"
+  implementation 'androidx.databinding:viewbinding:7.1.2'
+  implementation("com.squareup.retrofit2:retrofit:2.9.0") {
+    exclude module: 'okhttp'
+  }
+  implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+  implementation "com.squareup.okhttp3:okhttp:4.9.1"
+  implementation "com.squareup.okhttp3:okhttp-urlconnection:4.9.1"
+  implementation "com.squareup.okhttp3:logging-interceptor:4.9.1"
 }
 
 if (isNewArchitectureEnabled()) {

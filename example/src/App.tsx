@@ -9,7 +9,8 @@ import { Alert } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import React, { useEffect } from 'react';
 import { HomeScreen } from './home';
-import { CallScreen } from './call';
+import { DialCallScreen } from './dial_call';
+import { VideoCallScreen } from './video_call';
 
 const Stack = createNativeStackNavigator();
 
@@ -54,8 +55,15 @@ export const App = (props: AppProps) => {
           }}
         />
         <Stack.Screen
-          name="Call"
-          component={CallScreen}
+          name="DialCall"
+          component={DialCallScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="VideoCall"
+          component={VideoCallScreen}
           options={{
             headerShown: false,
           }}
