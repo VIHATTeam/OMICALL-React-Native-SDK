@@ -15,14 +15,9 @@ import AVFoundation
 class CallManager {
     
     static private var instance: CallManager? = nil // Instance
-    var call: OMICall? // Call
-    private var numberRetry: Int = 0
-    var isCallError: Bool = false  // check when call error
     private let omiLib = OMISIPLib.sharedInstance()
     var isSpeaker = false
-    var currentConfirmedCall : OMICall?
     var videoManager: OMIVideoViewManager?
-    
     
     /// Get instance
     static func shareInstance() -> CallManager {
@@ -30,6 +25,14 @@ class CallManager {
             instance = CallManager()
         }
         return instance!
+    }
+    
+    func getAvailableCall() -> OMICall? {
+        var currentCall = omiLib.getCurrentCall()
+        if (currentCall == nil) {
+            currentCall = omiLib.getNewestCall()
+        }
+        return currentCall
     }
     
     func updateToken(params: [String: Any]) {
@@ -79,7 +82,6 @@ class CallManager {
         if (call.callState == .disconnected) {
             DispatchQueue.main.async {
                 OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
-                self.currentConfirmedCall = nil
             }
         }
     }
@@ -110,7 +112,7 @@ class CallManager {
         case .confirmed:
             NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
             OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: ["isVideo": false, "callerNumber": call.callerNumber])
-            self.currentConfirmedCall = call
+            print(call.muted)
             OmikitPlugin.instance.sendOnMuteStatus()
             break
         case .disconnected:
@@ -119,34 +121,28 @@ class CallManager {
             } else if (!call.userDidHangUp) {
                 NSLog("Call remotly ended, in DISCONNECTED state, with UUID: \(call.uuid)")
             }
-            print(omiLib.getCurrentCall()?.uuid.uuidString)
+//            print(omiLib.getCurrentCall()?.uuid.uuidString)
             print(call.uuid.uuidString)
-            if let currentActiveCall = currentConfirmedCall, currentActiveCall.uuid.uuidString == call.uuid.uuidString {
-                OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
-                currentConfirmedCall = nil
-                break
-            }
-            if currentConfirmedCall == nil {
-                OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
-                break
-            }
-            print(omiLib.getNewestCall()?.uuid.uuidString)
+            OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
+//            print(omiLib.getNewestCall()?.uuid.uuidString)
             break
         case .incoming:
             OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["isVideo": false, "callerNumber": call.callerNumber ?? "", "isIncoming": call.isIncoming])
             break
         case .muted:
+            print("muteddddddd")
             break
         case .hold:
+            print("holdddddddd")
             break
-        @unknown default:
+        default:
             NSLog("Default call state")
+            break
         }
     }
     
     /// Start call
     func startCall(_ phoneNumber: String, isVideo: Bool) {
-//        registerNotificationCenter()
         if (isVideo) {
             OmiClient.startVideoCall(phoneNumber)
             return
@@ -154,65 +150,41 @@ class CallManager {
         OmiClient.startCall(phoneNumber)
     }
     
-    func endCurrentConfirmCall() {
-        var currentCall = omiLib.getCurrentCall()
-        if (currentCall == nil) {
-            currentCall = omiLib.getNewestCall()
-        }
-        if (currentCall == nil) {
+    func endAvailableCall() {
+        guard let call = getAvailableCall() else {
             OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
             return
         }
-        omiLib.callManager.end(currentCall!)
-        //        SwiftOmikitPlugin.instance?.sendEvent(onCallEnd, [:])
-        //        NotificationCenter.default.removeObserver(self)
+        omiLib.callManager.end(call)
     }
     
     
     func endAllCalls() {
         omiLib.callManager.endAllCalls()
-        //        SwiftOmikitPlugin.instance?.sendEvent(onCallEnd, [:])
-        //        NotificationCenter.default.removeObserver(self)
     }
     
     func sendDTMF(character: String) {
-        guard let call = omiLib.getCurrentCall() else {
+        guard let call = getAvailableCall() else {
             return
         }
         try? call.sendDTMF(character)
     }
     
-    
     /// Toogle mtue
-    func toggleMute(completion: @escaping () -> Void?) {
-        guard let omicall = OMISIPLib.sharedInstance().getCurrentCall() else {
-            return
+    func toggleMute() {
+        guard let call = getAvailableCall() else {
+            return 
         }
-        
-        omiLib.callManager.toggleMute(for: omicall) { error in
-            
-        }
-        
+        try? call.toggleMute()
     }
     
     /// Toogle hold
-    func toggleHold(completion: @escaping () -> Void?) {
-        guard let omicall = OMISIPLib.sharedInstance().getCurrentCall() else {
+    func toggleHold() {
+        guard let call = getAvailableCall() else {
             return
         }
-        DispatchQueue.main.async {[weak self] in
-            guard let self = self else { return }
-            self.omiLib.callManager.toggleHold(for: omicall) { error in
-                if error != nil {
-                    NSLog("Error holding current call: \(error!)")
-                    return
-                } else {
-                    completion()
-                }
-            }
-        }
+        try? call.toggleHold()
     }
-    
     
     /// Toogle speaker
     func toogleSpeaker() {
@@ -230,7 +202,6 @@ class CallManager {
             
         }
     }
-    
     
     func inputs() -> [[String: String]] {
         let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
