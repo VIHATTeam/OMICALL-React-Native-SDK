@@ -11,7 +11,13 @@ class OmikitPlugin: RCTEventEmitter {
         super.init()
         OmikitPlugin.instance = self
     }
-
+    
+    @objc(getInitialCall:withRejecter:)
+    func initCall(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        if let call = CallManager.shareInstance().getAvailableCall() {
+            
+        }
+    }
     
     @objc(initCall:withResolver:withRejecter:)
     func initCall(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
@@ -45,15 +51,13 @@ class OmikitPlugin: RCTEventEmitter {
     
     @objc(endCall:withRejecter:)
     func endCall(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        CallManager.shareInstance().endCurrentConfirmCall()
+        CallManager.shareInstance().endAvailableCall()
         resolve(true)
     }
     
     @objc(toggleMute:withRejecter:)
     func toggleMute(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
-        CallManager.shareInstance().toggleMute {
-            NSLog("done toggle mute")
-        }
+        CallManager.shareInstance().toggleMute()
         sendOnMuteStatus()
         resolve(true)
     }
@@ -74,13 +78,16 @@ class OmikitPlugin: RCTEventEmitter {
     }
     
     func sendOnMuteStatus() {
-        if let call = CallManager.shareInstance().currentConfirmedCall, let isMuted = call.muted as? Bool {
-            sendEvent(withName: onMuted, body: ["isMuted": isMuted])
+        if let call = CallManager.shareInstance().getAvailableCall() {
+            if let isMuted = call.muted as? Bool {
+                print("muteeeeed \(isMuted)")
+                sendEvent(withName: onMuted, body: isMuted)
+            }
         }
     }
     
     func sendOnSpeakerStatus() {
-        sendEvent(withName: onSpeaker, body: ["isSpeaker": CallManager.shareInstance().isSpeaker])
+        sendEvent(withName: onSpeaker, body: CallManager.shareInstance().isSpeaker)
     }
     
     override func supportedEvents() -> [String]! {
