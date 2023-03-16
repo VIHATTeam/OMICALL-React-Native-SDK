@@ -14,6 +14,9 @@ RCT_EXTERN_METHOD(updateToken:(id)data
 RCT_EXTERN_METHOD(startCall:(id)data
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(joinCall:
+                 (RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(endCall:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(toggleMute:

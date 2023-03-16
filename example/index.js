@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import React from 'react';
 import { UIColors } from './src/components';
 import { localStorage } from './src/local_storage';
-import { initCall } from 'omikit-plugin';
+import { initCall, getInitialCall } from 'omikit-plugin';
 import { prepareForUpdateToken } from './src/notification';
 import { CustomLoading } from './src/components/custom_view/custom_loading';
 
@@ -22,8 +22,7 @@ export const Main = () => {
     const data = localStorage.getString('login_info');
     const haveLoginInfo = data !== undefined;
     if (haveLoginInfo) {
-      const loginInfoJson = JSON.parse(data);
-      await initCall(loginInfoJson);
+      await initCall({});
       await prepareForUpdateToken();
     }
     setIsLogin(haveLoginInfo);

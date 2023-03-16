@@ -13,10 +13,20 @@ class OmikitPlugin: RCTEventEmitter {
     }
     
     @objc(getInitialCall:withRejecter:)
-    func initCall(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func getInitialCall(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         if let call = CallManager.shareInstance().getAvailableCall() {
-            
+            let callerNumber = call.callerNumber
+            let status = call.lastStatus
+            let muted = call.muted
+            let data : [String: Any] = [
+                "callerNumber" : callerNumber,
+                "status": status,
+                "muted": muted
+            ]
+            resolve(data)
+            return
         }
+        resolve(false)
     }
     
     @objc(initCall:withResolver:withRejecter:)
@@ -47,6 +57,12 @@ class OmikitPlugin: RCTEventEmitter {
             sendOnMuteStatus()
             resolve(true)
         }
+    }
+    
+    @objc(joinCall:withRejecter:)
+    func joinCall(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().joinCall()
+        resolve(true)
     }
     
     @objc(endCall:withRejecter:)

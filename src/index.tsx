@@ -17,6 +17,10 @@ const OmikitPlugin = NativeModules.OmikitPlugin
       }
     );
 
+export function getInitialCall(): Promise<any> {
+  return OmikitPlugin.getInitialCall();
+}
+
 export function initCall(data: any): Promise<boolean> {
   console.log(data);
   return OmikitPlugin.initCall(data);
@@ -30,6 +34,10 @@ export function updateToken(data: any): Promise<void> {
 export function startCall(data: any): Promise<boolean> {
   console.log(data);
   return OmikitPlugin.startCall(data);
+}
+
+export function joinCall(): Promise<boolean> {
+  return OmikitPlugin.joinCall();
 }
 
 export function endCall(): Promise<boolean> {
