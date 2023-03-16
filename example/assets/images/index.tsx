@@ -6,4 +6,5 @@ export const UIImages = {
   audioOff: require('./audio-off.png'),
   comment: require('./comment.png'),
   close: require('./close.png'),
+  joinCall: require('./join_call.png'),
 };

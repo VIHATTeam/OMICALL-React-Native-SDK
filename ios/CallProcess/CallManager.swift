@@ -42,19 +42,19 @@ class CallManager {
     }
     
     func initEndpoint(params: [String: Any]){
-        var isSupportVideoCall = false
+        var isSupportVideoCall = true
         if let userName = params["userName"] as? String, let password = params["password"] as? String, let realm = params["realm"] as? String {
             OmiClient.initWithUsername(userName, password: password, realm: realm)
-            if let isVideoCall = params["isVideo"] as? Bool {
-                isSupportVideoCall = isVideoCall
-            }
-            OmiClient.startOmiService(isSupportVideoCall)
-            if (isSupportVideoCall) {
-                OmiClient.registerAccount()
-                videoManager = OMIVideoViewManager.init()
-            }
-            registerNotificationCenter()
         }
+        if let isVideoCall = params["isVideo"] as? Bool {
+            isSupportVideoCall = isVideoCall
+        }
+        OmiClient.startOmiService(isSupportVideoCall)
+        if (isSupportVideoCall) {
+            OmiClient.registerAccount()
+            videoManager = OMIVideoViewManager.init()
+        }
+        registerNotificationCenter()
     }
     
     func registerNotificationCenter() {
@@ -161,6 +161,17 @@ class CallManager {
     
     func endAllCalls() {
         omiLib.callManager.endAllCalls()
+    }
+    
+    func joinCall() {
+        guard let call = getAvailableCall() else {
+            return
+        }
+        omiLib.callManager.answer(call) { error in
+            if (error != nil) {
+                print(error)
+            }
+        }
     }
     
     func sendDTMF(character: String) {

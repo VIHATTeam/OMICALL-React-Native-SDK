@@ -1,7 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 import { CustomButton, CustomTextField, KeyboardAvoid } from './components';
 import React, { useCallback, useEffect } from 'react';
-import { OmiCallEvent, omiEmitter, startCall } from 'omikit-plugin';
+import {
+  getInitialCall,
+  OmiCallEvent,
+  omiEmitter,
+  startCall,
+} from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 
@@ -10,9 +15,18 @@ export const HomeScreen = () => {
   var phone = '';
   const navigation = useNavigation();
 
+  const checkInitCall = useCallback(async () => {
+    const callingInfo = await getInitialCall();
+    if (callingInfo !== false) {
+      // const { callerNumber, muted, status } = callingInfo;
+      navigation.navigate('DialCall' as never, callingInfo as never);
+    }
+  }, [navigation]);
+
   useEffect(() => {
     prepareForUpdateToken();
-  }, []);
+    checkInitCall();
+  }, [checkInitCall]);
 
   const incomingReceived = useCallback(
     (data: any) => {

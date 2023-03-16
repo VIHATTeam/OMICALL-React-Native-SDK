@@ -128,13 +128,22 @@ export const DialCallScreen = ({ route }: any) => {
             </TouchableOpacity>
           </View>
         )}
-        <TouchableOpacity
-          onPress={async () => {
-            await endCall();
-          }}
-        >
-          <Image source={UIImages.hangup} style={styles.hangup} />
-        </TouchableOpacity>
+        <View style={styles.call}>
+          <TouchableOpacity
+            onPress={async () => {
+              await endCall();
+            }}
+          >
+            <Image source={UIImages.hangup} style={styles.hangup} />
+          </TouchableOpacity>
+          {/* <TouchableOpacity
+            onPress={async () => {
+              await joinCall();
+            }}
+          >
+            <Image source={UIImages.joinCall} style={styles.hangup} />
+          </TouchableOpacity> */}
+        </View>
       </View>
     </KeyboardAvoid>
   );
@@ -177,6 +186,10 @@ const styles = StyleSheet.create({
   hangup: {
     width: 60,
     height: 60,
+  },
+  call: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginBottom: 30,
   },
 });
