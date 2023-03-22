@@ -25,8 +25,8 @@ export const LoginScreen = () => {
   const phoneFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var userName = '101';
-  var password = 'Kunkun12345';
+  var userName = '111';
+  var password = 'P5JgMhMWhm';
   var realm = 'dky';
   const navigation = useNavigation();
 
