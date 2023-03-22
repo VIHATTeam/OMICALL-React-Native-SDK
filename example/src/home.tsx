@@ -12,7 +12,7 @@ import { prepareForUpdateToken } from './notification';
 
 export const HomeScreen = () => {
   ///need add call phone
-  var phone = '';
+  var phone = '112';
   const navigation = useNavigation();
 
   const checkInitCall = useCallback(async () => {
@@ -67,7 +67,7 @@ export const HomeScreen = () => {
           placeHolder="Phone number"
           keyboardType="phone-pad"
           ///need add call phone
-          value=""
+          value={phone}
           returnKey={'done'}
           onChange={(text: string) => {
             phone = text;

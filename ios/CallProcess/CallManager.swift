@@ -28,7 +28,7 @@ class CallManager {
     }
     
     func getAvailableCall() -> OMICall? {
-        var currentCall = omiLib.getCurrentCall()
+        var currentCall = omiLib.getCurrentConfirmCall()
         if (currentCall == nil) {
             currentCall = omiLib.getNewestCall()
         }
@@ -42,15 +42,10 @@ class CallManager {
     }
     
     func initEndpoint(params: [String: Any]){
-        var isSupportVideoCall = true
         if let userName = params["userName"] as? String, let password = params["password"] as? String, let realm = params["realm"] as? String {
             OmiClient.initWithUsername(userName, password: password, realm: realm)
         }
-        if let isVideoCall = params["isVideo"] as? Bool {
-            isSupportVideoCall = isVideoCall
-        }
-        OmiClient.startOmiService(isSupportVideoCall)
-        if (isSupportVideoCall) {
+        if let isVideoCall = params["isVideo"] as? Bool, isVideoCall == true {
             OmiClient.registerAccount()
             videoManager = OMIVideoViewManager.init()
         }
@@ -121,10 +116,8 @@ class CallManager {
             } else if (!call.userDidHangUp) {
                 NSLog("Call remotly ended, in DISCONNECTED state, with UUID: \(call.uuid)")
             }
-//            print(omiLib.getCurrentCall()?.uuid.uuidString)
             print(call.uuid.uuidString)
             OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
-//            print(omiLib.getNewestCall()?.uuid.uuidString)
             break
         case .incoming:
             OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["isVideo": false, "callerNumber": call.callerNumber ?? "", "isIncoming": call.isIncoming])
