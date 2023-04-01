@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View, Platform } from 'react-native';
 import React, {
   MutableRefObject,
   useCallback,
@@ -20,14 +20,16 @@ import { requestNotification } from './notification';
 import { localStorage } from './local_storage';
 
 export const LoginScreen = () => {
-  const [isVideo, setIsVideo] = useState(false);
+  const [isVideo, setIsVideo] = useState(true);
   const [loading, setLoading] = useState(false);
   const phoneFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var userName = '111';
-  var password = 'P5JgMhMWhm';
+  const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
+  var userName = Platform.OS === 'android' ? '112' : '111';
+  var password = Platform.OS === 'android' ? 'kjO8XbGZZG' : 'P5JgMhMWhm';
   var realm = 'dky';
+  var host = '171.244.138.14';
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -43,6 +45,7 @@ export const LoginScreen = () => {
       password: password,
       realm: realm,
       isVideo: isVideo,
+      host: host,
     };
     console.log(loginInfo);
     const result = await initCall(loginInfo);
@@ -56,7 +59,7 @@ export const LoginScreen = () => {
         navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
       }
     }, 2000);
-  }, [password, userName, navigation, realm, isVideo]);
+  }, [password, userName, navigation, realm, isVideo, host]);
 
   const _videoTrigger = useCallback(() => {
     setIsVideo(!isVideo);
@@ -83,6 +86,7 @@ export const LoginScreen = () => {
             value={password}
             isPassword={true}
             currentFocus={passwordFocus}
+            nextFocus={realmFocus}
             onChange={(text: string) => {
               password = text;
             }}
@@ -90,11 +94,22 @@ export const LoginScreen = () => {
           <CustomTextField
             placeHolder="Realm"
             style={styles.passwordInput}
-            value={realm}
+            value={host}
             isPassword={true}
             currentFocus={realmFocus}
+            nextFocus={hostFocus}
             onChange={(text: string) => {
               realm = text;
+            }}
+          />
+          <CustomTextField
+            placeHolder="Host"
+            style={styles.passwordInput}
+            value={realm}
+            isPassword={true}
+            currentFocus={hostFocus}
+            onChange={(text: string) => {
+              host = text;
             }}
           />
           <CustomCheckBox
