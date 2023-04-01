@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { CustomTimer, KeyboardAvoid, UIColors } from './components';
+import { CallStatus, CustomTimer, KeyboardAvoid, UIColors } from './components';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   endCall,
@@ -8,6 +8,7 @@ import {
   sendDTMF,
   toggleMute,
   toggleSpeak,
+  joinCall,
 } from 'omikit-plugin';
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
@@ -16,24 +17,22 @@ import { CustomKeyboard } from './components/custom_view/custom_keyboard';
 export const DialCallScreen = ({ route }: any) => {
   const callerNumber = route.params.callerNumber;
   const navigation = useNavigation();
+  const [status, setStatus] = useState(route.params.status);
   const [micOn, setMicOn] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
   const [keyboardOn, setKeyboardOn] = useState(false);
   const [title, setTitle] = useState('');
 
-  useEffect(() => {}, []);
-
   const onCallEstablished = () => {
     console.log('onCallEstablished');
-    setShowTimer(true);
+    setStatus(CallStatus.established);
   };
 
   const onCallEnd = useCallback(
     (data: any) => {
+      setStatus(CallStatus.end);
       console.log('onCallEnd');
       console.log(data);
-      setShowTimer(false);
       navigation.goBack();
     },
     [navigation]
@@ -89,45 +88,55 @@ export const DialCallScreen = ({ route }: any) => {
     <KeyboardAvoid>
       <View style={styles.background}>
         <Text style={styles.phone}>{callerNumber ?? ''}</Text>
-        {showTimer ? (
-          <CustomTimer />
-        ) : (
-          <Text style={styles.calling}>{'Calling...'}</Text>
-        )}
-        {keyboardOn ? (
-          <View style={styles.keyboard}>
-            <CustomKeyboard
-              callback={pressKeyCap}
-              title={title}
-              close={() => {
-                setTitle('');
-                setKeyboardOn(false);
-              }}
-            />
-          </View>
-        ) : (
-          <View style={styles.feature}>
-            <TouchableOpacity onPress={triggerMute}>
-              <Image
-                source={!muted ? UIImages.micOn : UIImages.micOff}
-                style={styles.featureImage}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                setKeyboardOn(true);
-              }}
-            >
-              <Image source={UIImages.comment} style={styles.featureImage} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={triggerSpeak}>
-              <Image
-                source={micOn ? UIImages.audioOn : UIImages.audioOff}
-                style={styles.featureImage}
-              />
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={styles.title}>
+          {status === CallStatus.established ? (
+            <CustomTimer />
+          ) : (
+            <Text style={styles.status}>{status}</Text>
+          )}
+        </View>
+        <View style={styles.feature}>
+          {status === CallStatus.established ? (
+            keyboardOn ? (
+              <View style={styles.keyboard}>
+                <CustomKeyboard
+                  callback={pressKeyCap}
+                  title={title}
+                  close={() => {
+                    setTitle('');
+                    setKeyboardOn(false);
+                  }}
+                />
+              </View>
+            ) : (
+              <View style={styles.feature}>
+                <TouchableOpacity onPress={triggerMute}>
+                  <Image
+                    source={!muted ? UIImages.micOn : UIImages.micOff}
+                    style={styles.featureImage}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    console.log('keyboard on');
+                    setKeyboardOn(true);
+                  }}
+                >
+                  <Image
+                    source={UIImages.comment}
+                    style={styles.featureImage}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={triggerSpeak}>
+                  <Image
+                    source={micOn ? UIImages.audioOn : UIImages.audioOff}
+                    style={styles.featureImage}
+                  />
+                </TouchableOpacity>
+              </View>
+            )
+          ) : null}
+        </View>
         <View style={styles.call}>
           <TouchableOpacity
             onPress={async () => {
@@ -136,13 +145,15 @@ export const DialCallScreen = ({ route }: any) => {
           >
             <Image source={UIImages.hangup} style={styles.hangup} />
           </TouchableOpacity>
-          {/* <TouchableOpacity
-            onPress={async () => {
-              await joinCall();
-            }}
-          >
-            <Image source={UIImages.joinCall} style={styles.hangup} />
-          </TouchableOpacity> */}
+          {status === CallStatus.ringing ? (
+            <TouchableOpacity
+              onPress={async () => {
+                await joinCall();
+              }}
+            >
+              <Image source={UIImages.joinCall} style={styles.hangup} />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
     </KeyboardAvoid>
@@ -162,10 +173,12 @@ const styles = StyleSheet.create({
     color: UIColors.textColor,
     fontWeight: '700',
   },
-  calling: {
+  title: {
+    marginTop: 16,
+  },
+  status: {
     fontSize: 20,
     color: UIColors.textColor,
-    marginTop: 8,
   },
   feature: {
     flexGrow: 1,
@@ -188,6 +201,7 @@ const styles = StyleSheet.create({
     height: 60,
   },
   call: {
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 30,

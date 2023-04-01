@@ -46,7 +46,7 @@ class CallManager {
             OmiClient.initWithUsername(userName, password: password, realm: realm)
         }
         if let isVideoCall = params["isVideo"] as? Bool, isVideoCall == true {
-            OmiClient.registerAccount()
+            OmiClient.startOmiService(true)
             videoManager = OMIVideoViewManager.init()
         }
         registerNotificationCenter()
@@ -68,7 +68,7 @@ class CallManager {
             )
         }
     }
-    
+
     @objc func callDealloc(_ notification: NSNotification) {
         guard let userInfo = notification.userInfo,
               let call     = userInfo[OMINotificationUserInfoCallKey] as? OMICall else {
@@ -106,7 +106,7 @@ class CallManager {
             break
         case .confirmed:
             NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
-            OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: ["isVideo": false, "callerNumber": call.callerNumber])
+            OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber])
             print(call.muted)
             OmikitPlugin.instance.sendOnMuteStatus()
             break
@@ -120,7 +120,7 @@ class CallManager {
             OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
             break
         case .incoming:
-            OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["isVideo": false, "callerNumber": call.callerNumber ?? "", "isIncoming": call.isIncoming])
+            OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber ?? ""])
             break
         case .muted:
             print("muteddddddd")
@@ -160,11 +160,7 @@ class CallManager {
         guard let call = getAvailableCall() else {
             return
         }
-        omiLib.callManager.answer(call) { error in
-            if (error != nil) {
-                print(error)
-            }
-        }
+        OmiClient.answerIncommingCall(call.uuid)
     }
     
     func sendDTMF(character: String) {

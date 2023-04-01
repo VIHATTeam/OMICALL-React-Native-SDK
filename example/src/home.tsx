@@ -1,5 +1,10 @@
 import { StyleSheet, View } from 'react-native';
-import { CustomButton, CustomTextField, KeyboardAvoid } from './components';
+import {
+  CallStatus,
+  CustomButton,
+  CustomTextField,
+  KeyboardAvoid,
+} from './components';
 import React, { useCallback, useEffect } from 'react';
 import {
   getInitialCall,
@@ -32,8 +37,13 @@ export const HomeScreen = () => {
     (data: any) => {
       console.log('incomingReceived');
       console.log(data);
-      // const { isVideo, callerNumber, isIncoming } = data;
-      navigation.navigate('DialCall' as never, data as never);
+
+      const { callerNumber } = data;
+      const input = {
+        callerNumber: callerNumber,
+        status: CallStatus.ringing,
+      };
+      navigation.navigate('DialCall' as never, input as never);
     },
     [navigation]
   );
@@ -55,6 +65,7 @@ export const HomeScreen = () => {
       const data = {
         callerNumber: phone,
         isVideo: false,
+        status: CallStatus.calling,
       };
       navigation.navigate('DialCall' as never, data as never);
     }
