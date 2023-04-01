@@ -49,16 +49,11 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
   <key>NSAppTransportSecurity</key>
-    <dict>
-      <key>NSExceptionDomains</key>
-      <dict>
-        <key>localhost</key>
-        <dict>
-          <key>NSExceptionAllowsInsecureHTTPLoads</key>
-          <true/>
-        </dict>
-      </dict>
-    </dict>
+  <dict>
+    <!--Include to allow all connections (DANGER)-->
+    <key>NSAllowsArbitraryLoads</key>
+        <true/>
+  </dict>
   <key>NSUserActivityTypes</key>
   <array>
       <string>INStartCallIntent</string>

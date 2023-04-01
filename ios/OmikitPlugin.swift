@@ -49,11 +49,8 @@ class OmikitPlugin: RCTEventEmitter {
     func startCall(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         if let dataOmi = data as? [String: Any] {
             let phoneNumber = dataOmi["phoneNumber"] as! String
-            var isVideo = false
-            if let isVideoCall = dataOmi["isVideo"] as? Bool {
-                isVideo = isVideoCall
-            }
-            CallManager.shareInstance().startCall(phoneNumber, isVideo: isVideo)
+            let isVideo = dataOmi["isVideo"] as? Bool
+            CallManager.shareInstance().startCall(phoneNumber, isVideo: isVideo ?? false)
             sendOnMuteStatus()
             resolve(true)
         }

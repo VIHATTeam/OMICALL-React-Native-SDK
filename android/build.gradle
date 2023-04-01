@@ -70,19 +70,6 @@ android {
 
 }
 
-repositories {
-  mavenCentral()
-  google()
-  jcenter() // Warning: this repository is going to shut down soon
-  maven {
-    url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
-    credentials {
-      username = "downloader"
-      password = "Omi@2022"
-    }
-  }
-}
-
 allprojects {
   repositories {
     google()
@@ -109,7 +96,7 @@ dependencies {
   implementation "com.facebook.react:react-native:+" // From node_modules
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-  api 'vn.vihat.omicall:omi-sdk:1.0.2'
+  api 'vn.vihat.omicall:omi-sdk:1.0.8'
 
   implementation 'androidx.core:core-ktx:1.7.0'
   implementation 'androidx.fragment:fragment-ktx:1.4.0'
