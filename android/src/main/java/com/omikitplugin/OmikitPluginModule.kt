@@ -1,6 +1,9 @@
 package com.omikitplugin
 
 import android.Manifest
+import android.content.Context
+import android.hardware.camera2.CameraManager
+import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.facebook.react.ReactActivity
@@ -21,24 +24,29 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   private val callListener = object : OmiListener {
 
-    override fun incomingReceived(callerId: Int, phoneNumber: String?) {
+    override fun incomingReceived(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
       val map: WritableMap = WritableNativeMap()
-      map.putBoolean("isVideo", false)
+      map.putBoolean("isVideo", isVideo ?: true)
       map.putString("callerNumber", phoneNumber)
       sendEvent(INCOMING_RECEIVED, map)
       Log.d("omikit", "incomingReceived: ")
     }
 
-    override fun onCallEstablished() {
+    override fun onCallEnd() {
+      sendEvent(CALL_END, null)
+    }
+
+    override fun onCallEstablished(
+      callerId: Int,
+      phoneNumber: String?,
+      isVideo: Boolean?,
+      startTime: Long,
+    ) {
       val map: WritableMap = WritableNativeMap()
       val sipNumber = OmiClient.instance.callUUID
       map.putString("callerNumber", sipNumber)
-      map.putBoolean("isVideo", false)
+      map.putBoolean("isVideo", isVideo ?: true)
       sendEvent(CALL_ESTABLISHED, map)
-    }
-
-    override fun onCallEnd() {
-      sendEvent(CALL_END, null)
     }
 
     override fun onConnectionTimeout() {
@@ -83,32 +91,68 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun initCall(data: ReadableMap, promise: Promise) {
     currentActivity?.runOnUiThread {
-      val userName = data.getString("userName") as String
-      val password = data.getString("password") as String
-      val realm = data.getString("realm") as String
-      OmiClient.register(
-        reactApplicationContext!!,
-        userName,
-        password,
-        false,
-        realm,
-        customUI = true,
-        isTcp = true
-      )
-      ActivityCompat.requestPermissions(
-        currentActivity!!,
-        arrayOf(
-          Manifest.permission.USE_SIP,
-          Manifest.permission.CALL_PHONE,
-          Manifest.permission.POST_NOTIFICATIONS,
-          Manifest.permission.CAMERA,
-          Manifest.permission.MODIFY_AUDIO_SETTINGS,
-          Manifest.permission.RECORD_AUDIO,
-        ),
-        0,
-      )
+      val userName = data.getString("userName")
+      val password = data.getString("password")
+      val realm = data.getString("realm")
+      val host = data.getString("host")
+      val isVideo = data.getBoolean("isVideo")
+      if (userName != null && password != null && realm != null && host != null) {
+        OmiClient.register(
+          reactApplicationContext!!,
+          userName,
+          password,
+          isVideo,
+          realm,
+          host = host,
+          customUI = true,
+          isTcp = true
+        )
+      }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ActivityCompat.requestPermissions(
+          currentActivity!!,
+          arrayOf(
+            Manifest.permission.USE_SIP,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.CAMERA,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.POST_NOTIFICATIONS,
+          ),
+          0,
+        )
+      } else {
+        ActivityCompat.requestPermissions(
+          currentActivity!!,
+          arrayOf(
+            Manifest.permission.USE_SIP,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.CAMERA,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS,
+            Manifest.permission.RECORD_AUDIO,
+          ),
+          0,
+        )
+      }
+      if (isVideo) {
+        val cm = currentActivity!!.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        OmiClient.instance.setCameraManager(cm)
+      }
       promise.resolve(true)
     }
+  }
+
+  @ReactMethod
+  fun getInitialCall(promise: Promise) {
+    currentActivity?.runOnUiThread {
+      promise.resolve(false)
+    }
+  }
+
+  @ReactMethod
+  fun joinCall(promise: Promise) {
+    OmiClient.instance.pickUp(true)
+    promise.resolve(true)
   }
 
   @ReactMethod
@@ -126,7 +170,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       promise.resolve(true)
     }
   }
-
 
   @ReactMethod
   fun startCall(data: ReadableMap, promise: Promise) {
@@ -159,41 +202,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   @ReactMethod
-  fun decline(promise: Promise) {
-    OmiClient.instance.decline()
-    promise.resolve(true)
-  }
-
-  @ReactMethod
-  fun hangup(data: ReadableMap, promise: Promise) {
-    val callId = data.getInt("callId")
-    OmiClient.instance.hangUp(callId)
-    promise.resolve(true)
-  }
-
-
-  @ReactMethod
-  fun onCallStart(data: ReadableMap, promise: Promise) {
-    val callId = data.getInt("callId")
-    OmiClient.instance.onCallStarted(callId)
-    promise.resolve(true)
-  }
-
-  @ReactMethod
-  fun onHold(data: ReadableMap, promise: Promise) {
-    val isHold = data.getBoolean("isHold")
-    OmiClient.instance.onHold(isHold)
-    promise.resolve(true)
-  }
-
-  @ReactMethod
-  fun onMute(data: ReadableMap, promise: Promise) {
-    val isMute = data.getBoolean("isMute")
-    OmiClient.instance.onMuted(isMute)
-    promise.resolve(true)
-  }
-
-  @ReactMethod
   fun sendDTMF(data: ReadableMap, promise: Promise) {
     val character = data.getString("character")
     var characterCode: Int? = character?.toIntOrNull()
@@ -212,7 +220,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   companion object {
     const val NAME = "OmikitPlugin"
     fun onDestroy() {
-      OmiClient.instance.disconnect()
+
     }
 
     fun onRequestPermissionsResult(

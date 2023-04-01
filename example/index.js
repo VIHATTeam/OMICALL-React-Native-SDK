@@ -22,8 +22,10 @@ export const Main = () => {
     const data = localStorage.getString('login_info');
     const haveLoginInfo = data !== undefined;
     if (haveLoginInfo) {
-      await initCall({});
-      await prepareForUpdateToken();
+      await initCall({
+        isVideo: true,
+      });
+      // await prepareForUpdateToken();
     }
     setIsLogin(haveLoginInfo);
     setLoading(false);

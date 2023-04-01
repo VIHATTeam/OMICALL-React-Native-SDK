@@ -3,6 +3,10 @@ package com.omikitpluginexample;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
+import com.facebook.react.modules.core.PermissionListener;
+import com.omikitplugin.OmikitPluginModule;
+
+import vn.vihat.omicall.omisdk.OmiClient;
 
 public class MainActivity extends ReactActivity {
 
@@ -44,5 +48,17 @@ public class MainActivity extends ReactActivity {
       // More on this on https://reactjs.org/blog/2022/03/29/react-v18.html
       return BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
     }
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    OmikitPluginModule.Companion.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+  }
+
+  @Override
+  protected void onDestroy() {
+    OmikitPluginModule.Companion.onDestroy();
+    super.onDestroy();
   }
 }

@@ -4,15 +4,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
   <application
-      android:name=".MainApplication"
+      android:name="com.omikitpluginexample.MainApplication"
       android:label="Omikit Plugin Example"
       android:icon="@mipmap/ic_launcher"
       android:allowBackup="false"
       android:roundIcon="@mipmap/ic_launcher_round"
-      android:theme="@style/AppTheme"
-      android:networkSecurityConfig="@xml/network_security_config">
+      android:theme="@style/AppTheme">
       <activity
-        android:name=".MainActivity"
+        android:name="com.omikitpluginexample.MainActivity"
         android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
         android:launchMode="singleTask"
         android:hardwareAccelerated="true"
@@ -22,6 +21,18 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+        <intent-filter>
+          <action android:name="com.omicall.sdk.CallingActivity"/>
+          <category android:name="android.intent.category.DEFAULT" />
+        </intent-filter>
       </activity>
+    <service
+      android:name="vn.vihat.omicall.omisdk.service.FMService"
+      android:enabled="true"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+      </intent-filter>
+    </service>
     </application>
 </manifest>

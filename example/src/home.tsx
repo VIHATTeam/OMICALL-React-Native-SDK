@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import {
   CallStatus,
   CustomButton,
@@ -17,7 +17,7 @@ import { prepareForUpdateToken } from './notification';
 
 export const HomeScreen = () => {
   ///need add call phone
-  var phone = '112';
+  var phone = Platform.OS === 'android' ? '111' : '112';
   const navigation = useNavigation();
 
   const checkInitCall = useCallback(async () => {

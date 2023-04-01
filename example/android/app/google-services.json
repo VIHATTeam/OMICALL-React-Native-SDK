@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "682956500665",
-    "project_id": "concung-5772a",
-    "storage_bucket": "concung-5772a.appspot.com"
+    "project_number": "956961781484",
+    "project_id": "example-sdk-omi",
+    "storage_bucket": "example-sdk-omi.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:682956500665:android:7847a05fd9acf8c5d9f568",
+        "mobilesdk_app_id": "1:956961781484:android:58ef928538d9bae07057c9",
         "android_client_info": {
-          "package_name": "omicall.concung.dev"
+          "package_name": "vn.vihat.omicall.sdk_example"
         }
       },
       "oauth_client": [
         {
-          "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+          "client_id": "956961781484-g9ij0cpv2sm9bun9mm9aj6pqsst8r8b7.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyC22nNQ2MPkN7n_MVOUTHtNbzQhNZyrSME"
+          "current_key": "AIzaSyDrWtKMSs5Wz9tx60x1ri_bg5tmfqKebSU"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+              "client_id": "956961781484-g9ij0cpv2sm9bun9mm9aj6pqsst8r8b7.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
