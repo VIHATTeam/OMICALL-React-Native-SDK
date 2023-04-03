@@ -274,14 +274,20 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     ```
   - Toggle the speaker: On/off the phone speaker
     ```
-    OmicallClient.instance.toggleSpeaker();
+    import {toggleSpeak} from 'omikit-plugin';
+    
+    toggleSpeak();
     ```
   - Send character: We only support `1 to 9` and `* #`.
     ```
-    OmicallClient.instance.sendDTMF(value);
+    import {sendDTMF} from 'omikit-plugin';
+    
+    sendDTMF({
+        character: text,
+    });
     ```
 
-* Event listener:
+- Event listener:
 
 ```
 useEffect(() => {
@@ -289,21 +295,17 @@ useEffect(() => {
     omiEmitter.addListener('onCallEstablished', onCallEstablished);
     omiEmitter.addListener('onCallEnd', onCallEnd);
     omiEmitter.addListener('onMuted', onMuted);
-    omiEmitter.addListener('onRinging', onRinging);
     return () => {
         omiEmitter.removeAllListeners('incomingReceived');
         omiEmitter.removeAllListeners('onCallEstablished');
         omiEmitter.removeAllListeners('onCallEnd');
         omiEmitter.removeAllListeners('onMuted');
-        omiEmitter.removeAllListeners('onRinging');
     };
 }, []);
-
 ```
-
-* Event List: `We support 5 events`
-  * `onCallEnd`: Trigger when end the call.
-  * `onCallEstablished`: Trigger when we created the call.
-  * `onRinging`: Trigger when the phone is ringing.
-  * `onHold`: Trigger when user hold the call. From parameters, you can reviceved correct status from server through `isHold`
-  * `onMuted`: Trigger when user muted the call. From parameters, you can reviceved correct status from server through `isMuted`
+- Action Name value: 
+    - `incomingReceived`: Have a incoming call. On Android this event work only foreground
+    - `onCallEstablished`: Connected a call.
+    - `onCallEnd`: End a call.
+    - `onMuted`: Audio changed.
+- Data value: We return `callerNumber`, `isVideo: true/false` information
