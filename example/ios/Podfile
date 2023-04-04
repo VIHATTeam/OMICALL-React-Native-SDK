@@ -16,7 +16,6 @@ target 'OmikitPluginExample' do
   pod 'Firebase', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
-  pod 'OmiKit', :git => 'https://github.com/VIHATTeam/OmiKit.git'
 
   use_react_native!(
     :path => config[:reactNativePath],
