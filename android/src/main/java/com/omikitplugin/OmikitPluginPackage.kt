@@ -12,6 +12,6 @@ class OmikitPluginPackage : ReactPackage {
   }
 
   override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-    return emptyList()
+    return listOf(FLLocalCameraView(reactContext), FLRemoteCameraView(reactContext))
   }
 }
