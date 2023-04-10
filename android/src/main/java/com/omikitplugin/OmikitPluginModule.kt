@@ -97,13 +97,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun initialize() {
     super.initialize()
-    OmiClient(context = reactApplicationContext!!)
-    OmiClient.instance.setListener(callListener)
-    OmiClient.instance.addAccountListener(accountListener)
   }
 
   @ReactMethod
   fun startServices(promise: Promise) {
+    OmiClient(context = reactApplicationContext!!)
+    OmiClient.instance.setListener(callListener)
+    OmiClient.instance.addAccountListener(accountListener)
+    val needSetupVideo = OmiClient.instance.needSetupCamera()
+    if (needSetupVideo) {
+      setCamera()
+    }
     promise.resolve(true)
   }
 

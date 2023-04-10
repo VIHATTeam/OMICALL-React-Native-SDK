@@ -19,7 +19,7 @@ import { LiveData } from './livedata';
 
 export const HomeScreen = () => {
   ///need add call phone
-  var phone = Platform.OS === 'android' ? '116' : '115';
+  var phone = Platform.OS === 'android' ? '115' : '116';
   const navigation = useNavigation();
   const [callVideo, setCallVideo] = useState(true);
 
@@ -92,14 +92,17 @@ export const HomeScreen = () => {
     if (phone.trim().length === 0) {
       return;
     }
-    const result = await startCall({ phoneNumber: phone, isVideo: false });
+    const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
     if (result) {
       const data = {
         callerNumber: phone,
-        isVideo: false,
         status: CallStatus.calling,
       };
-      navigation.navigate('DialCall' as never, data as never);
+      if (callVideo === true) {
+        navigation.navigate('VideoCall' as never, data as never);
+      } else {
+        navigation.navigate('DialCall' as never, data as never);
+      }
     }
   };
 

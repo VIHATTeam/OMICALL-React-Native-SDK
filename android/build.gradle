@@ -96,7 +96,7 @@ dependencies {
   implementation "com.facebook.react:react-native:+" // From node_modules
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-  api 'vn.vihat.omicall:omi-sdk:1.0.48'
+  api 'vn.vihat.omicall:omi-sdk:1.0.50'
 
   implementation 'androidx.core:core-ktx:1.7.0'
   implementation 'androidx.fragment:fragment-ktx:1.4.0'

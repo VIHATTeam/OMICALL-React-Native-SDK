@@ -8,7 +8,7 @@
     "start": "react-native start",
     "pods": "pod-install --quiet",
     "build:ios": "react-native bundle --entry-file ./index.js --platform ios --bundle-output ios/main.jsbundle --assets-dest ios",
-    "build:android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res"
+    "build:android": "react-native bundle --platform android --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --dev false --reset-cache --assets-dest android/app/src/main/res/"
   },
   "dependencies": {
     "@react-native-firebase/app": "^17.3.1",
