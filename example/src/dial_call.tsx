@@ -13,6 +13,7 @@ import {
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
 import { CustomKeyboard } from './components/custom_view/custom_keyboard';
+import { LiveData } from './livedata';
 
 export const DialCallScreen = ({ route }: any) => {
   const callerNumber = route.params.callerNumber;
@@ -22,6 +23,7 @@ export const DialCallScreen = ({ route }: any) => {
   const [muted, setMuted] = useState(false);
   const [keyboardOn, setKeyboardOn] = useState(false);
   const [title, setTitle] = useState('');
+  const [needBack, setNeedBack] = useState(true);
 
   const onCallEstablished = () => {
     console.log('onCallEstablished');
@@ -33,9 +35,11 @@ export const DialCallScreen = ({ route }: any) => {
       setStatus(CallStatus.end);
       console.log('onCallEnd');
       console.log(data);
-      navigation.goBack();
+      if (needBack) {
+        navigation.goBack();
+      }
     },
-    [navigation]
+    [navigation, needBack]
   );
 
   const onMuted = useCallback((data: any) => {
@@ -76,11 +80,14 @@ export const DialCallScreen = ({ route }: any) => {
     omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
+    LiveData.isOpenedCall = true;
     return () => {
+      console.log('remove widget');
       omiEmitter.removeAllListeners(OmiCallEvent.onCallEstablished);
       omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
+      LiveData.isOpenedCall = false;
     };
   }, [onCallEnd, onMuted, onSpeaker]);
 
@@ -140,7 +147,10 @@ export const DialCallScreen = ({ route }: any) => {
         <View style={styles.call}>
           <TouchableOpacity
             onPress={async () => {
-              await endCall();
+              setNeedBack(false);
+              endCall();
+              omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
+              navigation.goBack();
             }}
           >
             <Image source={UIImages.hangup} style={styles.hangup} />

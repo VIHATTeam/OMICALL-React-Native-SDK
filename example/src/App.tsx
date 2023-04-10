@@ -5,9 +5,7 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { UIColors } from './components';
 import { LoginScreen } from './login';
-import { Alert } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { HomeScreen } from './home';
 import { DialCallScreen } from './dial_call';
 import { VideoCallScreen } from './video_call';
@@ -21,14 +19,6 @@ interface AppProps {
 export const App = (props: AppProps) => {
   const { isLogin } = props;
   const navigationRef = useNavigationContainerRef();
-
-  useEffect(() => {
-    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
-      Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
-    });
-
-    return unsubscribe;
-  }, []);
 
   return (
     <NavigationContainer ref={navigationRef}>
