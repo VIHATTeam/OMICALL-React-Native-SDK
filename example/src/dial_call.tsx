@@ -1,4 +1,11 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  BackHandler,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { CallStatus, CustomTimer, KeyboardAvoid, UIColors } from './components';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -90,6 +97,16 @@ export const DialCallScreen = ({ route }: any) => {
       LiveData.isOpenedCall = false;
     };
   }, [onCallEnd, onMuted, onSpeaker]);
+
+  useEffect(() => {
+    const onBackPress = () => {
+      return true;
+    };
+    BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    };
+  }, []);
 
   return (
     <KeyboardAvoid>

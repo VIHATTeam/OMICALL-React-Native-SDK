@@ -18,7 +18,7 @@ export const Main = () => {
   }, [initData]);
 
   const initData = useCallback(async () => {
-    // await startServices();
+    startServices();
     if (Platform.OS === 'android') {
       configPushNotification({
         prefix: 'Cuộc gọi tới từ: ',
@@ -56,7 +56,8 @@ export const Main = () => {
 
 const styles = StyleSheet.create({
   loading: {
-    flex: 1,
+    width: '100%',
+    height: '100%',
     backgroundColor: UIColors.white,
     alignItems: 'center',
     justifyContent: 'center',

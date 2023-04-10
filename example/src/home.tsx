@@ -2,10 +2,11 @@ import { StyleSheet, View, Platform } from 'react-native';
 import {
   CallStatus,
   CustomButton,
+  CustomCheckBox,
   CustomTextField,
   KeyboardAvoid,
 } from './components';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   getInitialCall,
   OmiCallEvent,
@@ -18,8 +19,9 @@ import { LiveData } from './livedata';
 
 export const HomeScreen = () => {
   ///need add call phone
-  var phone = Platform.OS === 'android' ? '112' : '116';
+  var phone = Platform.OS === 'android' ? '116' : '115';
   const navigation = useNavigation();
+  const [callVideo, setCallVideo] = useState(true);
 
   const checkInitCall = useCallback(async () => {
     const callingInfo = await getInitialCall();
@@ -34,17 +36,26 @@ export const HomeScreen = () => {
     checkInitCall();
   }, [checkInitCall]);
 
+  const _videoTrigger = useCallback(() => {
+    setCallVideo(!callVideo);
+  }, [callVideo]);
+
   const incomingReceived = useCallback(
     (data: any) => {
       console.log('incomingReceived');
       console.log(data);
 
-      const { callerNumber } = data;
+      const { callerNumber, isVideo } = data;
       const input = {
         callerNumber: callerNumber,
         status: CallStatus.ringing,
       };
-      navigation.navigate('DialCall' as never, input as never);
+      console.log(isVideo);
+      if (isVideo === true) {
+        navigation.navigate('VideoCall' as never, input as never);
+      } else {
+        navigation.navigate('DialCall' as never, input as never);
+      }
     },
     [navigation]
   );
@@ -105,6 +116,12 @@ export const HomeScreen = () => {
             phone = text;
           }}
         />
+        <CustomCheckBox
+          title="Video call"
+          checked={callVideo}
+          callback={_videoTrigger}
+          style={styles.checkbox}
+        />
         <CustomButton title="CALL" callback={call} style={styles.button} />
       </View>
     </KeyboardAvoid>
@@ -115,6 +132,9 @@ const styles = StyleSheet.create({
   background: {
     padding: 24,
     flex: 1,
+  },
+  checkbox: {
+    marginTop: 24,
   },
   button: {
     marginTop: 24,
