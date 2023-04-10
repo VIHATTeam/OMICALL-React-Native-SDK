@@ -14,10 +14,11 @@ import {
 } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
+import { LiveData } from './livedata';
 
 export const HomeScreen = () => {
   ///need add call phone
-  var phone = Platform.OS === 'android' ? '111' : '112';
+  var phone = Platform.OS === 'android' ? '112' : '116';
   const navigation = useNavigation();
 
   const checkInitCall = useCallback(async () => {
@@ -48,12 +49,32 @@ export const HomeScreen = () => {
     [navigation]
   );
 
+  const establishedReceived = useCallback(
+    (data: any) => {
+      console.log(LiveData.isOpenedCall);
+      if (LiveData.isOpenedCall === true) {
+        return;
+      }
+      console.log('establishedReceived');
+      console.log(data);
+      const { callerNumber } = data;
+      const input = {
+        callerNumber: callerNumber,
+        status: CallStatus.established,
+      };
+      navigation.navigate('DialCall' as never, input as never);
+    },
+    [navigation]
+  );
+
   useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.incomingReceived, incomingReceived);
+    omiEmitter.addListener(OmiCallEvent.onCallEstablished, establishedReceived);
     return () => {
       omiEmitter.removeAllListeners(OmiCallEvent.incomingReceived);
+      omiEmitter.removeAllListeners(OmiCallEvent.onCallEstablished);
     };
-  }, [incomingReceived]);
+  }, [incomingReceived, establishedReceived]);
 
   const call = async () => {
     // navigation.navigate('Call' as never);

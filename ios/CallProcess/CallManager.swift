@@ -16,7 +16,6 @@ class CallManager {
     
     static private var instance: CallManager? = nil // Instance
     private let omiLib = OMISIPLib.sharedInstance()
-    var isSpeaker = false
     var videoManager: OMIVideoViewManager?
     
     /// Get instance
@@ -41,15 +40,36 @@ class CallManager {
         }
     }
     
-    func initEndpoint(params: [String: Any]){
-        if let userName = params["userName"] as? String, let password = params["password"] as? String, let realm = params["realm"] as? String {
+    private func requestPermission(isVideo: Bool) {
+        AVCaptureDevice.requestAccess(for: .audio) { _ in
+            print("request audio")
+        }
+        if isVideo {
+            AVCaptureDevice.requestAccess(for: .video) { _ in
+                print("request video")
+            }
+        }
+    }
+    
+    func initWithApiKeyEndpoint(params: [String: Any]) -> Bool {
+        //request permission
+        var result = true
+        if let usrUuid = params["usrUuid"] as? String, let fullName = params["fullName"] as? String, let apiKey = params["apiKey"] as? String {
+            result = OmiClient.initWithUUID(usrUuid, fullName: fullName, apiKey: apiKey)
+        }
+        let isVideo = (params["isVideo"] as? Bool) ?? true
+        requestPermission(isVideo: isVideo)
+        return result
+    }
+    
+    
+    func initWithUserPasswordEndpoint(params: [String: Any]) -> Bool {
+        if let userName = params["userName"] as? String, let password = params["password"] as? String, let realm = params["realm"] as? String, let host = params["host"] as? String {
             OmiClient.initWithUsername(userName, password: password, realm: realm)
         }
-        if let isVideoCall = params["isVideo"] as? Bool, isVideoCall == true {
-            OmiClient.startOmiService(true)
-            videoManager = OMIVideoViewManager.init()
-        }
-        registerNotificationCenter()
+        let isVideo = (params["isVideo"] as? Bool) ?? true
+        requestPermission(isVideo: isVideo)
+        return true
     }
     
     func registerNotificationCenter() {
@@ -68,15 +88,21 @@ class CallManager {
             )
         }
     }
-
+    
     @objc func callDealloc(_ notification: NSNotification) {
         guard let userInfo = notification.userInfo,
               let call     = userInfo[OMINotificationUserInfoCallKey] as? OMICall else {
             return;
         }
         if (call.callState == .disconnected) {
-            DispatchQueue.main.async {
-                OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
+            DispatchQueue.main.async {[weak self] in
+                guard let self = self else { return }
+                if (self.videoManager != nil) {
+                    self.videoManager = nil
+                }
+                DispatchQueue.main.async {
+                    OmikitPlugin.instance.sendEvent(withName: CALL_END, body: [:])
+                }
             }
         }
     }
@@ -106,9 +132,11 @@ class CallManager {
             break
         case .confirmed:
             NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call.uuid)")
-            OmikitPlugin.instance.sendEvent(withName: onCallEstablished, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber])
-            print(call.muted)
-            OmikitPlugin.instance.sendOnMuteStatus()
+            if (videoManager == nil && call.isVideo) {
+                videoManager = OMIVideoViewManager.init()
+            }
+            OmikitPlugin.instance.sendEvent(withName: CALL_ESTABLISHED, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber])
+            OmikitPlugin.instance.sendMuteStatus()
             break
         case .disconnected:
             if (!call.connected) {
@@ -116,11 +144,14 @@ class CallManager {
             } else if (!call.userDidHangUp) {
                 NSLog("Call remotly ended, in DISCONNECTED state, with UUID: \(call.uuid)")
             }
+            if (videoManager != nil) {
+                videoManager = nil
+            }
             print(call.uuid.uuidString)
-            OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
+            OmikitPlugin.instance.sendEvent(withName: CALL_END, body: [:])
             break
         case .incoming:
-            OmikitPlugin.instance.sendEvent(withName: incomingReceived, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber ?? ""])
+            OmikitPlugin.instance.sendEvent(withName: INCOMING_RECEIVED, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber ?? ""])
             break
         case .muted:
             print("muteddddddd")
@@ -135,22 +166,32 @@ class CallManager {
     }
     
     /// Start call
-    func startCall(_ phoneNumber: String, isVideo: Bool) {
+    func startCall(_ phoneNumber: String, isVideo: Bool) -> Bool {
         if (isVideo) {
-            OmiClient.startVideoCall(phoneNumber)
-            return
+            return OmiClient.startVideoCall(phoneNumber)
         }
-        OmiClient.startCall(phoneNumber)
+        return OmiClient.startCall(phoneNumber)
+    }
+    
+    /// Start call
+    func startCallWithUuid(_ uuid: String, isVideo: Bool) -> Bool {
+        let phoneNumber = OmiClient.getPhone(uuid)
+        if let phone = phoneNumber {
+            if (isVideo) {
+                return OmiClient.startVideoCall(phone)
+            }
+            return OmiClient.startCall(phone)
+        }
+        return false
     }
     
     func endAvailableCall() {
         guard let call = getAvailableCall() else {
-            OmikitPlugin.instance.sendEvent(withName: onCallEnd, body: [:])
+            OmikitPlugin.instance.sendEvent(withName: CALL_END, body: [:])
             return
         }
         omiLib.callManager.end(call)
     }
-    
     
     func endAllCalls() {
         omiLib.callManager.endAllCalls()
@@ -173,7 +214,7 @@ class CallManager {
     /// Toogle mtue
     func toggleMute() {
         guard let call = getAvailableCall() else {
-            return 
+            return
         }
         try? call.toggleMute()
     }
@@ -188,32 +229,28 @@ class CallManager {
     
     /// Toogle speaker
     func toogleSpeaker() {
-        do {
-            if (!isSpeaker) {
-                isSpeaker = true
-                try AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
-                
-            } else {
-                isSpeaker = false
-                try AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
-            }
-        } catch (let error){
-            NSLog("Error toogleSpeaker current call: \(error)")
-            
+        guard let call = getAvailableCall() else {
+            return
+        }
+        let speaker = call.speaker
+        if !speaker {
+            try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
+        } else {
+            try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
         }
     }
     
     func inputs() -> [[String: String]] {
-        let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
-        let results = inputs.map { item in
-            return [
-                "name": item.portName,
-                "id": item.uid,
-            ]
-        }
-        return results
+          let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
+          let results = inputs.map { item in
+              return [
+                  "name": item.portName,
+                  "id": item.uid,
+              ]
+          }
+          return results
     }
-    
+      
     func setInput(id: String) {
         let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
         if let newOutput = inputs.first(where: {$0.uid == id}) {
@@ -224,10 +261,10 @@ class CallManager {
     func outputs() -> [[String: String]] {
         let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
         var results = outputs.map { item in
-            return [
-                "name": item.portName,
-                "id": item.uid,
-            ]
+           return [
+              "name": item.portName,
+              "id": item.uid,
+           ]
         }
         let hasSpeaker = results.contains{ $0["name"] == "Speaker" }
         if (!hasSpeaker) {

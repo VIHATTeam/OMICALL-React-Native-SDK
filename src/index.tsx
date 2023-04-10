@@ -17,13 +17,26 @@ const OmikitPlugin = NativeModules.OmikitPlugin
       }
     );
 
+export function startServices(): Promise<any> {
+  return OmikitPlugin.startServices();
+}
+
+export function configPushNotification(data: any): Promise<any> {
+  return OmikitPlugin.configPushNotification(data);
+}
+
 export function getInitialCall(): Promise<any> {
   return OmikitPlugin.getInitialCall();
 }
 
-export function initCall(data: any): Promise<boolean> {
+export function initCallWithUserPassword(data: any): Promise<boolean> {
   console.log(data);
-  return OmikitPlugin.initCall(data);
+  return OmikitPlugin.initCallWithUserPassword(data);
+}
+
+export function initCallWithApiKey(data: any): Promise<boolean> {
+  console.log(data);
+  return OmikitPlugin.initCallWithApiKey(data);
 }
 
 export function updateToken(data: any): Promise<void> {
@@ -34,6 +47,11 @@ export function updateToken(data: any): Promise<void> {
 export function startCall(data: any): Promise<boolean> {
   console.log(data);
   return OmikitPlugin.startCall(data);
+}
+
+export function startCallWithUuid(data: any): Promise<boolean> {
+  console.log(data);
+  return OmikitPlugin.startCallWithUuid(data);
 }
 
 export function joinCall(): Promise<boolean> {
@@ -68,4 +86,5 @@ export const OmiCallEvent = {
   incomingReceived: 'INCOMING_RECEIVED',
   onSpeaker: 'SPEAKER',
   onMuted: 'MUTED',
+  // onVideo: 'VIDEO',
 };

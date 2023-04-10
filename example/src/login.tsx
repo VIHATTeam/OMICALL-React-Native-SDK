@@ -12,7 +12,7 @@ import {
   CustomTextField,
   KeyboardAvoid,
 } from './components';
-import { initCall } from 'omikit-plugin';
+import { initCallWithUserPassword } from 'omikit-plugin';
 // import { requestNotification } from './notification';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
@@ -26,8 +26,8 @@ export const LoginScreen = () => {
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var userName = Platform.OS === 'android' ? '112' : '111';
-  var password = Platform.OS === 'android' ? 'kjO8XbGZZG' : 'P5JgMhMWhm';
+  var userName = Platform.OS === 'android' ? '111' : '115';
+  var password = Platform.OS === 'android' ? 'P5JgMhMWhm' : 'VlAkzpm2Fn';
   var realm = 'dky';
   var host = '171.244.138.14';
   const navigation = useNavigation();
@@ -48,7 +48,7 @@ export const LoginScreen = () => {
       host: host,
     };
     console.log(loginInfo);
-    const result = await initCall(loginInfo);
+    const result = await initCallWithUserPassword(loginInfo);
     //save login info
     setTimeout(async () => {
       setLoading(false);

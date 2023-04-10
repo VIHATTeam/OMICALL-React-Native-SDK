@@ -1,15 +1,23 @@
-////
-////  LocalCameraView.swift
-////  omicall_flutter_plugin
-////
-////  Created by PRO 2019 16' on 15/02/2023.
-////
 //
-//import Foundation
-//import Flutter
-//import WebKit
-//import UIKit
-//import OmiKit
+//  LocalCameraView.swift
+//  omicall_flutter_plugin
+//
+//  Created by PRO 2019 16' on 15/02/2023.
+//
+
+import Foundation
+import React
+import UIKit
+import OmiKit
+
+@objc(FLLocalCameraView)
+class FLLocalCameraView: RCTViewManager {
+    override func view() -> UIView! {
+        let view = UIView()
+        view.backgroundColor = .red
+        return view
+    }
+}
 //
 //class FLLocalCameraFactory: NSObject, FlutterPlatformViewFactory {
 //    private var messenger: FlutterBinaryMessenger
