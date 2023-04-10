@@ -49,6 +49,7 @@ export const App = (props: AppProps) => {
           component={DialCallScreen}
           options={{
             headerShown: false,
+            gestureEnabled: false,
           }}
         />
         <Stack.Screen
@@ -56,6 +57,7 @@ export const App = (props: AppProps) => {
           component={VideoCallScreen}
           options={{
             headerShown: false,
+            gestureEnabled: false,
           }}
         />
         {/* <Stack.Screen name="Tips" component={TipsScreen} />

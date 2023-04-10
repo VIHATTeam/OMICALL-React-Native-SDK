@@ -26,9 +26,9 @@ export const LoginScreen = () => {
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var userName = Platform.OS === 'android' ? '111' : '115';
-  var password = Platform.OS === 'android' ? 'P5JgMhMWhm' : 'VlAkzpm2Fn';
-  var realm = 'dky';
+  var userName = Platform.OS === 'android' ? '116' : '115';
+  var password = Platform.OS === 'android' ? 'vWmFFBZwss' : 'VlAkzpm2Fn';
+  var realm = 'thaonguyennguyen1197';
   var host = '171.244.138.14';
   const navigation = useNavigation();
 
