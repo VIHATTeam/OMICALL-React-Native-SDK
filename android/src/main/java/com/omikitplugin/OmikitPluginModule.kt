@@ -311,6 +311,50 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
+  @ReactMethod
+  fun switchOmiCamera(promise: Promise) {
+    currentActivity?.runOnUiThread {
+      OmiClient.instance.switchCamera()
+      promise.resolve(true)
+    }
+  }
+
+  @ReactMethod
+  fun toggleOmiVideo(promise: Promise) {
+    currentActivity?.runOnUiThread {
+      OmiClient.instance.toggleCamera()
+      promise.resolve(true)
+    }
+  }
+
+  @ReactMethod
+  fun omiInputs(promise: Promise) {
+    currentActivity?.runOnUiThread {
+      val inputs = OmiClient.instance.getAudioInputs()
+      val allAudios = inputs.map {
+        mapOf(
+          "name" to it.first,
+          "id" to it.second,
+        )
+      }.toTypedArray()
+      promise.resolve(allAudios)
+    }
+  }
+
+  @ReactMethod
+  fun omiOutputs(promise: Promise) {
+    currentActivity?.runOnUiThread {
+      val inputs = OmiClient.instance.getAudioOutputs()
+      val allAudios = inputs.map {
+        mapOf(
+          "name" to it.first,
+          "id" to it.second,
+        )
+      }.toTypedArray()
+      promise.resolve(allAudios)
+    }
+  }
+
   companion object {
     const val NAME = "OmikitPlugin"
     fun onDestroy() {
