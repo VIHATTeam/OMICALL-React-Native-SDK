@@ -152,12 +152,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         OmiClient.register(
           userName,
           password,
-          isVideo ?: true,
+          isVideo,
           realm,
           host,
         )
       }
-      requestPermission(isVideo ?: true)
+      requestPermission(isVideo)
       if (isVideo) {
         setCamera()
       }
@@ -180,14 +180,14 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
               apiKey = apiKey,
               userName = usrName,
               uuid = usrUuid,
-              isVideo ?: true,
+              isVideo,
             )
           }
         } catch (_ : Throwable) {
 
         }
       }
-      requestPermission(isVideo ?: true)
+      requestPermission(isVideo)
       if (isVideo) {
         setCamera()
       }
@@ -230,8 +230,25 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     currentActivity?.runOnUiThread {
       val phoneNumber = data.getString("phoneNumber") as String
       val isVideo = data.getBoolean("isVideo")
-      OmiClient.instance.startCall(phoneNumber, isVideo)
-      promise.resolve(true)
+      val result = OmiClient.instance.startCall(phoneNumber, isVideo)
+      promise.resolve(result)
+    }
+  }
+
+  @ReactMethod
+  fun startCallWithUuid(data: ReadableMap, promise: Promise) {
+    mainScope.launch {
+      var callResult = false
+      withContext(Dispatchers.Default) {
+        try {
+          val uuid = data.getString("usrUuid") as String
+          val isVideo = data.getBoolean("isVideo")
+          callResult = OmiClient.instance.startCallWithUuid(uuid = uuid, isVideo = isVideo)
+        } catch (_ : Throwable) {
+
+        }
+      }
+      promise.resolve(callResult)
     }
   }
 
@@ -268,7 +285,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   @ReactMethod
-  fun toggleSpeak(promise: Promise) {
+  fun toggleSpeaker(promise: Promise) {
     currentActivity?.runOnUiThread {
       val newStatus = OmiClient.instance.toggleSpeaker()
       promise.resolve(newStatus)

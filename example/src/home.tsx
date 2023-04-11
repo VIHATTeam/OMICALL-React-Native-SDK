@@ -11,7 +11,8 @@ import {
   getInitialCall,
   OmiCallEvent,
   omiEmitter,
-  startCall,
+  // startCall,
+  startCallWithUuid,
 } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
@@ -19,7 +20,8 @@ import { LiveData } from './livedata';
 
 export const HomeScreen = () => {
   ///need add call phone
-  var phone = Platform.OS === 'android' ? '115' : '116';
+  var phone = Platform.OS === 'android' ? '123aaa' : '122aaa';
+  // var phone = Platform.OS === 'android' ? '115' : '116';
   const navigation = useNavigation();
   const [callVideo, setCallVideo] = useState(true);
 
@@ -68,12 +70,16 @@ export const HomeScreen = () => {
       }
       console.log('establishedReceived');
       console.log(data);
-      const { callerNumber } = data;
+      const { callerNumber, isVideo } = data;
       const input = {
         callerNumber: callerNumber,
         status: CallStatus.established,
       };
-      navigation.navigate('DialCall' as never, input as never);
+      if (isVideo === true) {
+        navigation.navigate('VideoCall' as never, input as never);
+      } else {
+        navigation.navigate('DialCall' as never, input as never);
+      }
     },
     [navigation]
   );
@@ -87,12 +93,35 @@ export const HomeScreen = () => {
     };
   }, [incomingReceived, establishedReceived]);
 
+  // const call = async () => {
+  //   // navigation.navigate('Call' as never);
+  //   if (phone.trim().length === 0) {
+  //     return;
+  //   }
+  //   const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
+  //   if (result) {
+  //     const data = {
+  //       callerNumber: phone,
+  //       status: CallStatus.calling,
+  //     };
+  //     if (callVideo === true) {
+  //       navigation.navigate('VideoCall' as never, data as never);
+  //     } else {
+  //       navigation.navigate('DialCall' as never, data as never);
+  //     }
+  //   }
+  // };
+
   const call = async () => {
     // navigation.navigate('Call' as never);
     if (phone.trim().length === 0) {
       return;
     }
-    const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
+    const result = await startCallWithUuid({
+      usrUuid: phone,
+      isVideo: callVideo,
+    });
+    console.log(result);
     if (result) {
       const data = {
         callerNumber: phone,
@@ -110,8 +139,7 @@ export const HomeScreen = () => {
     <KeyboardAvoid>
       <View style={styles.background}>
         <CustomTextField
-          placeHolder="Phone number"
-          keyboardType="phone-pad"
+          placeHolder="Phone number/Usr Uuid"
           ///need add call phone
           value={phone}
           returnKey={'done'}

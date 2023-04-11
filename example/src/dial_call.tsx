@@ -14,7 +14,7 @@ import {
   omiEmitter,
   sendDTMF,
   toggleMute,
-  toggleSpeak,
+  toggleSpeaker,
   joinCall,
 } from 'omikit-plugin';
 import { UIImages } from '../assets';
@@ -74,7 +74,7 @@ export const DialCallScreen = ({ route }: any) => {
   );
 
   const triggerSpeak = useCallback(() => {
-    toggleSpeak();
+    toggleSpeaker();
   }, []);
 
   const triggerMute = useCallback(() => {

@@ -9,6 +9,7 @@ import React from 'react';
 import { HomeScreen } from './home';
 import { DialCallScreen } from './dial_call';
 import { VideoCallScreen } from './video_call';
+import { LoginApiKeyScreen } from './login_with_apikey';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,7 +24,7 @@ export const App = (props: AppProps) => {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
-        initialRouteName={isLogin ? 'Home' : 'Login'}
+        initialRouteName={isLogin ? 'Home' : 'LoginAPIKey'}
         screenOptions={{
           headerStyle: { backgroundColor: UIColors.mainColor },
           headerTintColor: '#fff',
@@ -36,6 +37,7 @@ export const App = (props: AppProps) => {
           headerBackTitleVisible: false,
         }}
       >
+        <Stack.Screen name="LoginAPIKey" component={LoginApiKeyScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen
           name="Home"
