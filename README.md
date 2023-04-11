@@ -344,7 +344,7 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
   ```
   - Toggle a video in video call: On/off video in video call
   ```
-  import {toggleVideo} from 'omikit-plugin';
+  import {toggleOmiVideo} from 'omikit-plugin';
   toggleOmiVideo();
   ```
   - Local Camera Widget: Your camera view in a call

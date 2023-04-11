@@ -116,6 +116,18 @@ class OmikitPlugin: RCTEventEmitter {
         }
     }
     
+    @objc(switchOmiCamera:withRejecter:)
+    func switchOmiCamera(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().switchCamera()
+        resolve(true)
+    }
+    
+    @objc(toggleOmiVideo:withRejecter:)
+    func toggleOmiVideo(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().toggleCamera()
+        resolve(true)
+    }
+    
     func sendMuteStatus() {
         if let call = CallManager.shareInstance().getAvailableCall() {
             sendEvent(withName: MUTED, body: call.muted)

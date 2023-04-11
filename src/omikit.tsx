@@ -78,6 +78,14 @@ export function sendDTMF(data: any): Promise<boolean> {
   return OmikitPlugin.sendDTMF(data);
 }
 
+export function switchOmiCamera(): Promise<boolean> {
+  return OmikitPlugin.switchOmiCamera();
+}
+
+export function toggleOmiVideo(): Promise<boolean> {
+  return OmikitPlugin.toggleOmiVideo();
+}
+
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 
 export const OmiCallEvent = {
