@@ -274,9 +274,9 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     ```
   - Toggle the speaker: On/off the phone speaker
     ```
-    import {toggleSpeak} from 'omikit-plugin';
+    import {toggleSpeaker} from 'omikit-plugin';
     
-    toggleSpeak();
+    toggleSpeaker();
     ```
   - Send character: We only support `1 to 9` and `* #`.
     ```

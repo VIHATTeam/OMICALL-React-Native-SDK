@@ -11,7 +11,7 @@ import {
   OmiRemoteCameraView,
   refreshRemoteCamera,
   toggleMute,
-  toggleSpeak,
+  toggleSpeaker,
   joinCall,
   endCall,
 } from 'omikit-plugin';
@@ -62,7 +62,7 @@ export const VideoCallScreen = ({ route }: any) => {
   }, []);
 
   const triggerSpeak = useCallback(() => {
-    toggleSpeak();
+    toggleSpeaker();
   }, []);
 
   const triggerMute = useCallback(() => {

@@ -12,24 +12,24 @@ import {
   CustomTextField,
   KeyboardAvoid,
 } from './components';
-import { initCallWithUserPassword } from 'omikit-plugin';
+import { initCallWithApiKey } from 'omikit-plugin';
 // import { requestNotification } from './notification';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
 import { requestNotification } from './notification';
 import { localStorage } from './local_storage';
 
-export const LoginScreen = () => {
+export const LoginApiKeyScreen = () => {
   const [isVideo, setIsVideo] = useState(true);
   const [loading, setLoading] = useState(false);
   const phoneFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var userName = Platform.OS === 'android' ? '116' : '115';
-  var password = Platform.OS === 'android' ? 'vWmFFBZwss' : 'VlAkzpm2Fn';
-  var realm = 'thaonguyennguyen1197';
-  var host = '171.244.138.14';
+  var usrUuid = Platform.OS === 'android' ? '122aaa' : '123aaa';
+  var fullName = Platform.OS === 'android' ? 'chau1' : 'chau2';
+  var apiKey =
+    '0ACE08B2F03BE1D6B3F7F5CCD34D9AC08CB92976E2AB6CEE6EA38C5C96F1B858';
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -37,18 +37,17 @@ export const LoginScreen = () => {
   }, []);
 
   const loginUser = useCallback(async () => {
-    console.log(userName);
-    console.log(password);
+    console.log(usrUuid);
+    console.log(fullName);
     setLoading(true);
     const loginInfo = {
-      userName: userName,
-      password: password,
-      realm: realm,
+      usrUuid: usrUuid,
+      fullName: fullName,
+      apiKey: apiKey,
       isVideo: isVideo,
-      host: host,
     };
     console.log(loginInfo);
-    const result = await initCallWithUserPassword(loginInfo);
+    const result = await initCallWithApiKey(loginInfo);
     //save login info
     setLoading(false);
     if (result) {
@@ -57,7 +56,7 @@ export const LoginScreen = () => {
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
     }
-  }, [password, userName, navigation, realm, isVideo, host]);
+  }, [usrUuid, fullName, navigation, isVideo, apiKey]);
 
   const _videoTrigger = useCallback(() => {
     setIsVideo(!isVideo);
@@ -68,46 +67,36 @@ export const LoginScreen = () => {
       <KeyboardAvoid>
         <View style={styles.background}>
           <CustomTextField
-            placeHolder="User name"
+            placeHolder="User Uuid"
             // keyboardType="phone-pad"
-            value={userName}
+            value={usrUuid}
             returnKey={'next'}
             currentFocus={phoneFocus}
             nextFocus={passwordFocus}
             onChange={(text: string) => {
-              userName = text;
+              usrUuid = text;
             }}
           />
           <CustomTextField
-            placeHolder="Password"
+            placeHolder="Fullname"
             style={styles.passwordInput}
-            value={password}
+            value={fullName}
             isPassword={true}
             currentFocus={passwordFocus}
             nextFocus={realmFocus}
             onChange={(text: string) => {
-              password = text;
+              fullName = text;
             }}
           />
           <CustomTextField
-            placeHolder="Realm"
+            placeHolder="Apikey"
             style={styles.passwordInput}
-            value={host}
+            value={apiKey}
             isPassword={true}
             currentFocus={realmFocus}
             nextFocus={hostFocus}
             onChange={(text: string) => {
-              realm = text;
-            }}
-          />
-          <CustomTextField
-            placeHolder="Host"
-            style={styles.passwordInput}
-            value={realm}
-            isPassword={true}
-            currentFocus={hostFocus}
-            onChange={(text: string) => {
-              host = text;
+              apiKey = text;
             }}
           />
           <CustomCheckBox

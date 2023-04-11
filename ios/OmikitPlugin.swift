@@ -68,7 +68,6 @@ class OmikitPlugin: RCTEventEmitter {
             let phoneNumber = dataOmi["phoneNumber"] as! String
             let isVideo = dataOmi["isVideo"] as? Bool
             let result = CallManager.shareInstance().startCall(phoneNumber, isVideo: isVideo ?? false)
-            sendMuteStatus()
             resolve(result)
         }
     }
@@ -76,10 +75,9 @@ class OmikitPlugin: RCTEventEmitter {
     @objc(startCallWithUuid:withResolver:withRejecter:)
     func startCallWithUuid(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         if let dataOmi = data as? [String: Any] {
-            let uuid = dataOmi["uuid"] as! String
+            let uuid = dataOmi["usrUuid"] as! String
             let isVideo = dataOmi["isVideo"] as? Bool
             let result = CallManager.shareInstance().startCallWithUuid(uuid, isVideo: isVideo ?? false)
-            sendMuteStatus()
             resolve(result)
         }
     }
@@ -99,22 +97,15 @@ class OmikitPlugin: RCTEventEmitter {
     @objc(toggleMute:withRejecter:)
     func toggleMute(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().toggleMute()
-        sendMuteStatus()
         if let call = CallManager.shareInstance().getAvailableCall() {
             resolve(call.muted)
         }
     }
     
-    @objc(toggleSpeak:withRejecter:)
-    func toggleSpeak(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
-        CallManager.shareInstance().toogleSpeaker()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {[weak self] in
-            guard let self = self else { return }
-            self.sendSpeakerStatus()
-            if let call = CallManager.shareInstance().getAvailableCall() {
-                resolve(call.speaker)
-            }
-        }
+    @objc(toggleSpeaker:withRejecter:)
+    func toggleSpeaker(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().toogleSpeaker() 
+        resolve(CallManager.shareInstance().isSpeaker)
     }
     
     @objc(sendDTMF:withResolver:withRejecter:)
@@ -132,9 +123,7 @@ class OmikitPlugin: RCTEventEmitter {
     }
     
     func sendSpeakerStatus() {
-        if let call = CallManager.shareInstance().getAvailableCall() {
-            sendEvent(withName: SPEAKER, body: call.speaker)
-        }
+        sendEvent(withName: SPEAKER, body: CallManager.shareInstance().isSpeaker)
 
     }
     

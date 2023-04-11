@@ -17,6 +17,7 @@ class CallManager {
     static private var instance: CallManager? = nil // Instance
     private let omiLib = OMISIPLib.sharedInstance()
     var videoManager: OMIVideoViewManager?
+    var isSpeaker = false
     
     /// Get instance
     static func shareInstance() -> CallManager {
@@ -135,8 +136,10 @@ class CallManager {
             if (videoManager == nil && call.isVideo) {
                 videoManager = OMIVideoViewManager.init()
             }
+            isSpeaker = call.isVideo
             OmikitPlugin.instance.sendEvent(withName: CALL_ESTABLISHED, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber])
             OmikitPlugin.instance.sendMuteStatus()
+            OmikitPlugin.instance.sendSpeakerStatus()
             break
         case .disconnected:
             if (!call.connected) {
@@ -229,15 +232,13 @@ class CallManager {
     
     /// Toogle speaker
     func toogleSpeaker() {
-        guard let call = getAvailableCall() else {
-            return
-        }
-        let speaker = call.speaker
-        if !speaker {
+        if !isSpeaker {
             try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
         } else {
             try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
         }
+        isSpeaker = !isSpeaker
+        OmikitPlugin.instance.sendSpeakerStatus()
     }
     
     func inputs() -> [[String: String]] {

@@ -45,7 +45,7 @@ RCT_EXTERN_METHOD(toggleMute:
                  (RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(toggleSpeak:
+RCT_EXTERN_METHOD(toggleSpeaker:
                  (RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
