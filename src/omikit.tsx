@@ -86,6 +86,10 @@ export function toggleOmiVideo(): Promise<boolean> {
   return OmikitPlugin.toggleOmiVideo();
 }
 
+export function logout(): Promise<boolean> {
+  return OmikitPlugin.logout();
+}
+
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 
 export const OmiCallEvent = {

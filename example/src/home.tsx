@@ -13,10 +13,12 @@ import {
   omiEmitter,
   // startCall,
   startCallWithUuid,
+  logout,
 } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 import { LiveData } from './livedata';
+import { localStorage } from './local_storage';
 
 export const HomeScreen = () => {
   ///need add call phone
@@ -135,6 +137,12 @@ export const HomeScreen = () => {
     }
   };
 
+  const logoutCB = async () => {
+    await logout();
+    localStorage.clearAll();
+    navigation.reset({ index: 0, routes: [{ name: 'LoginAPIKey' as never }] });
+  };
+
   return (
     <KeyboardAvoid>
       <View style={styles.background}>
@@ -154,6 +162,11 @@ export const HomeScreen = () => {
           style={styles.checkbox}
         />
         <CustomButton title="CALL" callback={call} style={styles.button} />
+        <CustomButton
+          title="LOG OUT"
+          callback={logoutCB}
+          style={styles.button}
+        />
       </View>
     </KeyboardAvoid>
   );

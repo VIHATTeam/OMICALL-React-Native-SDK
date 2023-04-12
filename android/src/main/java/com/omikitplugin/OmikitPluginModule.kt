@@ -207,15 +207,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun updateToken(data: ReadableMap, promise: Promise) {
     mainScope.launch {
       val deviceTokenAndroid = data.getString("fcmToken") as String
-      val appId = data.getString("appId") as String
-      val deviceId = data.getString("deviceId") as String
       withContext(Dispatchers.Default) {
         try {
           OmiClient.instance.updatePushToken(
             "",
             deviceTokenAndroid,
-            deviceId,
-            appId,
           )
         } catch (_ : Throwable) {
 
@@ -352,6 +348,20 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         )
       }.toTypedArray()
       promise.resolve(allAudios)
+    }
+  }
+
+  @ReactMethod
+  fun logout(promise: Promise) {
+    mainScope.launch {
+      withContext(Dispatchers.Default) {
+        try {
+          OmiClient.instance.logout()
+        } catch (_ : Throwable) {
+
+        }
+      }
+      promise.resolve(true)
     }
   }
 

@@ -241,6 +241,10 @@ class CallManager {
         OmikitPlugin.instance.sendSpeakerStatus()
     }
     
+    func logout() {
+        OmiClient.logout()
+    }
+    
     func inputs() -> [[String: String]] {
           let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
           let results = inputs.map { item in
