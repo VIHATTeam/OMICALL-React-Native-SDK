@@ -129,6 +129,12 @@ class OmikitPlugin: RCTEventEmitter {
         resolve(true)
     }
     
+    @objc(logout:withRejecter:)
+    func logout(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().logout()
+        resolve(true)
+    }
+    
     func sendMuteStatus() {
         if let call = CallManager.shareInstance().getAvailableCall() {
             sendEvent(withName: MUTED, body: call.muted)

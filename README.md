@@ -9,11 +9,11 @@ The most important part of the framework is :
 - Optimize codec voip for you.
 - Full inteface to interactive with core function like sound/ringtone/codec.
 
-## Status
+### Status
 
-Currently active maintainance and improve performance
+Currently active maintenance and improve performance
 
-## Running
+### Running
 
 Install via npm:
 
@@ -31,7 +31,7 @@ yarn add omikit-plugin --latest
 
 #### Android:
 
-- Add this setting in `build.gradle`:
+- Add these settings in `build.gradle`:
 ```
 jcenter() 
 maven {
@@ -80,7 +80,7 @@ allprojects {
 
 You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/build.gradle">android/build.gradle</a> to know more informations.
 
-- Add this setting In `app/build.gradle`:
+- Add these settings in `app/build.gradle`:
 ```
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
@@ -130,9 +130,9 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 ```
 
-- Setup push notification: We only support Firebase for push notification.
+- Setup remote push notification: Only support Firebase for remote push notification.
   - Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
-  - Add Fire Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for Flutter)
+  - Add Fire Messaging to receive `fcm_token` (You can refer <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> to setup notification for React native)
 
   - For more setting information, please refer <a href="https://rnfirebase.io/messaging/usage">Config Push for Android</a>
 
@@ -169,7 +169,7 @@ voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
 pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
 ```
 
--  Add this lines into `Info.plist`:
+-  Add these lines into `Info.plist`:
 
 ```
 <key>NSMicrophoneUsageDescription</key>
@@ -179,7 +179,7 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
 <string>Need camera access for video call functions</string>
 ```
 
-- Save token for `OmiClient`: You use `Cloud Messaging` into your project so you don't need add this lines.
+- Save token for `OmiClient`: if You added `Cloud Messaging` in your project so you don't need add these lines.
 
 ```
 - (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)devToken
@@ -198,7 +198,7 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
 }
 
 ```
-*** Only use under lines when add `Cloud Messaging` plugin ***
+*** Only use under lines when added `Cloud Messaging` plugin in your project ***
 - Setup push notification: We only support Firebase for push notification.
   - Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
   - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
@@ -303,6 +303,15 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
         isVideo: false //allow video call: true/false
     });
     ```
+  -  Call with UUID (only support with Api key):
+    ```
+    import {startCallWithUuid} from 'omikit-plugin';
+    
+    const result = await startCallWithUuid({ 
+        usrUuid: uuid, //phone number
+        isVideo: false //allow video call: true/false
+    });
+    ```
   - Accept a call:
     ```
     import {joinCall} from 'omikit-plugin';
@@ -334,6 +343,12 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     sendDTMF({
         character: text,
     });
+    ```
+  - Logout: Can't receive call.
+    ```
+    import {logout} from 'omikit-plugin';
+    
+    logout();
     ```
     
 - Video Call functions: Support only video call, You need enable video in `init functions` and `start call` to implements under functions.
