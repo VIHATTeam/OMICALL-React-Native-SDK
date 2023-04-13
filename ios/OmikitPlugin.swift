@@ -135,6 +135,18 @@ class OmikitPlugin: RCTEventEmitter {
         resolve(true)
     }
     
+    @objc(registerVideoEvent:withRejecter:)
+    func registerVideoEvent(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().registerVideoEvent()
+        resolve(true)
+    }
+    
+    @objc(removeVideoEvent:withRejecter:)
+    func removeVideoEvent(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().removeVideoEvent()
+        resolve(true)
+    }
+    
     func sendMuteStatus() {
         if let call = CallManager.shareInstance().getAvailableCall() {
             sendEvent(withName: MUTED, body: call.muted)
@@ -153,7 +165,9 @@ class OmikitPlugin: RCTEventEmitter {
             CALL_END,
             MUTED,
             SPEAKER,
-            VIDEO
+            VIDEO,
+            REMOTE_VIDEO_READY,
+            LOCAL_VIDEO_READY
         ]
     }
 }

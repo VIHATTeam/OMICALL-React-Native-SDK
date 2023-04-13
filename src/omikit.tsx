@@ -90,6 +90,14 @@ export function logout(): Promise<boolean> {
   return OmikitPlugin.logout();
 }
 
+export function registerVideoEvent(): Promise<boolean> {
+  return OmikitPlugin.registerVideoEvent();
+}
+
+export function removeVideoEvent(): Promise<boolean> {
+  return OmikitPlugin.removeVideoEvent();
+}
+
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 
 export const OmiCallEvent = {
@@ -98,5 +106,7 @@ export const OmiCallEvent = {
   incomingReceived: 'INCOMING_RECEIVED',
   onSpeaker: 'SPEAKER',
   onMuted: 'MUTED',
+  onLocalVideoReady: 'LOCAL_VIDEO_READY',
+  onRemoteVideoReady: 'REMOTE_VIDEO_READY',
   // onVideo: 'VIDEO',
 };
