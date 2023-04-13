@@ -29,7 +29,7 @@ class FLRemoteCameraView: RCTViewManager {
     
     @objc(refresh:withRejecter:)
     func refresh(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
-        setupViews()
+        self.setupViews()
     }
     
     func setupViews() {

@@ -14,10 +14,13 @@ import {
   toggleSpeaker,
   joinCall,
   endCall,
+  registerVideoEvent,
+  removeVideoEvent,
 } from 'omikit-plugin';
 import { LiveData } from './livedata';
 import { BackHandler } from 'react-native';
 import { UIImages } from '../assets';
+import { Platform } from 'react-native';
 
 export const VideoCallScreen = ({ route }: any) => {
   // const callerNumber = route.params.callerNumber;
@@ -30,8 +33,10 @@ export const VideoCallScreen = ({ route }: any) => {
 
   const onCallEstablished = () => {
     console.log('onCallEstablished');
-    refreshLocalCamera();
-    refreshRemoteCamera();
+    if (Platform.OS === 'android') {
+      refreshLocalCamera();
+      refreshRemoteCamera();
+    }
     setStatus(CallStatus.established);
   };
 
@@ -65,6 +70,16 @@ export const VideoCallScreen = ({ route }: any) => {
     toggleSpeaker();
   }, []);
 
+  const refreshLocalCameraEvent = useCallback(() => {
+    // setMicOn((prev) => !prev);
+    refreshLocalCamera();
+  }, []);
+
+  const refreshRemoteCameraEvent = useCallback(() => {
+    // setMicOn((prev) => !prev);
+    refreshRemoteCamera();
+  }, []);
+
   const triggerMute = useCallback(() => {
     // setMicOn((prev) => !prev);
     toggleMute();
@@ -75,6 +90,17 @@ export const VideoCallScreen = ({ route }: any) => {
     omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
+    if (Platform.OS === 'ios') {
+      registerVideoEvent();
+      omiEmitter.addListener(
+        OmiCallEvent.onLocalVideoReady,
+        refreshLocalCameraEvent
+      );
+      omiEmitter.addListener(
+        OmiCallEvent.onRemoteVideoReady,
+        refreshRemoteCameraEvent
+      );
+    }
     LiveData.isOpenedCall = true;
     return () => {
       console.log('remove widget');
@@ -82,9 +108,20 @@ export const VideoCallScreen = ({ route }: any) => {
       omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
+      if (Platform.OS === 'ios') {
+        removeVideoEvent();
+        omiEmitter.removeAllListeners(OmiCallEvent.onLocalVideoReady);
+        omiEmitter.removeAllListeners(OmiCallEvent.onRemoteVideoReady);
+      }
       LiveData.isOpenedCall = false;
     };
-  }, [onCallEnd, onMuted, onSpeaker]);
+  }, [
+    onCallEnd,
+    onMuted,
+    onSpeaker,
+    refreshLocalCameraEvent,
+    refreshRemoteCameraEvent,
+  ]);
 
   useEffect(() => {
     const onBackPress = () => {

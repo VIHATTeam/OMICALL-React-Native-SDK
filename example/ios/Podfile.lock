@@ -43,9 +43,9 @@ PODS:
     - GoogleUtilities/Logger (~> 7.8)
   - FirebaseCoreExtension (10.6.0):
     - FirebaseCore (~> 10.0)
-  - FirebaseCoreInternal (10.7.0):
+  - FirebaseCoreInternal (10.8.0):
     - "GoogleUtilities/NSData+zlib (~> 7.8)"
-  - FirebaseInstallations (10.7.0):
+  - FirebaseInstallations (10.8.0):
     - FirebaseCore (~> 10.0)
     - GoogleUtilities/Environment (~> 7.8)
     - GoogleUtilities/UserDefaults (~> 7.8)
@@ -126,9 +126,9 @@ PODS:
     - nanopb/encode (= 2.30909.0)
   - nanopb/decode (2.30909.0)
   - nanopb/encode (2.30909.0)
-  - OmiKit (1.5.21)
-  - omikit-plugin (2.0.4):
-    - OmiKit (= 1.5.21)
+  - OmiKit (1.5.20)
+  - omikit-plugin (2.1.0):
+    - OmiKit (= 1.5.20)
     - React-Core
   - PromisesObjC (2.2.0)
   - RCT-Folly (2021.06.28.00-v2):
@@ -588,8 +588,8 @@ SPEC CHECKSUMS:
   FirebaseAnalytics: 9f382605c5ee412b039212f054bf7a403d9850c1
   FirebaseCore: fa80ad16a62d52f67274b5b88304c3a318bbf9a4
   FirebaseCoreExtension: 318e5ee9ad4092b00423c2bddd51c3f5c3585973
-  FirebaseCoreInternal: 8845798510aae74703467480f71ac613788d0696
-  FirebaseInstallations: 59c0e4c7a816a0f76710d83f77e5369b3e45eb96
+  FirebaseCoreInternal: fa2899eb1f340054858d289e5a0fb935a0a74e52
+  FirebaseInstallations: b2a05a3fe707df764345d68685534d07d0664af3
   FirebaseMessaging: fd93783258c53ae5cdb9b41bf0c51606a677f2d5
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 3d02b25ca00c2d456734d0bcff864cbc62f6ae1a
@@ -599,8 +599,8 @@ SPEC CHECKSUMS:
   MMKV: 7f34558bbb5a33b0eaefae2de4b6a20a2ffdad6f
   MMKVCore: ddf41b9d9262f058419f9ba7598719af56c02cd3
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
-  OmiKit: 2a824d3766313cfe3487bf9f95d6b7172e5b4637
-  omikit-plugin: b7e0fe166ce8d748ea78318a9479d2f66af69b56
+  OmiKit: eb8cf0c7cab448130ffb0effb290b51d55e0038e
+  omikit-plugin: 70596f97d945ade4c6d030342119e59516d36cfe
   PromisesObjC: 09985d6d70fbe7878040aa746d78236e6946d2ef
   RCT-Folly: b9d9fe1fc70114b751c076104e52f3b1b5e5a95a
   RCTRequired: 54bff6aa61efd9598ab59d2a823c382b4fe13d27

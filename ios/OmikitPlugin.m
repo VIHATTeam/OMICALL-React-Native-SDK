@@ -63,6 +63,12 @@ RCT_EXTERN_METHOD(toggleOmiVideo:
 RCT_EXTERN_METHOD(logout:
                  (RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(registerVideoEvent:
+                 (RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(removeVideoEvent:
+                 (RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
 
 + (BOOL)requiresMainQueueSetup
 {
