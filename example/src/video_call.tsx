@@ -34,9 +34,9 @@ export const VideoCallScreen = ({ route }: any) => {
   const onCallEstablished = () => {
     console.log('onCallEstablished');
     if (Platform.OS === 'android') {
-      refreshLocalCamera();
       refreshRemoteCamera();
     }
+    refreshLocalCamera();
     setStatus(CallStatus.established);
   };
 

@@ -28,8 +28,8 @@ export const LoginScreen = () => {
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   var userName = Platform.OS === 'android' ? '116' : '115';
   var password = Platform.OS === 'android' ? 'vWmFFBZwss' : 'VlAkzpm2Fn';
-  var realm = 'thaonguyennguyen1197';
-  var host = '171.244.138.14';
+  var realm = '';
+  var host = '';
   const navigation = useNavigation();
 
   useEffect(() => {
