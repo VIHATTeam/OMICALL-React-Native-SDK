@@ -382,6 +382,11 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
   import {refreshRemoteCamera} from 'omikit-plugin';
   refreshRemoteCamera();
   ```
+  - Register event: Register remote video ready: only visible on iOS
+  ```
+  import {registerVideoEvent} from 'omikit-plugin';
+  registerVideoEvent();
+  ```
 
 
 - Event listener:
@@ -392,12 +397,23 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
+    if (Platform.OS === 'ios') {
+      registerVideoEvent();
+      omiEmitter.addListener(
+        OmiCallEvent.onRemoteVideoReady,
+        refreshRemoteCameraEvent
+      );
+    }
     return () => {
         omiEmitter.removeAllListeners(OmiCallEvent.incomingReceived);
         omiEmitter.removeAllListeners('onCallEstablished');
         omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
         omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
         omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
+        if (Platform.OS === 'ios') {
+           removeVideoEvent();
+           omiEmitter.removeAllListeners(OmiCallEvent.onRemoteVideoReady);
+        }
     };
 }, []);
 ```
