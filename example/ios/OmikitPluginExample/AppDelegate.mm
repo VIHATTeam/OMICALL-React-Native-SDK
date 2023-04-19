@@ -16,7 +16,7 @@
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <ReactCommon/RCTTurboModuleManager.h>
-
+#import <UserNotifications/UserNotifications.h>
 #import <react/config/ReactNativeConfig.h>
 
 
@@ -66,9 +66,25 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   self.provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
   self.voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
   self.pushkitManager = [[PushKitManager alloc] initWithVoipRegistry: self.voipRegistry];
+  if (@available(iOS 10.0, *)) {
+      [UNUserNotificationCenter currentNotificationCenter].delegate = (id<UNUserNotificationCenterDelegate>) self;
+  }
   return YES;
 }
 
+//Called when a notification is delivered to a foreground app.
+-(void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+  NSLog(@"User Info : %@",notification.request.content.userInfo);
+  completionHandler(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge);
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
+  NSDictionary *userInfo  = response.notification.request.content.userInfo;
+  if (userInfo && [userInfo valueForKey:@"callerNumber"]) {
+    NSLog(@"User Info : %@",userInfo);
+  }
+}
 /// This method controls whether the `concurrentRoot`feature of React18 is turned on or off.
 ///
 /// @see: https://reactjs.org/blog/2022/03/29/react-v18.html
