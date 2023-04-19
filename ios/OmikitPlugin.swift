@@ -18,8 +18,11 @@ class OmikitPlugin: RCTEventEmitter {
         resolve(true)
     }
     
-    @objc(configPushNotification:withRejecter:)
-    func configPushNotification(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    @objc(configPushNotification:withResolver:withRejecter:)
+    func configPushNotification(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        if let dataOmi = data as? [String: Any] {
+            CallManager.shareInstance().configNotification(data: dataOmi)
+        }
         resolve(true)
     }
     
@@ -157,6 +160,7 @@ class OmikitPlugin: RCTEventEmitter {
         sendEvent(withName: SPEAKER, body: CallManager.shareInstance().isSpeaker)
 
     }
+    
     
     override func supportedEvents() -> [String]! {
         return [

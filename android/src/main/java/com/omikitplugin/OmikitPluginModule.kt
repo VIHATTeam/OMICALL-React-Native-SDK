@@ -243,6 +243,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         } catch (_ : Throwable) {
 
         }
+
       }
       promise.resolve(callResult)
     }

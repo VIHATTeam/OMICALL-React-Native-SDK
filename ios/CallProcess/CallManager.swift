@@ -87,8 +87,49 @@ class CallManager {
                                                    name: NSNotification.Name.OMICallDealloc,
                                                    object: nil
             )
+            self.showMissedCall()
         }
     }
+    
+    func configNotification(data: [String: Any]) {
+        if let title = data["missedCallTitle"] as? String, let message = data["prefixMissedCallMessage"] as? String {
+            let user = UserDefaults.standard
+            user.set(title, forKey: "missedCallTitle")
+            user.set(message, forKey: "prefixMissedCallMessage")
+        }
+    }
+    
+    func showMissedCall() {
+        OmiClient.setMissedCall { call in
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                switch settings.authorizationStatus {
+                    case .notDetermined:
+                       break
+                    case .authorized, .provisional:
+                        let user = UserDefaults.standard
+                        let title = user.string(forKey: "missedCallTitle") ?? ""
+                        let message = user.string(forKey: "prefixMissedCallMessage") ?? ""
+                        let content      = UNMutableNotificationContent()
+                        content.title    = title
+                        content.body = "\(message) \(call.callerNumber!)"
+                        content.sound    = .default
+                        content.userInfo = [
+                            "callerNumber": call.callerNumber,
+                            "isVideo": call.isVideo,
+                        ]
+                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+                        //getting the notification request
+                        let id = Int.random(in: 0..<10000000)
+                        let request = UNNotificationRequest(identifier: "\(id)", content: content, trigger: trigger)
+                        //adding the notification to notification center
+                        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+                    default:
+                        break // Do nothing
+                }
+            }
+        }
+    }
+    
     
     func registerVideoEvent() {
         DispatchQueue.main.async {
@@ -189,13 +230,6 @@ class CallManager {
         case .incoming:
             OmikitPlugin.instance.sendEvent(withName: INCOMING_RECEIVED, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber ?? ""])
             break
-        case .muted:
-            print("muteddddddd")
-            break
-        case .hold:
-            print("holdddddddd")
-            break
-        
         default:
             NSLog("Default call state")
             break

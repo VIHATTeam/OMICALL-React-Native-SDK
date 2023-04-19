@@ -19,20 +19,20 @@ export const Main = () => {
 
   const initData = useCallback(async () => {
     startServices();
-    if (Platform.OS === 'android') {
-      configPushNotification({
-        prefix: 'Cuộc gọi tới từ: ',
-        declineTitle: 'Từ chối',
-        acceptTitle: 'Chấp nhận',
-        acceptBackgroundColor: '#FF3700B3',
-        declineBackgroundColor: '#FF000000',
-        incomingBackgroundColor: '#FFFFFFFF',
-        incomingAcceptButtonImage: 'join_call',
-        incomingDeclineButtonImage: 'hangup',
-        backImage: 'ic_back',
-        userImage: 'calling_face',
-      });
-    }
+    configPushNotification({
+      prefix: 'Cuộc gọi tới từ: ',
+      declineTitle: 'Từ chối',
+      acceptTitle: 'Chấp nhận',
+      acceptBackgroundColor: '#FF3700B3',
+      declineBackgroundColor: '#FF000000',
+      incomingBackgroundColor: '#FFFFFFFF',
+      incomingAcceptButtonImage: 'join_call',
+      incomingDeclineButtonImage: 'hangup',
+      backImage: 'ic_back',
+      userImage: 'calling_face',
+      missedCallTitle: 'Cuộc gọi nhớ',
+      prefixMissedCallMessage: 'Cuộc gọi nhỡ từ',
+    });
     const data = localStorage.getString('login_info');
     const isLogin = data !== undefined;
     // if (haveLoginInfo) {

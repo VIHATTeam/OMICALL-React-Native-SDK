@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.0
+  - Increase Android/iOS core version
+  - Support missed call.
+  - Update document and sample
+
 ## 2.1.1
   - Increase Android/iOS core version
   - Add `registerVideoEvent` to register remote video ready.
