@@ -8,7 +8,7 @@
 
 #import <Firebase/Firebase.h>
 #import <OmiKit/OmiKit.h>
-
+#import <omikit-plugin/OmikitNotification.h>
 #if RCT_NEW_ARCH_ENABLED
 #import <React/CoreModulesPlugins.h>
 #import <React/RCTCxxBridgeDelegate.h>
@@ -80,10 +80,12 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 }
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
-  NSDictionary *userInfo  = response.notification.request.content.userInfo;
-  if (userInfo && [userInfo valueForKey:@"callerNumber"]) {
-    NSLog(@"User Info : %@",userInfo);
-  }
+    NSDictionary *userInfo  = response.notification.request.content.userInfo;
+    if (userInfo && [userInfo valueForKey:@"callerNumber"]) {
+      NSLog(@"User Info : %@",userInfo);
+      [OmikitNotification didRecieve:userInfo];
+    }
+    completionHandler();
 }
 /// This method controls whether the `concurrentRoot`feature of React18 is turned on or off.
 ///

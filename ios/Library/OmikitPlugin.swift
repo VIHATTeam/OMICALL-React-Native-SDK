@@ -3,9 +3,9 @@ import React
 import OmiKit
 
 @objc(OmikitPlugin)
-class OmikitPlugin: RCTEventEmitter {
+public class OmikitPlugin: RCTEventEmitter {
     
-    public static var instance : OmikitPlugin!
+    @objc public static var instance : OmikitPlugin!
 
     override init() {
         super.init()
@@ -161,8 +161,11 @@ class OmikitPlugin: RCTEventEmitter {
 
     }
     
+    @objc public func didReceive(data: [String: Any]) {
+        print(data)
+    }
     
-    override func supportedEvents() -> [String]! {
+    public override func supportedEvents() -> [String]! {
         return [
             INCOMING_RECEIVED,
             CALL_ESTABLISHED,
