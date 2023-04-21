@@ -26,10 +26,14 @@ export const LoginScreen = () => {
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var userName = Platform.OS === 'android' ? '116' : '115';
-  var password = Platform.OS === 'android' ? 'vWmFFBZwss' : 'VlAkzpm2Fn';
-  var realm = '';
-  var host = '';
+  const [userName, setUserNumber] = useState(
+    Platform.OS === 'android' ? '116' : '115'
+  );
+  const [password, setPassword] = useState(
+    Platform.OS === 'android' ? 'vWmFFBZwss' : 'VlAkzpm2Fn'
+  );
+  const [realm, setRealm] = useState('');
+  const [host, setHost] = useState('');
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -75,7 +79,7 @@ export const LoginScreen = () => {
             currentFocus={phoneFocus}
             nextFocus={passwordFocus}
             onChange={(text: string) => {
-              userName = text;
+              setUserNumber(text);
             }}
           />
           <CustomTextField
@@ -86,7 +90,7 @@ export const LoginScreen = () => {
             currentFocus={passwordFocus}
             nextFocus={realmFocus}
             onChange={(text: string) => {
-              password = text;
+              setPassword(text);
             }}
           />
           <CustomTextField
@@ -97,7 +101,7 @@ export const LoginScreen = () => {
             currentFocus={realmFocus}
             nextFocus={hostFocus}
             onChange={(text: string) => {
-              realm = text;
+              setRealm(text);
             }}
           />
           <CustomTextField
@@ -107,7 +111,7 @@ export const LoginScreen = () => {
             isPassword={true}
             currentFocus={hostFocus}
             onChange={(text: string) => {
-              host = text;
+              setHost(text);
             }}
           />
           <CustomCheckBox
