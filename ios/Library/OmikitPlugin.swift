@@ -158,11 +158,16 @@ public class OmikitPlugin: RCTEventEmitter {
     
     func sendSpeakerStatus() {
         sendEvent(withName: SPEAKER, body: CallManager.shareInstance().isSpeaker)
-
     }
     
     @objc public func didReceive(data: [String: Any]) {
         print(data)
+        if let callerNumber = data["omisdkCallerNumber"] as? String, let isVideo = data["omisdkIsVideo"] as? Bool {
+            sendEvent(withName: CLICK_MISSED_CALL, body: [
+                "callerNumber": callerNumber,
+                "isVideo": isVideo,
+            ])
+        }
     }
     
     public override func supportedEvents() -> [String]! {
@@ -174,7 +179,8 @@ public class OmikitPlugin: RCTEventEmitter {
             SPEAKER,
             VIDEO,
             REMOTE_VIDEO_READY,
-            LOCAL_VIDEO_READY
+            LOCAL_VIDEO_READY,
+            CLICK_MISSED_CALL
         ]
     }
 }

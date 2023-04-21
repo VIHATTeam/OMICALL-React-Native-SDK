@@ -81,7 +81,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
     NSDictionary *userInfo  = response.notification.request.content.userInfo;
-    if (userInfo && [userInfo valueForKey:@"callerNumber"]) {
+    if (userInfo && [userInfo valueForKey:@"omisdkCallerNumber"]) {
       NSLog(@"User Info : %@",userInfo);
       [OmikitNotification didRecieve:userInfo];
     }

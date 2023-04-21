@@ -114,8 +114,8 @@ class CallManager {
                         content.body = "\(message) \(call.callerNumber!)"
                         content.sound    = .default
                         content.userInfo = [
-                            "callerNumber": call.callerNumber,
-                            "isVideo": call.isVideo,
+                            "omisdkCallerNumber": call.callerNumber,
+                            "omisdkIsVideo": call.isVideo,
                         ]
                         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
                         //getting the notification request
