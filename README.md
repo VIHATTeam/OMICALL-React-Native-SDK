@@ -99,13 +99,14 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
     <category android:name="android.intent.category.DEFAULT" />
 </intent-filter>
 //add this lines outside <activity>
-<service
-    android:name="vn.vihat.omicall.omisdk.service.FMService"
-    android:exported="false">
-    <intent-filter>
-        <action android:name="com.google.firebase.MESSAGING_EVENT" />
-    </intent-filter>
-</service>
+<receiver
+  android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
+  android:exported="true"
+  android:permission="com.google.android.c2dm.permission.SEND">
+  <intent-filter>
+    <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+  </intent-filter>
+</receiver>
 ```
 
 You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/app/src/main/AndroidManifest.xml">AndroidManifest</a> to know more informations.
@@ -255,17 +256,19 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     import { configPushNotification } from 'omikit-plugin';
     
     configPushNotification({
-        prefix: 'Cuộc gọi tới từ: ',
-        declineTitle: 'Từ chối',
-        acceptTitle: 'Chấp nhận',
-        acceptBackgroundColor: '#FF3700B3',
-        declineBackgroundColor: '#FF000000',
-        incomingBackgroundColor: '#FFFFFFFF',
-        incomingAcceptButtonImage: 'join_call',
-        incomingDeclineButtonImage: 'hangup',
-        backImage: 'ic_back',
-        userImage: 'calling_face',
-      });
+      prefix : "Cuộc gọi tới từ: ",
+      declineTitle : "Từ chối",
+      acceptTitle : "Chấp nhận",
+      acceptBackgroundColor : "#FF3700B3",
+      declineBackgroundColor : "#FF000000",
+      incomingBackgroundColor : "#FFFFFFFF",
+      incomingAcceptButtonImage : "join_call", //image name
+      incomingDeclineButtonImage : "hangup", //image name
+      backImage : "ic_back", //image name: icon of back button
+      userImage : "calling_face", //image name: icon of user default
+      prefixMissedCallMessage: 'Cuộc gọi nhỡ từ' //config prefix message for the missed call
+      missedCallTitle: 'Cuộc gọi nhỡ' //config title for the missed call
+    });
     //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
     ```
   - Get call when user open app from killed status(only iOS):
@@ -397,6 +400,7 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
+    omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     if (Platform.OS === 'ios') {
       registerVideoEvent();
       omiEmitter.addListener(
@@ -423,4 +427,5 @@ useEffect(() => {
     - `OmiCallEvent.onCallEnd`: End a call.
     - `OmiCallEvent.onMuted`: Audio changed.
     - `OmiCallEvent.onSpeaker`: Audio changed.
+    - `OmiCallEvent.onClickMissedCall`: Click missed call notification.
 - Data value: We return `callerNumber`, `isVideo: true/false` information

@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## 2.2.0
   - Increase Android/iOS core version
+  - Replace `FMService` to `FirebaseMessageReceiver` in AndroidManifest.xml
   - Support missed call.
   - Update document and sample
   
