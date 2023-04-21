@@ -86,14 +86,48 @@ export const HomeScreen = () => {
     [navigation]
   );
 
+  const callWithParam = useCallback(
+    async (data: any) => {
+      const { callerNumber, isVideo } = data;
+      const result = await startCall({
+        phoneNumber: callerNumber,
+        isVideo: isVideo,
+      });
+      if (result) {
+        const param = {
+          callerNumber: callerNumber,
+          status: CallStatus.calling,
+        };
+        if (isVideo === true) {
+          navigation.navigate('VideoCall' as never, param as never);
+        } else {
+          navigation.navigate('DialCall' as never, param as never);
+        }
+      }
+    },
+    [navigation]
+  );
+
+  const clickMissedCall = useCallback(
+    (data: any) => {
+      if (LiveData.isOpenedCall === true) {
+        return;
+      }
+      callWithParam(data);
+    },
+    [callWithParam]
+  );
+
   useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.incomingReceived, incomingReceived);
     omiEmitter.addListener(OmiCallEvent.onCallEstablished, establishedReceived);
+    omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     return () => {
       omiEmitter.removeAllListeners(OmiCallEvent.incomingReceived);
       omiEmitter.removeAllListeners(OmiCallEvent.onCallEstablished);
+      omiEmitter.removeAllListeners(OmiCallEvent.onClickMissedCall);
     };
-  }, [incomingReceived, establishedReceived]);
+  }, [incomingReceived, establishedReceived, clickMissedCall]);
 
   const call = async () => {
     // navigation.navigate('Call' as never);

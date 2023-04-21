@@ -108,5 +108,5 @@ export const OmiCallEvent = {
   onMuted: 'MUTED',
   onLocalVideoReady: 'LOCAL_VIDEO_READY',
   onRemoteVideoReady: 'REMOTE_VIDEO_READY',
-  // onVideo: 'VIDEO',
+  onClickMissedCall: 'CLICK_MISSED_CALL',
 };
