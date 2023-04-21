@@ -86,7 +86,10 @@ export const VideoCallScreen = ({ route }: any) => {
   }, []);
 
   useEffect(() => {
-    omiEmitter.addListener(OmiCallEvent.onCallEstablished, onCallEstablished);
+    const established = omiEmitter.addListener(
+      OmiCallEvent.onCallEstablished,
+      onCallEstablished
+    );
     omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
@@ -104,7 +107,7 @@ export const VideoCallScreen = ({ route }: any) => {
     LiveData.isOpenedCall = true;
     return () => {
       console.log('remove widget');
-      omiEmitter.removeAllListeners(OmiCallEvent.onCallEstablished);
+      established.remove();
       omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
