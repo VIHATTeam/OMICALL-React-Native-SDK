@@ -26,10 +26,13 @@ export const LoginApiKeyScreen = () => {
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  var usrUuid = Platform.OS === 'android' ? '122aaa' : '123aaa';
-  var fullName = Platform.OS === 'android' ? 'chau1' : 'chau2';
-  var apiKey =
-    '0ACE08B2F03BE1D6B3F7F5CCD34D9AC08CB92976E2AB6CEE6EA38C5C96F1B858';
+  var [usrUuid, setUsrUuid] = useState(
+    Platform.OS === 'android' ? '122aaa' : '123aaa'
+  );
+  var [fullName, setFullName] = useState(
+    Platform.OS === 'android' ? 'chau1' : 'chau2'
+  );
+  var apiKey = '';
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export const LoginApiKeyScreen = () => {
             currentFocus={phoneFocus}
             nextFocus={passwordFocus}
             onChange={(text: string) => {
-              usrUuid = text;
+              setUsrUuid(text);
             }}
           />
           <CustomTextField
@@ -85,7 +88,7 @@ export const LoginApiKeyScreen = () => {
             currentFocus={passwordFocus}
             nextFocus={realmFocus}
             onChange={(text: string) => {
-              fullName = text;
+              setFullName(text);
             }}
           />
           <CustomTextField

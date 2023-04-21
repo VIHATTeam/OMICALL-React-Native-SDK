@@ -1,7 +1,9 @@
 package com.omikitplugin
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Handler
@@ -19,10 +21,11 @@ import vn.vihat.omicall.omisdk.OmiAccountListener
 import vn.vihat.omicall.omisdk.OmiClient
 import vn.vihat.omicall.omisdk.OmiListener
 import vn.vihat.omicall.omisdk.utils.OmiSDKUtils
+import vn.vihat.omicall.omisdk.utils.SipServiceConstants
 
 
 class OmikitPluginModule(reactContext: ReactApplicationContext?) :
-  ReactContextBaseJavaModule(reactContext) {
+  ReactContextBaseJavaModule(reactContext), ActivityEventListener {
   private val mainScope = CoroutineScope(Dispatchers.Main)
 
   override fun getName(): String {
@@ -97,6 +100,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun initialize() {
     super.initialize()
+    reactApplicationContext!!.addActivityEventListener(this)
   }
 
   @ReactMethod
@@ -122,6 +126,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val incomingBackgroundColor = data.getString("incomingBackgroundColor")
       val incomingAcceptButtonImage = data.getString("incomingAcceptButtonImage")
       val incomingDeclineButtonImage = data.getString("incomingDeclineButtonImage")
+      val prefixMissedCallMessage = data.getString("prefixMissedCallMessage")
+      val missedCallTitle = data.getString("missedCallTitle")
       val backImage = data.getString("backImage")
       val userImage = data.getString("userImage")
       OmiClient.instance.configPushNotification(
@@ -135,6 +141,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         incomingDeclineButtonImage = incomingDeclineButtonImage ?: "hangup",
         backImage = backImage ?: "ic_back",
         userImage = userImage ?: "calling_face",
+        prefixMissedCallMessage = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
+        missedCallTitle = prefixMissedCallMessage ?: "Cuộc gọi nhỡ"
       )
       promise.resolve(true)
     }
@@ -415,5 +423,19 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     val cm =
       reactApplicationContext!!.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     OmiClient.instance.setCameraManager(cm)
+  }
+
+  override fun onActivityResult(p0: Activity?, p1: Int, p2: Int, p3: Intent?) {
+
+  }
+
+  override fun onNewIntent(p0: Intent?) {
+    if (p0 != null && p0.hasExtra(SipServiceConstants.PARAM_NUMBER)) {
+      //do your Stuff
+      val map: WritableMap = WritableNativeMap()
+      map.putString("callerNumber", p0.getStringExtra(SipServiceConstants.PARAM_NUMBER) ?: "")
+      map.putBoolean("isVideo", p0.getBooleanExtra(SipServiceConstants.PARAM_IS_VIDEO, false))
+      sendEvent(CLICK_MISSED_CALL, map)
+    }
   }
 }

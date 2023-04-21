@@ -22,7 +22,9 @@ import { localStorage } from './local_storage';
 
 export const HomeScreen = () => {
   ///need add call phone
-  var phone = Platform.OS === 'android' ? '123aaa' : '122aaa';
+  var [phone, setPhone] = useState(
+    Platform.OS === 'android' ? '123aaa' : '122aaa'
+  );
   // var phone = Platform.OS === 'android' ? '115' : '116';
   const navigation = useNavigation();
   const [callVideo, setCallVideo] = useState(true);
@@ -186,7 +188,7 @@ export const HomeScreen = () => {
           value={phone}
           returnKey={'done'}
           onChange={(text: string) => {
-            phone = text;
+            setPhone(text);
           }}
         />
         <CustomCheckBox
