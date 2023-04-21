@@ -226,8 +226,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     currentActivity?.runOnUiThread {
       val phoneNumber = data.getString("phoneNumber") as String
       val isVideo = data.getBoolean("isVideo")
-      val result = OmiClient.instance.startCall(phoneNumber, isVideo)
-      promise.resolve(result)
+      OmiClient.instance.startCall(phoneNumber, isVideo)
+      promise.resolve(true)
     }
   }
 
