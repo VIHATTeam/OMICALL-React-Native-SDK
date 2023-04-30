@@ -32,8 +32,9 @@ yarn add omikit-plugin --latest
 #### Android:
 
 - Add these settings in `build.gradle`:
+
 ```
-jcenter() 
+jcenter()
 maven {
     url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
     credentials {
@@ -42,10 +43,12 @@ maven {
     }
 }
 ```
+
 ```
 //in dependencies
 classpath 'com.google.gms:google-services:4.3.13'
 ```
+
 ```
 //under buildscript
 allprojects {
@@ -81,15 +84,16 @@ allprojects {
 You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/build.gradle">android/build.gradle</a> to know more informations.
 
 - Add these settings in `app/build.gradle`:
+
 ```
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
 apply plugin: 'com.google.gms.google-services'
 ```
 
 You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/app/build.gradle">android/app/build.gradle</a> to know more informations.
 
 - Update AndroidManifest.xml:
+
 ```
 //need request this permission
 <uses-permission android:name="android.permission.INTERNET" />
@@ -112,6 +116,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/app/src/main/AndroidManifest.xml">AndroidManifest</a> to know more informations.
 
 - We registered permissions into my plugin:
+
 ```
 <uses-permission android:name="android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS"
     tools:ignore="ProtectedPermissions" />
@@ -132,13 +137,15 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 ```
 
 - Setup remote push notification: Only support Firebase for remote push notification.
+
   - Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
   - Add Fire Messaging to receive `fcm_token` (You can refer <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> to setup notification for React native)
 
   - For more setting information, please refer <a href="https://rnfirebase.io/messaging/usage">Config Push for Android</a>
 
 #### iOS:
-----
+
+---
 
 We support both Object-C and Swift. But we only support documents for Object-C. We will write for Swift language later. Thank you.
 
@@ -170,7 +177,7 @@ voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
 pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
 ```
 
--  Add these lines into `Info.plist`:
+- Add these lines into `Info.plist`:
 
 ```
 <key>NSMicrophoneUsageDescription</key>
@@ -192,15 +199,18 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     {
         [token appendFormat:@"%02.2hhX", data[i]];
     }
-    
+
     // print the token in the console.
     NSLog(@"Push Notification Token: %@", [token copy]);
     [OmiClient setUserPushNotificationToken:[token copy]];
 }
 
 ```
-*** Only use under lines when added `Cloud Messaging` plugin in your project ***
+
+**_ Only use under lines when added `Cloud Messaging` plugin in your project _**
+
 - Setup push notification: We only support Firebase for push notification.
+
   - Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
   - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
 
@@ -215,18 +225,22 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
 //because we use APNS to push notification on iOS so you don't need add Firebase for iOS.
 //But you can use firebase-messaging to get APNS token for iOS.
 ```
+
 - Important function.
   - Start Serivce: OmiKit need start services and register some events.
+
     ```
     //Call in the root widget
     import { startServices } from 'omikit-plugin';
-    
+
     startServices();
     ```
+
   - Create OmiKit With ApiKey: OmiKit need apikey, username, user id to init enviroment. ViHAT Group will provide api key for you. Please contact for my sale:
+
     ```
     import { initCallWithApiKey } from 'omikit-plugin';
-    
+
     const loginInfo = {
       usrUuid: usrUuid,
       fullName: fullName,
@@ -237,10 +251,12 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     const result = await initCallWithApiKey(loginInfo);
     //result is true then user login successfully.
     ```
+
   - Create OmiKit: OmiKit need userName, password, realm, host to init enviroment. ViHAT Group will provide informations for you. Please contact for my sale:
+
 ```
     import { initCall } from 'omikit-plugin';
-    
+
     const loginInfo = {
       userName: userName, //string
       password: password, //string
@@ -251,40 +267,46 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     const result = await initCall(loginInfo);
     //result is true then user login successfully.
 ```
-  - Config push notification for Android:
-    ```
-    import { configPushNotification } from 'omikit-plugin';
-    
-    configPushNotification({
-      prefix : "Cuộc gọi tới từ: ",
-      declineTitle : "Từ chối",
-      acceptTitle : "Chấp nhận",
-      acceptBackgroundColor : "#FF3700B3",
-      declineBackgroundColor : "#FF000000",
-      incomingBackgroundColor : "#FFFFFFFF",
-      incomingAcceptButtonImage : "join_call", //image name
-      incomingDeclineButtonImage : "hangup", //image name
-      backImage : "ic_back", //image name: icon of back button
-      userImage : "calling_face", //image name: icon of user default
-      prefixMissedCallMessage: 'Cuộc gọi nhỡ từ' //config prefix message for the missed call
-      missedCallTitle: 'Cuộc gọi nhỡ' //config title for the missed call
-    });
-    //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
-    ```
-  - Get call when user open app from killed status(only iOS):
-    ```
-    import { getInitialCall } from 'omikit-plugin';
-    
-    const callingInfo = await getInitialCall();
-    if (callingInfo !== false) {
-      navigation.navigate('DialCall' as never, callingInfo as never);
-    }
-    //callingInfo != false then user have a calling.
-    ```
+
+- Config push notification for Android:
+
+  ```
+  import { configPushNotification } from 'omikit-plugin';
+
+  configPushNotification({
+    prefix : "Cuộc gọi tới từ: ",
+    declineTitle : "Từ chối",
+    acceptTitle : "Chấp nhận",
+    acceptBackgroundColor : "#FF3700B3",
+    declineBackgroundColor : "#FF000000",
+    incomingBackgroundColor : "#FFFFFFFF",
+    incomingAcceptButtonImage : "join_call", //image name
+    incomingDeclineButtonImage : "hangup", //image name
+    backImage : "ic_back", //image name: icon of back button
+    userImage : "calling_face", //image name: icon of user default
+    prefixMissedCallMessage: 'Cuộc gọi nhỡ từ' //config prefix message for the missed call
+    missedCallTitle: 'Cuộc gọi nhỡ' //config title for the missed call
+  });
+  //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
+  ```
+
+- Get call when user open app from killed status(only iOS):
+
+  ```
+  import { getInitialCall } from 'omikit-plugin';
+
+  const callingInfo = await getInitialCall();
+  if (callingInfo !== false) {
+    navigation.navigate('DialCall' as never, callingInfo as never);
+  }
+  //callingInfo != false then user have a calling.
+  ```
+
 - Upload token: OmiKit need FCM for Android and APNS to push notification on user devices. We use more packages: <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> and <a href="https://www.npmjs.com/package/react-native-device-info?activeTab=readme">react-native-device-info</a>
+
   ```
   import { updateToken } from 'omikit-plugin';
-  
+
   const fcmToken = await fcm;
   const apnsToken = await apns;
   const deviceId = DeviceInfo.getDeviceId();
@@ -296,103 +318,128 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     appId: appId,
   });
   ```
+
 - Other functions:
-  -  Call with phone number (mobile phone or internal number):
-    ```
-    import {startCall} from 'omikit-plugin';
-    
-    const result = await startCall({ 
-        phoneNumber: phone, //phone number
-        isVideo: false //allow video call: true/false
-    });
-    ```
-  -  Call with UUID (only support with Api key):
-    ```
-    import {startCallWithUuid} from 'omikit-plugin';
-    
-    const result = await startCallWithUuid({ 
-        usrUuid: uuid, //phone number
-        isVideo: false //allow video call: true/false
-    });
-    ```
+  - Call with phone number (mobile phone or internal number):
+  ```
+  import {startCall} from 'omikit-plugin';
+
+  const result = await startCall({
+      phoneNumber: phone, //phone number
+      isVideo: false //allow video call: true/false
+  });
+  ```
+  - Call with UUID (only support with Api key):
+  ```
+  import {startCallWithUuid} from 'omikit-plugin';
+
+  const result = await startCallWithUuid({
+      usrUuid: uuid, //phone number
+      isVideo: false //allow video call: true/false
+  });
+  ```
   - Accept a call:
+
     ```
     import {joinCall} from 'omikit-plugin';
-    
+
     await joinCall();
     ```
+
   - End a call: We will push a event `endCall` for you.
+
     ```
     import {endCall} from 'omikit-plugin';
-    
+
     await endCall();
     ```
+
   - Toggle the audio: On/off audio a call
+
     ```
     import {toggleMute} from 'omikit-plugin';
-    
+
     toggleMute();
     ```
+
   - Toggle the speaker: On/off the phone speaker
+
     ```
     import {toggleSpeaker} from 'omikit-plugin';
-    
+
     toggleSpeaker();
     ```
+
   - Send character: We only support `1 to 9` and `* #`.
+
     ```
     import {sendDTMF} from 'omikit-plugin';
-    
+
     sendDTMF({
         character: text,
     });
     ```
+
   - Logout: Can't receive call.
+
     ```
     import {logout} from 'omikit-plugin';
-    
+
     logout();
     ```
-    
 - Video Call functions: Support only video call, You need enable video in `init functions` and `start call` to implements under functions.
+
   - Switch front/back camera: We use the front camera for first time.
+
   ```
   import {switchOmiCamera} from 'omikit-plugin';
   switchOmiCamera();
   ```
+
   - Toggle a video in video call: On/off video in video call
+
   ```
   import {toggleOmiVideo} from 'omikit-plugin';
   toggleOmiVideo();
   ```
+
   - Local Camera Widget: Your camera view in a call
+
   ```
   import { OmiLocalCameraView } from 'omikit-plugin';
   <OmiLocalCameraView style={styles.localCamera} />
   ```
+
   - Remote Camera Widget: Remote camera view in a call
+
   ```
   import { OmiRemoteCameraView } from 'omikit-plugin';
   <OmiRemoteCameraView style={styles.remoteCamera} />
   ```
+
   - More function: Refresh local camera
+
   ```
   import {refreshLocalCamera} from 'omikit-plugin';
   refreshLocalCamera();
   ```
+
   - More function: Refresh remote camera
+
   ```
   import {refreshRemoteCamera} from 'omikit-plugin';
   refreshRemoteCamera();
   ```
+
   - Register event: Register remote video ready: only visible on iOS
+
   ```
   import {registerVideoEvent} from 'omikit-plugin';
   registerVideoEvent();
   ```
 
-
 - Event listener:
+
 ```
 useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.incomingReceived, incomingReceived);
@@ -421,11 +468,12 @@ useEffect(() => {
     };
 }, []);
 ```
-- Action Name value: 
-    - `OmiCallEvent.incomingReceived`: Have a incoming call. On Android this event work only foreground
-    - `OmiCallEvent.onCallEstablished`: Connected a call.
-    - `OmiCallEvent.onCallEnd`: End a call.
-    - `OmiCallEvent.onMuted`: Audio changed.
-    - `OmiCallEvent.onSpeaker`: Audio changed.
-    - `OmiCallEvent.onClickMissedCall`: Click missed call notification.
+
+- Action Name value:
+  - `OmiCallEvent.incomingReceived`: Have a incoming call. On Android this event work only foreground
+  - `OmiCallEvent.onCallEstablished`: Connected a call.
+  - `OmiCallEvent.onCallEnd`: End a call.
+  - `OmiCallEvent.onMuted`: Audio changed.
+  - `OmiCallEvent.onSpeaker`: Audio changed.
+  - `OmiCallEvent.onClickMissedCall`: Click missed call notification.
 - Data value: We return `callerNumber`, `isVideo: true/false` information

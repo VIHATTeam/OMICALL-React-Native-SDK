@@ -35,8 +35,8 @@ export const VideoCallScreen = ({ route }: any) => {
     console.log('onCallEstablished');
     if (Platform.OS === 'android') {
       refreshRemoteCamera();
+      refreshLocalCamera();
     }
-    refreshLocalCamera();
     setStatus(CallStatus.established);
   };
 
@@ -70,14 +70,10 @@ export const VideoCallScreen = ({ route }: any) => {
     toggleSpeaker();
   }, []);
 
-  const refreshLocalCameraEvent = useCallback(() => {
-    // setMicOn((prev) => !prev);
-    refreshLocalCamera();
-  }, []);
-
   const refreshRemoteCameraEvent = useCallback(() => {
     // setMicOn((prev) => !prev);
     refreshRemoteCamera();
+    refreshLocalCamera();
   }, []);
 
   const triggerMute = useCallback(() => {
@@ -96,10 +92,6 @@ export const VideoCallScreen = ({ route }: any) => {
     if (Platform.OS === 'ios') {
       registerVideoEvent();
       omiEmitter.addListener(
-        OmiCallEvent.onLocalVideoReady,
-        refreshLocalCameraEvent
-      );
-      omiEmitter.addListener(
         OmiCallEvent.onRemoteVideoReady,
         refreshRemoteCameraEvent
       );
@@ -113,18 +105,11 @@ export const VideoCallScreen = ({ route }: any) => {
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       if (Platform.OS === 'ios') {
         removeVideoEvent();
-        omiEmitter.removeAllListeners(OmiCallEvent.onLocalVideoReady);
         omiEmitter.removeAllListeners(OmiCallEvent.onRemoteVideoReady);
       }
       LiveData.isOpenedCall = false;
     };
-  }, [
-    onCallEnd,
-    onMuted,
-    onSpeaker,
-    refreshLocalCameraEvent,
-    refreshRemoteCameraEvent,
-  ]);
+  }, [onCallEnd, onMuted, onSpeaker, refreshRemoteCameraEvent]);
 
   useEffect(() => {
     const onBackPress = () => {
