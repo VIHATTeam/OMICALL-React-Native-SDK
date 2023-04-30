@@ -34,9 +34,11 @@ class FLLocalCameraView: RCTViewManager {
     }
     
     func setupViews() {
-        CallManager.shareInstance().getLocalPreviewView(callback: {[weak self] previewView in
+        DispatchQueue.main.async {[weak self] in
             guard let self = self else { return }
-            self._view.setView(previewView)
-        })
+            if let videoView = CallManager.shareInstance().getLocalPreviewView(frame: self._view.frame) {
+                self._view.setView(videoView)
+            }
+        }
     }
 }

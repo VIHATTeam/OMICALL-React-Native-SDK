@@ -387,28 +387,14 @@ class CallManager {
         }
     }
     
-    func getLocalPreviewView(callback: @escaping (UIView) -> Void) {
-        guard let videoManager = videoManager  else { return }
-        videoManager.localView {previewView in
-            DispatchQueue.main.async {
-                if (previewView != nil) {
-                    previewView!.contentMode = .scaleAspectFill
-                    callback(previewView!)
-                }
-            }
-        }
+    func getLocalPreviewView(frame: CGRect) -> UIView? {
+        guard let videoManager = videoManager  else { return nil}
+        return videoManager.createView(forVideoLocal: frame)
     }
     
-    func getRemotePreviewView(callback: @escaping (UIView) -> Void) {
-        guard let videoManager = videoManager  else { return }
-        videoManager.remoteView { previewView in
-            DispatchQueue.main.async {
-                if (previewView != nil) {
-                    previewView!.contentMode = .scaleAspectFill
-                    callback(previewView!)
-                }
-            }
-        }
+    func getRemotePreviewView(frame: CGRect) -> UIView?  {
+        guard let videoManager = videoManager  else { return nil }
+        return videoManager.createView(forVideoRemote: frame)
     }
 }
 
