@@ -127,7 +127,7 @@ PODS:
   - nanopb/decode (2.30909.0)
   - nanopb/encode (2.30909.0)
   - OmiKit (1.5.29)
-  - omikit-plugin (2.3.0):
+  - omikit-plugin (2.2.0):
     - OmiKit (= 1.5.29)
     - React-Core
   - PromisesObjC (2.2.0)
@@ -427,6 +427,8 @@ PODS:
     - RNFBApp
   - RNFS (2.20.0):
     - React-Core
+  - RNPermissions (3.8.0):
+    - React-Core
   - RNScreens (3.20.0):
     - React-Core
     - React-RCTImage
@@ -475,6 +477,7 @@ DEPENDENCIES:
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - RNFS (from `../node_modules/react-native-fs`)
+  - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
@@ -574,6 +577,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-firebase/messaging"
   RNFS:
     :path: "../node_modules/react-native-fs"
+  RNPermissions:
+    :path: "../node_modules/react-native-permissions"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   Yoga:
@@ -600,7 +605,7 @@ SPEC CHECKSUMS:
   MMKVCore: ddf41b9d9262f058419f9ba7598719af56c02cd3
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
   OmiKit: a556343edb46f8dc81296fd3e38200b5a26e77b8
-  omikit-plugin: 8a756e534da2af3a36f47beed89ddde2a53cd178
+  omikit-plugin: 571304aa98ccb585d8d5fe4e676162d2ef505ce5
   PromisesObjC: 09985d6d70fbe7878040aa746d78236e6946d2ef
   RCT-Folly: b9d9fe1fc70114b751c076104e52f3b1b5e5a95a
   RCTRequired: 54bff6aa61efd9598ab59d2a823c382b4fe13d27
@@ -634,6 +639,7 @@ SPEC CHECKSUMS:
   RNFBApp: 3bf62629c41ef65d82e763c25aeb77cdfa63bfae
   RNFBMessaging: c2bf85653cdb745f60d3cc43c9ec51d4edca0c52
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
+  RNPermissions: 2f37f9f0b1a7a28804e0a87b7750e7dbfda95d55
   RNScreens: 218801c16a2782546d30bd2026bb625c0302d70f
   Yoga: 0b84a956f7393ef1f37f3bb213c516184e4a689d
 

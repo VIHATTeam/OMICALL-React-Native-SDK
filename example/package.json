@@ -10,6 +10,11 @@
     "build:ios": "react-native bundle --entry-file ./index.js --platform ios --bundle-output ios/main.jsbundle --assets-dest ios",
     "build:android": "react-native bundle --platform android --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --dev false --reset-cache --assets-dest android/app/src/main/res/"
   },
+  "reactNativePermissionsIOS": [
+    "Camera",
+    "Microphone",
+    "Notifications"
+  ],
   "dependencies": {
     "@react-native-firebase/app": "^17.3.1",
     "@react-native-firebase/messaging": "^17.3.1",
@@ -21,6 +26,7 @@
     "react-native-device-info": "^10.4.0",
     "react-native-fs": "^2.20.0",
     "react-native-mmkv": "2.4.4",
+    "react-native-permissions": "^3.8.0",
     "react-native-safe-area-context": "^4.5.0",
     "react-native-screens": "^3.20.0"
   },
