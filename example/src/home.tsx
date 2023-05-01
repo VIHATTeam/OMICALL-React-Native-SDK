@@ -1,4 +1,4 @@
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View, Platform, Alert } from 'react-native';
 import {
   CallStatus,
   CustomButton,
@@ -14,18 +14,21 @@ import {
   startCall,
   // startCallWithUuid,
   logout,
+  startCallWithUuid,
 } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 import { LiveData } from './livedata';
 import { localStorage } from './local_storage';
+import { check } from 'prettier';
+import { PERMISSIONS } from 'react-native-permissions';
 
 export const HomeScreen = () => {
   ///need add call phone
   var [phone, setPhone] = useState(
     Platform.OS === 'android' ? '123aaa' : '122aaa'
   );
-  // var phone = Platform.OS === 'android' ? '115' : '116';
+  // var [phone, setPhone] = useState(Platform.OS === 'android' ? '110' : '111');
   const navigation = useNavigation();
   const [callVideo, setCallVideo] = useState(true);
 
@@ -136,35 +139,12 @@ export const HomeScreen = () => {
     };
   }, [incomingReceived, establishedReceived, clickMissedCall, onCallEnd]);
 
-  const call = async () => {
-    // navigation.navigate('Call' as never);
-    if (phone.trim().length === 0) {
-      return;
-    }
-    const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
-    if (result) {
-      const data = {
-        callerNumber: phone,
-        status: CallStatus.calling,
-      };
-      if (callVideo === true) {
-        navigation.navigate('VideoCall' as never, data as never);
-      } else {
-        navigation.navigate('DialCall' as never, data as never);
-      }
-    }
-  };
-
   // const call = async () => {
   //   // navigation.navigate('Call' as never);
   //   if (phone.trim().length === 0) {
   //     return;
   //   }
-  //   const result = await startCallWithUuid({
-  //     usrUuid: phone,
-  //     isVideo: callVideo,
-  //   });
-  //   console.log(result);
+  //   const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
   //   if (result) {
   //     const data = {
   //       callerNumber: phone,
@@ -177,6 +157,53 @@ export const HomeScreen = () => {
   //     }
   //   }
   // };
+
+  const call = async () => {
+    // navigation.navigate('Call' as never);
+    if (phone.trim().length === 0) {
+      return;
+    }
+    const result = await startCallWithUuid({
+      usrUuid: phone,
+      isVideo: callVideo,
+    });
+    console.log(result);
+    if (result) {
+      const data = {
+        callerNumber: phone,
+        status: CallStatus.calling,
+      };
+      if (callVideo === true) {
+        navigation.navigate('VideoCall' as never, data as never);
+      } else {
+        navigation.navigate('DialCall' as never, data as never);
+      }
+    } else {
+      console.log('faaaaaaa');
+      const isAllowRecordAudio = check(PERMISSIONS.ANDROID.RECORD_AUDIO);
+      console.log(isAllowRecordAudio);
+      if (isAllowRecordAudio === false) {
+        showAlert('Please check permission!');
+        return;
+      }
+    }
+  };
+
+  const showAlert = (message: string) =>
+    Alert.alert(
+      'Notification',
+      message,
+      [
+        {
+          text: 'Cancel',
+          onPress: () => Alert.alert('Cancel Pressed'),
+          style: 'cancel',
+        },
+      ],
+      {
+        cancelable: true,
+      }
+    );
 
   const logoutCB = async () => {
     await logout();

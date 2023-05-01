@@ -86,7 +86,7 @@ export const VideoCallScreen = ({ route }: any) => {
       OmiCallEvent.onCallEstablished,
       onCallEstablished
     );
-    omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
+    const end = omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     if (Platform.OS === 'ios') {
@@ -100,7 +100,7 @@ export const VideoCallScreen = ({ route }: any) => {
     return () => {
       console.log('remove widget');
       established.remove();
-      omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
+      end.remove();
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       if (Platform.OS === 'ios') {

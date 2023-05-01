@@ -4,11 +4,14 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.RCTNativeAppEventEmitter
@@ -42,8 +45,24 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       Log.d("omikit", "incomingReceived: ")
     }
 
-    override fun onCallEnd() {
-      sendEvent(CALL_END, null)
+    override fun onCallEnd(callInfo: Any?) {
+      if (callInfo is Map<*, *>) {
+        val call = callInfo as Map<*, *>
+        val map: WritableMap = WritableNativeMap()
+        val timeStartToAnswer = call["time_start_to_answer"] as Long?
+        val timeEnd = call["time_end"] as Long
+        map.putString("transaction_id", call["transaction_id"] as String)
+        map.putString("direction", call["direction"] as String)
+        map.putString("source_number", call["source_number"] as String)
+        map.putString("destination_number", call["destination_number"] as String)
+        map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
+        map.putDouble("time_end", timeEnd.toDouble())
+        map.putString("sip_user", call["sip_user"] as String)
+        map.putString("disposition", call["disposition"] as String)
+        sendEvent(CALL_END, map)
+      } else {
+        sendEvent(CALL_END, null)
+      }
     }
 
     override fun onCallEstablished(
@@ -51,12 +70,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       phoneNumber: String?,
       isVideo: Boolean?,
       startTime: Long,
+      transactionId: String?,
     ) {
-      Handler().postDelayed({
+      OmiClient.instance.changeLocalCameraOrientation(0)
+      Handler(Looper.getMainLooper()).postDelayed({
         Log.d("OmikitReactNative", "onCallEstablished")
         val map: WritableMap = WritableNativeMap()
         map.putString("callerNumber", phoneNumber)
         map.putBoolean("isVideo", isVideo ?: true)
+        map.putString("transactionId", transactionId)
         sendEvent(CALL_ESTABLISHED, map)
       }, 500)
     }
@@ -82,7 +104,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
 
     override fun onRinging() {
-//      sendEvent("onRinging", null)
     }
 
     override fun onVideoSize(width: Int, height: Int) {
@@ -191,7 +212,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
               isVideo,
             )
           }
-        } catch (_ : Throwable) {
+        } catch (_: Throwable) {
 
         }
       }
@@ -221,7 +242,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             "",
             deviceTokenAndroid,
           )
-        } catch (_ : Throwable) {
+        } catch (_: Throwable) {
 
         }
       }
@@ -231,29 +252,46 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun startCall(data: ReadableMap, promise: Promise) {
-    currentActivity?.runOnUiThread {
-      val phoneNumber = data.getString("phoneNumber") as String
-      val isVideo = data.getBoolean("isVideo")
-      OmiClient.instance.startCall(phoneNumber, isVideo)
-      promise.resolve(true)
+    val audio: Int =
+      ContextCompat.checkSelfPermission(
+        reactApplicationContext!!,
+        Manifest.permission.RECORD_AUDIO
+      )
+    if (audio == PackageManager.PERMISSION_GRANTED) {
+      currentActivity?.runOnUiThread {
+        val phoneNumber = data.getString("phoneNumber") as String
+        val isVideo = data.getBoolean("isVideo")
+        OmiClient.instance.startCall(phoneNumber, isVideo)
+        promise.resolve(true)
+      }
+    } else {
+      promise.resolve(false)
     }
   }
 
   @ReactMethod
   fun startCallWithUuid(data: ReadableMap, promise: Promise) {
-    mainScope.launch {
-      var callResult = false
-      withContext(Dispatchers.Default) {
-        try {
-          val uuid = data.getString("usrUuid") as String
-          val isVideo = data.getBoolean("isVideo")
-          callResult = OmiClient.instance.startCallWithUuid(uuid = uuid, isVideo = isVideo)
-        } catch (_ : Throwable) {
+    val audio: Int =
+      ContextCompat.checkSelfPermission(
+        reactApplicationContext!!,
+        Manifest.permission.RECORD_AUDIO
+      )
+    if (audio == PackageManager.PERMISSION_GRANTED) {
+      mainScope.launch {
+        var callResult = false
+        withContext(Dispatchers.Default) {
+          try {
+            val uuid = data.getString("usrUuid") as String
+            val isVideo = data.getBoolean("isVideo")
+            callResult = OmiClient.instance.startCallWithUuid(uuid = uuid, isVideo = isVideo)
+          } catch (_: Throwable) {
 
+          }
         }
-
+        promise.resolve(callResult)
       }
-      promise.resolve(callResult)
+    } else {
+      promise.resolve(false)
     }
   }
 
@@ -268,19 +306,35 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun endCall(promise: Promise) {
     currentActivity?.runOnUiThread {
-      OmiClient.instance.hangUp()
-      promise.resolve(true)
+      val callInfo = OmiClient.instance.hangUp()
+      if (callInfo is Map<*, *>) {
+        val call = callInfo as Map<*, *>
+        val map: WritableMap = WritableNativeMap()
+        val timeStartToAnswer = call["time_start_to_answer"] as Long?
+        val timeEnd = call["time_end"] as Long
+        map.putString("transaction_id", call["transaction_id"] as String)
+        map.putString("direction", call["direction"] as String)
+        map.putString("source_number", call["source_number"] as String)
+        map.putString("destination_number", call["destination_number"] as String)
+        map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
+        map.putDouble("time_end", timeEnd.toDouble())
+        map.putString("sip_user", call["sip_user"] as String)
+        map.putString("disposition", call["disposition"] as String)
+        sendEvent(CALL_END, map)
+      } else {
+        promise.resolve(null)
+      }
     }
   }
 
   @ReactMethod
   fun toggleMute(promise: Promise) {
     mainScope.launch {
-      var newStatus : Boolean? = null
+      var newStatus: Boolean? = null
       withContext(Dispatchers.Default) {
         try {
           newStatus = OmiClient.instance.toggleMute()
-        } catch (_ : Throwable) {
+        } catch (_: Throwable) {
 
         }
       }
@@ -366,11 +420,85 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       withContext(Dispatchers.Default) {
         try {
           OmiClient.instance.logout()
-        } catch (_ : Throwable) {
+        } catch (_: Throwable) {
 
         }
       }
       promise.resolve(true)
+    }
+  }
+
+  @ReactMethod
+  fun getCurrentUser(promise: Promise) {
+    mainScope.launch {
+      var callResult: Any? = null
+      withContext(Dispatchers.Default) {
+        try {
+          callResult = OmiClient.instance.getCurrentUser()
+        } catch (_: Throwable) {
+
+        }
+      }
+      if (callResult != null && callResult is Map<*, *>) {
+        val call = callResult as Map<*, *>
+        val map: WritableMap = WritableNativeMap()
+        map.putString("extension", call["extension"] as String?)
+        map.putString("uuid", call["uuid"] as String?)
+        map.putString("full_name", call["full_name"] as String?)
+        map.putString("avatar_url", call["avatar_url"] as String?)
+        promise.resolve(map)
+      } else {
+        promise.resolve(null);
+      }
+    }
+  }
+
+  @ReactMethod
+  fun getGuestUser(promise: Promise) {
+    mainScope.launch {
+      var callResult: Any? = null
+      withContext(Dispatchers.Default) {
+        try {
+          callResult = OmiClient.instance.getIncomingCallUser()
+        } catch (_: Throwable) {
+
+        }
+      }
+      if (callResult != null && callResult is Map<*, *>) {
+        val call = callResult as Map<*, *>
+        val map: WritableMap = WritableNativeMap()
+        map.putString("extension", call["extension"] as String?)
+        map.putString("uuid", call["uuid"] as String?)
+        map.putString("full_name", call["full_name"] as String?)
+        map.putString("avatar_url", call["avatar_url"] as String?)
+        promise.resolve(map)
+      } else {
+        promise.resolve(null);
+      }
+    }
+  }
+
+  @ReactMethod
+  fun getUserInfo(phone: Any, promise: Promise) {
+    mainScope.launch {
+      var callResult: Any? = null
+      withContext(Dispatchers.Default) {
+        try {
+          callResult = OmiClient.instance.getUserInfo(phone as String)
+        } catch (_: Throwable) {
+        }
+      }
+      if (callResult != null && callResult is Map<*, *>) {
+        val call = callResult as Map<*, *>
+        val map: WritableMap = WritableNativeMap()
+        map.putString("extension", call["extension"] as String?)
+        map.putString("uuid", call["uuid"] as String?)
+        map.putString("full_name", call["full_name"] as String?)
+        map.putString("avatar_url", call["avatar_url"] as String?)
+        promise.resolve(map)
+      } else {
+        promise.resolve(null);
+      }
     }
   }
 
@@ -399,7 +527,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
-  private fun requestPermission(isVideo : Boolean) {
+  private fun requestPermission(isVideo: Boolean) {
     var permissions = arrayOf(
       Manifest.permission.USE_SIP,
       Manifest.permission.CALL_PHONE,

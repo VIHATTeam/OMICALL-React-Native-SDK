@@ -32,8 +32,7 @@ export const LoginApiKeyScreen = () => {
   var [fullName, setFullName] = useState(
     Platform.OS === 'android' ? 'chau1' : 'chau2'
   );
-  var apiKey =
-    '0ACE08B2F03BE1D6B3F7F5CCD34D9AC08CB92976E2AB6CEE6EA38C5C96F1B858';
+  var apiKey = '';
   const navigation = useNavigation();
 
   useEffect(() => {
