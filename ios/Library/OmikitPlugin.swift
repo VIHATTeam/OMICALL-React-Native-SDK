@@ -94,8 +94,8 @@ public class OmikitPlugin: RCTEventEmitter {
     
     @objc(endCall:withRejecter:)
     func endCall(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        CallManager.shareInstance().endAvailableCall()
-        resolve(true)
+        let result = CallManager.shareInstance().endAvailableCall()
+        resolve(result)
     }
     
     @objc(toggleMute:withRejecter:)
@@ -107,7 +107,7 @@ public class OmikitPlugin: RCTEventEmitter {
     }
     
     @objc(toggleSpeaker:withRejecter:)
-    func toggleSpeaker(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func toggleSpeaker(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().toogleSpeaker() 
         resolve(CallManager.shareInstance().isSpeaker)
     }
@@ -121,34 +121,56 @@ public class OmikitPlugin: RCTEventEmitter {
     }
     
     @objc(switchOmiCamera:withRejecter:)
-    func switchOmiCamera(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func switchOmiCamera(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().switchCamera()
         resolve(true)
     }
     
     @objc(toggleOmiVideo:withRejecter:)
-    func toggleOmiVideo(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func toggleOmiVideo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().toggleCamera()
         resolve(true)
     }
     
     @objc(logout:withRejecter:)
-    func logout(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func logout(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().logout()
         resolve(true)
     }
     
     @objc(registerVideoEvent:withRejecter:)
-    func registerVideoEvent(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func registerVideoEvent(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().registerVideoEvent()
         resolve(true)
     }
     
     @objc(removeVideoEvent:withRejecter:)
-    func removeVideoEvent(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func removeVideoEvent(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         CallManager.shareInstance().removeVideoEvent()
         resolve(true)
     }
+    
+    @objc(getCurrentUser:withRejecter:)
+    func getCurrentUser(resolve: @escaping RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().getCurrentUser { user in
+            resolve(user)
+        }
+    }
+
+    @objc(getGuestUser:withRejecter:)
+    func getGuestUser(resolve: @escaping RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().getGuestUser { user in
+            resolve(user)
+        }
+    }
+    
+    @objc(getUserInfor:withResolver:withRejecter:)
+    func getUserInfor(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        CallManager.shareInstance().getUserInfo(phone: data as! String) { user in
+            resolve(user)
+        }
+    }
+    
     
     func sendMuteStatus() {
         if let call = CallManager.shareInstance().getAvailableCall() {
@@ -169,6 +191,7 @@ public class OmikitPlugin: RCTEventEmitter {
             ])
         }
     }
+    
     
     public override func supportedEvents() -> [String]! {
         return [

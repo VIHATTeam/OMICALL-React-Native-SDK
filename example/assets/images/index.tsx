@@ -7,4 +7,5 @@ export const UIImages = {
   comment: require('./comment.png'),
   close: require('./close.png'),
   joinCall: require('./join_call.png'),
+  callingFace: require('./calling_face.png'),
 };

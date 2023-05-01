@@ -98,6 +98,18 @@ export function removeVideoEvent(): Promise<boolean> {
   return OmikitPlugin.removeVideoEvent();
 }
 
+export function getCurrentUser(): Promise<any> {
+  return OmikitPlugin.getCurrentUser();
+}
+
+export function getGuestUser(): Promise<any> {
+  return OmikitPlugin.getGuestUser();
+}
+
+export function getUserInfo(phone: String): Promise<any> {
+  return OmikitPlugin.getUserInfo(phone);
+}
+
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 
 export const OmiCallEvent = {
