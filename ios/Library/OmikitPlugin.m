@@ -69,6 +69,15 @@ RCT_EXTERN_METHOD(registerVideoEvent:
 RCT_EXTERN_METHOD(removeVideoEvent:
                  (RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(getCurrentUser:
+                 (RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(getGuestUser:
+                 (RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(getUserInfo: (id)data
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
 
 + (BOOL)requiresMainQueueSetup
 {

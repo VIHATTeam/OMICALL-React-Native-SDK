@@ -16,14 +16,17 @@ import {
   toggleMute,
   toggleSpeaker,
   joinCall,
+  getCurrentUser,
+  getGuestUser,
 } from 'omikit-plugin';
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
 import { CustomKeyboard } from './components/custom_view/custom_keyboard';
 import { LiveData } from './livedata';
+import { UserView } from './components/custom_view/user_view';
 
 export const DialCallScreen = ({ route }: any) => {
-  const callerNumber = route.params.callerNumber;
+  // const callerNumber = route.params.callerNumber;
   const navigation = useNavigation();
   const [status, setStatus] = useState(route.params.status);
   const [micOn, setMicOn] = useState(false);
@@ -31,6 +34,8 @@ export const DialCallScreen = ({ route }: any) => {
   const [keyboardOn, setKeyboardOn] = useState(false);
   const [title, setTitle] = useState('');
   const [needBack, setNeedBack] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [guestUser, setGuestUser] = useState<any>(null);
 
   const onCallEstablished = () => {
     console.log('onCallEstablished');
@@ -111,16 +116,36 @@ export const DialCallScreen = ({ route }: any) => {
     };
   }, []);
 
+  useEffect(() => {
+    fetchUserInfo();
+  }, []);
+
+  const fetchUserInfo = async () => {
+    const current = await getCurrentUser();
+    setCurrentUser(current);
+    const guest = await getGuestUser();
+    setGuestUser(guest);
+  };
+
   return (
     <KeyboardAvoid>
       <View style={styles.background}>
-        <Text style={styles.phone}>{callerNumber ?? ''}</Text>
-        <View style={styles.title}>
-          {status === CallStatus.established ? (
-            <CustomTimer />
-          ) : (
-            <Text style={styles.status}>{status}</Text>
-          )}
+        <View style={styles.titleBackground}>
+          <UserView
+            full_name={currentUser == null ? null : currentUser.full_name}
+            avatar_url={currentUser == null ? null : currentUser.avatar_url}
+          />
+          <View style={styles.title}>
+            {status === CallStatus.established ? (
+              <CustomTimer />
+            ) : (
+              <Text style={styles.status}>{status}</Text>
+            )}
+          </View>
+          <UserView
+            full_name={guestUser == null ? null : guestUser.full_name}
+            avatar_url={guestUser == null ? null : guestUser.avatar_url}
+          />
         </View>
         <View style={styles.feature}>
           {status === CallStatus.established ? (
@@ -198,13 +223,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
+  titleBackground: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   phone: {
     fontSize: 30,
     color: UIColors.textColor,
     fontWeight: '700',
   },
   title: {
-    marginTop: 16,
+    marginHorizontal: 24,
   },
   status: {
     fontSize: 20,

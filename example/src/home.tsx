@@ -50,7 +50,6 @@ export const HomeScreen = () => {
     (data: any) => {
       console.log('incomingReceived');
       console.log(data);
-
       const { callerNumber, isVideo } = data;
       const input = {
         callerNumber: callerNumber,
@@ -88,6 +87,10 @@ export const HomeScreen = () => {
     [navigation]
   );
 
+  const onCallEnd = useCallback((data: any) => {
+    console.log(data);
+  }, []);
+
   const callWithParam = useCallback(
     async (data: any) => {
       const { callerNumber, isVideo } = data;
@@ -123,13 +126,15 @@ export const HomeScreen = () => {
   useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.incomingReceived, incomingReceived);
     omiEmitter.addListener(OmiCallEvent.onCallEstablished, establishedReceived);
+    omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     return () => {
       omiEmitter.removeAllListeners(OmiCallEvent.incomingReceived);
+      omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
       omiEmitter.removeAllListeners(OmiCallEvent.onCallEstablished);
       omiEmitter.removeAllListeners(OmiCallEvent.onClickMissedCall);
     };
-  }, [incomingReceived, establishedReceived, clickMissedCall]);
+  }, [incomingReceived, establishedReceived, clickMissedCall, onCallEnd]);
 
   const call = async () => {
     // navigation.navigate('Call' as never);

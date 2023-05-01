@@ -18,6 +18,8 @@ class CallManager {
     private let omiLib = OMISIPLib.sharedInstance()
     var videoManager: OMIVideoViewManager?
     var isSpeaker = false
+    private var guestPhone : String = ""
+    private var lastStatusCall : String?
     
     /// Get instance
     static func shareInstance() -> CallManager {
@@ -175,8 +177,11 @@ class CallManager {
                 if (self.videoManager != nil) {
                     self.videoManager = nil
                 }
+                let callInfo = self.getCallInfo(call: call)
+                self.lastStatusCall = nil
+                self.guestPhone = ""
                 DispatchQueue.main.async {
-                    OmikitPlugin.instance.sendEvent(withName: CALL_END, body: [:])
+                    OmikitPlugin.instance.sendEvent(withName: CALL_END, body: callInfo)
                 }
             }
         }
@@ -211,6 +216,7 @@ class CallManager {
                 videoManager = OMIVideoViewManager.init()
             }
             isSpeaker = call.isVideo
+            lastStatusCall = "answered"
             OmikitPlugin.instance.sendEvent(withName: CALL_ESTABLISHED, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber])
             OmikitPlugin.instance.sendMuteStatus()
             OmikitPlugin.instance.sendSpeakerStatus()
@@ -221,13 +227,17 @@ class CallManager {
             } else if (!call.userDidHangUp) {
                 NSLog("Call remotly ended, in DISCONNECTED state, with UUID: \(call.uuid)")
             }
+            let callInfo = getCallInfo(call: call)
             if (videoManager != nil) {
                 videoManager = nil
             }
+            lastStatusCall = nil
+            guestPhone = ""
             print(call.uuid.uuidString)
-            OmikitPlugin.instance.sendEvent(withName: CALL_END, body: [:])
+            OmikitPlugin.instance.sendEvent(withName: CALL_END, body: callInfo)
             break
         case .incoming:
+            guestPhone = call.callerNumber ?? ""
             OmikitPlugin.instance.sendEvent(withName: INCOMING_RECEIVED, body: ["isVideo": call.isVideo, "callerNumber": call.callerNumber ?? ""])
             break
         default:
@@ -238,6 +248,7 @@ class CallManager {
     
     /// Start call
     func startCall(_ phoneNumber: String, isVideo: Bool) -> Bool {
+        guestPhone = phoneNumber
         if (isVideo) {
             return OmiClient.startVideoCall(phoneNumber)
         }
@@ -248,6 +259,7 @@ class CallManager {
     func startCallWithUuid(_ uuid: String, isVideo: Bool) -> Bool {
         let phoneNumber = OmiClient.getPhone(uuid)
         if let phone = phoneNumber {
+            guestPhone = phoneNumber ?? ""
             if (isVideo) {
                 return OmiClient.startVideoCall(phone)
             }
@@ -256,12 +268,14 @@ class CallManager {
         return false
     }
     
-    func endAvailableCall() {
+    func endAvailableCall() -> [String: Any] {
         guard let call = getAvailableCall() else {
             OmikitPlugin.instance.sendEvent(withName: CALL_END, body: [:])
-            return
+            return [:]
         }
+        let callInfo = getCallInfo(call: call)
         omiLib.callManager.end(call)
+        return callInfo
     }
     
     func endAllCalls() {
@@ -311,6 +325,23 @@ class CallManager {
     
     func logout() {
         OmiClient.logout()
+    }
+    
+    func getCurrentUser(completion: @escaping (([String: Any]) -> Void)) {
+        let prefs = UserDefaults.standard
+        if let user = prefs.value(forKey: "User") as? String {
+            getUserInfo(phone: user, completion: completion)
+        }
+    }
+    
+    func getGuestUser(completion: @escaping (([String: Any]) -> Void)) {
+        getUserInfo(phone: guestPhone, completion: completion)
+    }
+    
+    func getUserInfo(phone: String, completion: @escaping (([String: Any]) -> Void)) {
+        if let account = OmiClient.getAccountInfo(phone) as? [String: Any] {
+            completion(account)
+        }
     }
     
     func inputs() -> [[String: String]] {
@@ -395,6 +426,27 @@ class CallManager {
     func getRemotePreviewView(frame: CGRect) -> UIView?  {
         guard let videoManager = videoManager  else { return nil }
         return videoManager.createView(forVideoRemote: frame)
+    }
+    
+    private func getCallInfo(call: OMICall) -> [String: Any] {
+        var direction = "outbound"
+        if (guestPhone.count < 10) {
+            direction = "inbound"
+        }
+        let prefs = UserDefaults.standard
+        let user = prefs.value(forKey: "User") as? String
+        let status = call.callState == .confirmed ? "answered" : "no_answered"
+        let timeEnd = Int(Date().timeIntervalSince1970)
+        return [
+            "transaction_id" : call.omiId,
+            "direction" : direction,
+            "source_number" : user,
+            "destination_number" : guestPhone,
+            "time_start_to_answer" : call.createDate,
+            "time_end" : timeEnd,
+            "sip_user": user,
+            "disposition" : lastStatusCall == nil ? "no_answered" : "answered",
+        ]
     }
 }
 
