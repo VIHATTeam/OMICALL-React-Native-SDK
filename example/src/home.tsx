@@ -20,8 +20,10 @@ import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 import { LiveData } from './livedata';
 import { localStorage } from './local_storage';
-import { check } from 'prettier';
-import { PERMISSIONS } from 'react-native-permissions';
+import RNPermissions, {
+  Permission,
+  PERMISSIONS,
+} from 'react-native-permissions';
 
 export const HomeScreen = () => {
   ///need add call phone
@@ -180,30 +182,31 @@ export const HomeScreen = () => {
       }
     } else {
       console.log('faaaaaaa');
-      const isAllowRecordAudio = check(PERMISSIONS.ANDROID.RECORD_AUDIO);
-      console.log(isAllowRecordAudio);
-      if (isAllowRecordAudio === false) {
-        showAlert('Please check permission!');
-        return;
+      const PLATFORM_PERMISSIONS = Platform.select<
+        typeof PERMISSIONS.ANDROID | typeof PERMISSIONS.IOS | {}
+      >({
+        android: PERMISSIONS.ANDROID.RECORD_AUDIO,
+        ios: PERMISSIONS.IOS.MICROPHONE,
+        default: {},
+      });
+      const PERMISSIONS_VALUES: Permission[] =
+        Object.values(PLATFORM_PERMISSIONS);
+      const audioPermission = PERMISSIONS_VALUES[0];
+      if (audioPermission) {
+        const value = await RNPermissions.check(audioPermission);
+        if (value !== 'granted') {
+          showAlert('Check audio permission!');
+        }
       }
     }
   };
 
   const showAlert = (message: string) =>
-    Alert.alert(
-      'Notification',
-      message,
-      [
-        {
-          text: 'Cancel',
-          onPress: () => Alert.alert('Cancel Pressed'),
-          style: 'cancel',
-        },
-      ],
+    Alert.alert('Notification', message, [
       {
-        cancelable: true,
-      }
-    );
+        text: 'Cancel',
+      },
+    ]);
 
   const logoutCB = async () => {
     await logout();
