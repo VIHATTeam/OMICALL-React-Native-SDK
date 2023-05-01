@@ -158,11 +158,15 @@ We support both Object-C and Swift. But we only support documents for Object-C. 
 #import <UserNotifications/UserNotifications.h>
 #import <OmiKit/OmiKit-umbrella.h>
 #import <OmiKit/Constants.h>
-#import <UserNotifications/UserNotifications.h>
 
-PushKitManager *pushkitManager;
-CallKitProviderDelegate * provider;
-PKPushRegistry * voipRegistry;
+@interface AppDelegate : UIResponder <UIApplicationDelegate, RCTBridgeDelegate, UNUserNotificationCenterDelegate>
+
+@property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, strong) PushKitManager *pushkitManager;
+@property (nonatomic, strong) CallKitProviderDelegate * provider;
+@property (nonatomic, strong) PKPushRegistry * voipRegistry;
+
+@end
 ```
 
 - Edit AppDelegate.m:
@@ -175,6 +179,25 @@ PKPushRegistry * voipRegistry;
 provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
 voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
 pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
+if (@available(iOS 10.0, *)) {
+      [UNUserNotificationCenter currentNotificationCenter].delegate = (id<UNUserNotificationCenterDelegate>) self;
+}
+
+//Called when a notification is delivered to a foreground app.
+-(void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+  NSLog(@"User Info : %@",notification.request.content.userInfo);
+  completionHandler(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge);
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
+    NSDictionary *userInfo  = response.notification.request.content.userInfo;
+    if (userInfo && [userInfo valueForKey:@"omisdkCallerNumber"]) {
+      NSLog(@"User Info : %@",userInfo);
+      [OmikitNotification didRecieve:userInfo];
+    }
+    completionHandler();
+}
 ```
 
 - Add these lines into `Info.plist`:
@@ -207,7 +230,7 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
 
 ```
 
-**_ Only use under lines when added `Cloud Messaging` plugin in your project _**
+*** Only use under lines when added `Cloud Messaging` plugin in your project ***
 
 - Setup push notification: We only support Firebase for push notification.
 
@@ -268,7 +291,7 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     //result is true then user login successfully.
 ```
 
-- Config push notification for Android:
+- Config push notification:
 
   ```
   import { configPushNotification } from 'omikit-plugin';
@@ -303,10 +326,8 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
   ```
 
 - Upload token: OmiKit need FCM for Android and APNS to push notification on user devices. We use more packages: <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> and <a href="https://www.npmjs.com/package/react-native-device-info?activeTab=readme">react-native-device-info</a>
-
   ```
   import { updateToken } from 'omikit-plugin';
-
   const fcmToken = await fcm;
   const apnsToken = await apns;
   const deviceId = DeviceInfo.getDeviceId();
@@ -323,7 +344,6 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
   - Call with phone number (mobile phone or internal number):
   ```
   import {startCall} from 'omikit-plugin';
-
   const result = await startCall({
       phoneNumber: phone, //phone number
       isVideo: false //allow video call: true/false
@@ -332,7 +352,6 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
   - Call with UUID (only support with Api key):
   ```
   import {startCallWithUuid} from 'omikit-plugin';
-
   const result = await startCallWithUuid({
       usrUuid: uuid, //phone number
       isVideo: false //allow video call: true/false
@@ -351,7 +370,19 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     ```
     import {endCall} from 'omikit-plugin';
 
-    await endCall();
+    const value = await endCall();
+    //value is call information
+    Sample output:
+    {
+       "transaction_id":ea7dff38-cb1e-483d-8576...........,
+       "direction":"inbound",
+       "source_number":111,
+       "destination_number":110,
+       "time_start_to_answer":1682858097393,
+       "time_end":1682858152181,
+       "sip_user":111,
+       "disposition":"answered"
+    }
     ```
 
   - Toggle the audio: On/off audio a call
@@ -378,6 +409,39 @@ pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
     sendDTMF({
         character: text,
     });
+    ```
+  - Get current user information:
+    ```
+    final user = await getCurrentUser();
+    Output Sample:  
+    {
+        "extension": "111",
+        "full_name": "chau1",
+        "avatar_url": "",
+        "uuid": "122aaa"
+    }
+    ```
+  - Get guest user information:
+    ```
+    final user = await getGuestUser();
+    Output Sample:  
+    {
+        "extension": "111",
+        "full_name": "chau1",
+        "avatar_url": "",
+        "uuid": "122aaa"
+    }
+    ```
+  - Get user information from sip:
+    ```
+    final user = await getUserInfo("111");
+    Output Sample:  
+    {
+        "extension": "111",
+        "full_name": "chau1",
+        "avatar_url": "",
+        "uuid": "122aaa"
+    }
     ```
 
   - Logout: Can't receive call.
@@ -472,7 +536,7 @@ useEffect(() => {
 - Action Name value:
   - `OmiCallEvent.incomingReceived`: Have a incoming call. On Android this event work only foreground
   - `OmiCallEvent.onCallEstablished`: Connected a call.
-  - `OmiCallEvent.onCallEnd`: End a call.
+  - `OmiCallEvent.onCallEnd`: End a call and return call information (like endCall)
   - `OmiCallEvent.onMuted`: Audio changed.
   - `OmiCallEvent.onSpeaker`: Audio changed.
   - `OmiCallEvent.onClickMissedCall`: Click missed call notification.

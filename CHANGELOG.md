@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 ## 2.2.0
   - Increase Android/iOS core version
   - Replace `FMService` to `FirebaseMessageReceiver` in AndroidManifest.xml
-  - Support missed call.
+  - Support missed call
+  - Return call information after the call ending.
+  - Add `getCurrentUser`, `getGuestUser` and `getUserInfo` to get user information.
   - Update document and sample
   
 ## 2.1.2
