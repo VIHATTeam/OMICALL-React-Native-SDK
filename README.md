@@ -141,7 +141,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
   - Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
   - Add Fire Messaging to receive `fcm_token` (You can refer <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> to setup notification for React native)
 
-  - For more setting information, please refer <a href="https://rnfirebase.io/messaging/usage">Config Push for Android</a>
+  - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/android-sdk/cau-hinh-push-notification">Config Push for Android</a>
 
 #### iOS:
 
@@ -230,7 +230,7 @@ if (@available(iOS 10.0, *)) {
 
 ```
 
-*** Only use under lines when added `Cloud Messaging` plugin in your project ***
+**_ Only use under lines when added `Cloud Messaging` plugin in your project _**
 
 - Setup push notification: We only support Firebase for push notification.
 
@@ -250,6 +250,7 @@ if (@available(iOS 10.0, *)) {
 ```
 
 - Important function.
+
   - Start Serivce: OmiKit need start services and register some events.
 
     ```
@@ -326,6 +327,7 @@ if (@available(iOS 10.0, *)) {
   ```
 
 - Upload token: OmiKit need FCM for Android and APNS to push notification on user devices. We use more packages: <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> and <a href="https://www.npmjs.com/package/react-native-device-info?activeTab=readme">react-native-device-info</a>
+
   ```
   import { updateToken } from 'omikit-plugin';
   const fcmToken = await fcm;
@@ -341,7 +343,9 @@ if (@available(iOS 10.0, *)) {
   ```
 
 - Other functions:
+
   - Call with phone number (mobile phone or internal number):
+
   ```
   import {startCall} from 'omikit-plugin';
   const result = await startCall({
@@ -349,7 +353,9 @@ if (@available(iOS 10.0, *)) {
       isVideo: false //allow video call: true/false
   });
   ```
+
   - Call with UUID (only support with Api key):
+
   ```
   import {startCallWithUuid} from 'omikit-plugin';
   const result = await startCallWithUuid({
@@ -357,6 +363,7 @@ if (@available(iOS 10.0, *)) {
       isVideo: false //allow video call: true/false
   });
   ```
+
   - Accept a call:
 
     ```
@@ -410,10 +417,11 @@ if (@available(iOS 10.0, *)) {
         character: text,
     });
     ```
+
   - Get current user information:
     ```
     final user = await getCurrentUser();
-    Output Sample:  
+    Output Sample:
     {
         "extension": "111",
         "full_name": "chau1",
@@ -424,7 +432,7 @@ if (@available(iOS 10.0, *)) {
   - Get guest user information:
     ```
     final user = await getGuestUser();
-    Output Sample:  
+    Output Sample:
     {
         "extension": "111",
         "full_name": "chau1",
@@ -433,9 +441,10 @@ if (@available(iOS 10.0, *)) {
     }
     ```
   - Get user information from sip:
+
     ```
     final user = await getUserInfo("111");
-    Output Sample:  
+    Output Sample:
     {
         "extension": "111",
         "full_name": "chau1",
@@ -451,6 +460,7 @@ if (@available(iOS 10.0, *)) {
 
     logout();
     ```
+
 - Video Call functions: Support only video call, You need enable video in `init functions` and `start call` to implements under functions.
 
   - Switch front/back camera: We use the front camera for first time.

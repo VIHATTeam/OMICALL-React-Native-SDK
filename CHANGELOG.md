@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.1
+  - Update readme
+
 ## 2.2.0
   - Increase Android/iOS core version
   - Replace `FMService` to `FirebaseMessageReceiver` in AndroidManifest.xml
