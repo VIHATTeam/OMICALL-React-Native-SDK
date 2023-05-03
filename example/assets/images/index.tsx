@@ -8,4 +8,5 @@ export const UIImages = {
   close: require('./close.png'),
   joinCall: require('./join_call.png'),
   callingFace: require('./calling_face.png'),
+  icBack: require('./ic_back.png'),
 };
