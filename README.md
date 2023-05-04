@@ -298,6 +298,7 @@ if (@available(iOS 10.0, *)) {
   import { configPushNotification } from 'omikit-plugin';
 
   configPushNotification({
+    notificationIcon : "calling_face", //notification icon on Android
     prefix : "Cuộc gọi tới từ: ",
     declineTitle : "Từ chối",
     acceptTitle : "Chấp nhận",

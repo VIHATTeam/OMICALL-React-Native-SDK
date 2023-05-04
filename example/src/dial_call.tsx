@@ -92,14 +92,14 @@ export const DialCallScreen = ({ route }: any) => {
       OmiCallEvent.onCallEstablished,
       onCallEstablished
     );
-    omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
+    const end = omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     LiveData.isOpenedCall = true;
     return () => {
       established.remove();
       console.log('remove widget');
-      omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
+      end.remove();
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       LiveData.isOpenedCall = false;
