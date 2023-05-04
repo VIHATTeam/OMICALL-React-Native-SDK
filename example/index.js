@@ -20,6 +20,7 @@ export const Main = () => {
   const initData = useCallback(async () => {
     startServices();
     configPushNotification({
+      notificationIcon: 'assets_images_calling_face',
       prefix: 'Cuộc gọi tới từ: ',
       declineTitle: 'Từ chối',
       acceptTitle: 'Chấp nhận',

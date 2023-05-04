@@ -51,7 +51,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         val map: WritableMap = WritableNativeMap()
         val timeStartToAnswer = call["time_start_to_answer"] as Long?
         val timeEnd = call["time_end"] as Long
-        map.putString("transaction_id", call["transaction_id"] as String)
+        map.putString("transaction_id", call["transaction_id"] as String?)
         map.putString("direction", call["direction"] as String)
         map.putString("source_number", call["source_number"] as String)
         map.putString("destination_number", call["destination_number"] as String)
@@ -139,6 +139,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun configPushNotification(data: ReadableMap, promise: Promise) {
     currentActivity?.runOnUiThread {
+      val notificationIcon = data.getString("notificationIcon")
       val prefix = data.getString("prefix")
       val declineTitle = data.getString("declineTitle")
       val acceptTitle = data.getString("acceptTitle")
@@ -152,6 +153,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val backImage = data.getString("backImage")
       val userImage = data.getString("userImage")
       OmiClient.instance.configPushNotification(
+        notificationIcon = notificationIcon ?: "",
         prefix = prefix ?: "Cuộc gọi tới từ: ",
         declineTitle = declineTitle ?: "Từ chối",
         acceptTitle = acceptTitle ?: "Chấp nhận",
@@ -312,7 +314,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         val map: WritableMap = WritableNativeMap()
         val timeStartToAnswer = call["time_start_to_answer"] as Long?
         val timeEnd = call["time_end"] as Long
-        map.putString("transaction_id", call["transaction_id"] as String)
+        map.putString("transaction_id", call["transaction_id"] as String?)
         map.putString("direction", call["direction"] as String)
         map.putString("source_number", call["source_number"] as String)
         map.putString("destination_number", call["destination_number"] as String)
