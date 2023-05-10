@@ -72,7 +72,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       startTime: Long,
       transactionId: String?,
     ) {
-      OmiClient.instance.changeLocalCameraOrientation(0)
       Handler(Looper.getMainLooper()).postDelayed({
         Log.d("OmikitReactNative", "onCallEstablished")
         val map: WritableMap = WritableNativeMap()
@@ -141,24 +140,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     currentActivity?.runOnUiThread {
       val notificationIcon = data.getString("notificationIcon")
       val prefix = data.getString("prefix")
-      val declineTitle = data.getString("declineTitle")
-      val acceptTitle = data.getString("acceptTitle")
-      val acceptBackgroundColor = data.getString("acceptBackgroundColor")
-      val declineBackgroundColor = data.getString("declineBackgroundColor")
       val incomingBackgroundColor = data.getString("incomingBackgroundColor")
       val incomingAcceptButtonImage = data.getString("incomingAcceptButtonImage")
       val incomingDeclineButtonImage = data.getString("incomingDeclineButtonImage")
       val prefixMissedCallMessage = data.getString("prefixMissedCallMessage")
-      val missedCallTitle = data.getString("missedCallTitle")
       val backImage = data.getString("backImage")
       val userImage = data.getString("userImage")
       OmiClient.instance.configPushNotification(
         notificationIcon = notificationIcon ?: "",
         prefix = prefix ?: "Cuộc gọi tới từ: ",
-        declineTitle = declineTitle ?: "Từ chối",
-        acceptTitle = acceptTitle ?: "Chấp nhận",
-        acceptBackgroundColor = acceptBackgroundColor ?: "#FF3700B3",
-        declineBackgroundColor = declineBackgroundColor ?: "#FF000000",
         incomingBackgroundColor = incomingBackgroundColor ?: "#FFFFFFFF",
         incomingAcceptButtonImage = incomingAcceptButtonImage ?: "join_call",
         incomingDeclineButtonImage = incomingDeclineButtonImage ?: "hangup",

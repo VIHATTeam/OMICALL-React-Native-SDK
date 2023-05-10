@@ -132,7 +132,7 @@ export const DialCallScreen = ({ route }: any) => {
       <View style={styles.background}>
         <View style={styles.titleBackground}>
           <UserView
-            full_name={currentUser == null ? null : currentUser.full_name}
+            full_name={currentUser == null ? null : currentUser.extension}
             avatar_url={currentUser == null ? null : currentUser.avatar_url}
           />
           <View style={styles.title}>
@@ -143,7 +143,7 @@ export const DialCallScreen = ({ route }: any) => {
             )}
           </View>
           <UserView
-            full_name={guestUser == null ? null : guestUser.full_name}
+            full_name={guestUser == null ? null : guestUser.extension}
             avatar_url={guestUser == null ? null : guestUser.avatar_url}
           />
         </View>

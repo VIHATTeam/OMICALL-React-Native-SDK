@@ -27,7 +27,7 @@ import RNPermissions, {
 export const HomeScreen = () => {
   ///need add call phone
   var [phone, setPhone] = useState(
-    Platform.OS === 'android' ? '123aaa' : '122aaa'
+    Platform.OS === 'android' ? '123aaa' : '124aaa'
   );
   // var [phone, setPhone] = useState(Platform.OS === 'android' ? '110' : '111');
   const navigation = useNavigation();
@@ -193,6 +193,7 @@ export const HomeScreen = () => {
       const audioPermission = PERMISSIONS_VALUES[0];
       if (audioPermission) {
         const value = await RNPermissions.check(audioPermission);
+        console.log(value);
         if (value !== 'granted') {
           showAlert('Check audio permission!');
         }

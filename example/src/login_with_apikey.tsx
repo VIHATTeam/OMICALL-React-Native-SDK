@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
 import { requestNotification } from './notification';
 import { localStorage } from './local_storage';
+import { Alert } from 'react-native';
 
 export const LoginApiKeyScreen = () => {
   const [isVideo, setIsVideo] = useState(true);
@@ -27,10 +28,10 @@ export const LoginApiKeyScreen = () => {
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   var [usrUuid, setUsrUuid] = useState(
-    Platform.OS === 'android' ? '122aaa' : '123aaa'
+    Platform.OS === 'android' ? '124aaa' : '123aaa'
   );
   var [fullName, setFullName] = useState(
-    Platform.OS === 'android' ? 'chau1' : 'chau2'
+    Platform.OS === 'android' ? 'chau4' : 'chau2'
   );
   var apiKey = '';
   const navigation = useNavigation();
@@ -51,19 +52,29 @@ export const LoginApiKeyScreen = () => {
     };
     console.log(loginInfo);
     const result = await initCallWithApiKey(loginInfo);
+    console.log(result);
     //save login info
     setLoading(false);
-    if (result) {
+    if (result === true) {
       const loginInfoString = JSON.stringify(loginInfo);
       localStorage.set('login_info', loginInfoString);
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
+    } else {
+      showAlert('Login failed');
     }
   }, [usrUuid, fullName, navigation, isVideo, apiKey]);
 
   const _videoTrigger = useCallback(() => {
     setIsVideo(!isVideo);
   }, [isVideo]);
+
+  const showAlert = (message: string) =>
+    Alert.alert('Notification', message, [
+      {
+        text: 'Cancel',
+      },
+    ]);
 
   return (
     <>
