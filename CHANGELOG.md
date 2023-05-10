@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.3
+  - Increase android core
+  - Allow to set image for the incoming notification
+  - Update sample
+
 ## 2.2.2
   - Increase android/ ios core
   - Support to change notification icon on Android
