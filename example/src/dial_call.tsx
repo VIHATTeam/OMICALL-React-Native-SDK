@@ -87,6 +87,15 @@ export const DialCallScreen = ({ route }: any) => {
     toggleMute();
   }, []);
 
+  const onSwitchboardAnswer = useCallback(async (data: any) => {
+    const { sip } = data;
+    console.log(sip);
+    console.log(sip);
+    //use sip to get info getUserInfo()
+    const guest = await getGuestUser();
+    setGuestUser(guest);
+  }, []);
+
   useEffect(() => {
     const established = omiEmitter.addListener(
       OmiCallEvent.onCallEstablished,
@@ -95,6 +104,10 @@ export const DialCallScreen = ({ route }: any) => {
     const end = omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
+    omiEmitter.addListener(
+      OmiCallEvent.onSwitchboardAnswer,
+      onSwitchboardAnswer
+    );
     LiveData.isOpenedCall = true;
     return () => {
       established.remove();
@@ -102,9 +115,10 @@ export const DialCallScreen = ({ route }: any) => {
       end.remove();
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
+      omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
       LiveData.isOpenedCall = false;
     };
-  }, [onCallEnd, onMuted, onSpeaker]);
+  }, [onCallEnd, onMuted, onSpeaker, onSwitchboardAnswer]);
 
   useEffect(() => {
     const onBackPress = () => {

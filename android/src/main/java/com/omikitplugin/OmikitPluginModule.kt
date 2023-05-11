@@ -105,6 +105,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     override fun onRinging() {
     }
 
+    override fun onSwitchBoardAnswer(sip: String) {
+      val map: WritableMap = WritableNativeMap()
+      map.putString("sip", sip)
+      sendEvent(SWITCHBOARD_ANSWER, map)
+    }
+
     override fun onVideoSize(width: Int, height: Int) {
 
     }
