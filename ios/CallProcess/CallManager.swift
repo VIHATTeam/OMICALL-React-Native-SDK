@@ -89,6 +89,11 @@ class CallManager {
                                                    name: NSNotification.Name.OMICallDealloc,
                                                    object: nil
             )
+            NotificationCenter.default.addObserver(CallManager.instance!,
+                                                   selector: #selector(self.switchBoardAnswer(_:)),
+                                                   name: NSNotification.Name.OMICallSwitchBoardAnswer,
+                                                   object: nil
+            )
             self.showMissedCall()
         }
     }
@@ -147,6 +152,15 @@ class CallManager {
         DispatchQueue.main.async {
             NotificationCenter.default.removeObserver(CallManager.instance!, name: NSNotification.Name.OMICallVideoInfo, object: nil)
         }
+    }
+    
+    @objc func switchBoardAnswer(_ notification: NSNotification) {
+        guard let userInfo = notification.userInfo,
+              let sip     = userInfo[OMINotificationSIPKey] as? String else {
+            return;
+        }
+        guestPhone = sip
+        OmikitPlugin.instance.sendEvent(withName: SWITCHBOARD_ANSWER, body: ["sip": sip])
     }
     
     @objc func videoUpdate(_ notification: NSNotification) {

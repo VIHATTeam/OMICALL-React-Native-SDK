@@ -121,4 +121,5 @@ export const OmiCallEvent = {
   onLocalVideoReady: 'LOCAL_VIDEO_READY',
   onRemoteVideoReady: 'REMOTE_VIDEO_READY',
   onClickMissedCall: 'CLICK_MISSED_CALL',
+  onSwitchboardAnswer: 'SWITCHBOARD_ANSWER',
 };

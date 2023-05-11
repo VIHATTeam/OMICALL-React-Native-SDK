@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.0
+  - Increase android/iOS core
+  - Support to receive switchboard
+  - Update sample
+
 ## 2.2.3
   - Increase android core
   - Allow to set image for the incoming notification

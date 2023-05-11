@@ -519,6 +519,7 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
+    omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, onSwitchboardAnswer);
     if (Platform.OS === 'ios') {
       registerVideoEvent();
       omiEmitter.addListener(
@@ -532,6 +533,7 @@ useEffect(() => {
         omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
         omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
         omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
+        omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
         if (Platform.OS === 'ios') {
            removeVideoEvent();
            omiEmitter.removeAllListeners(OmiCallEvent.onRemoteVideoReady);
@@ -547,4 +549,5 @@ useEffect(() => {
   - `OmiCallEvent.onMuted`: Audio changed.
   - `OmiCallEvent.onSpeaker`: Audio changed.
   - `OmiCallEvent.onClickMissedCall`: Click missed call notification.
-- Data value: We return `callerNumber`, `isVideo: true/false` information
+  - `OmiCallEvent.onSwitchboardAnswer`: Switchboard sip is listening.
+- Data value: We return `callerNumber`, `sip`, `isVideo: true/false` information
