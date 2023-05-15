@@ -2,10 +2,8 @@ package com.omikitplugin
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -134,10 +132,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     OmiClient(context = reactApplicationContext!!)
     OmiClient.instance.setListener(callListener)
     OmiClient.instance.addAccountListener(accountListener)
-    val needSetupVideo = OmiClient.instance.needSetupCamera()
-    if (needSetupVideo) {
-      setCamera()
-    }
     promise.resolve(true)
   }
 
@@ -185,9 +179,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         )
       }
       requestPermission(isVideo)
-      if (isVideo) {
-        setCamera()
-      }
       promise.resolve(true)
     }
   }
@@ -215,9 +206,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         }
       }
       requestPermission(isVideo)
-      if (isVideo) {
-        setCamera()
-      }
       promise.resolve(loginResult)
     }
   }
@@ -543,12 +531,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       permissions,
       0,
     )
-  }
-
-  private fun setCamera() {
-    val cm =
-      reactApplicationContext!!.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-    OmiClient.instance.setCameraManager(cm)
   }
 
   override fun onActivityResult(p0: Activity?, p1: Int, p2: Int, p3: Intent?) {
