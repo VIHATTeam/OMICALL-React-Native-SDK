@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.2
+  - Increase android core
+  - Improve background and kill app state
+  - Update sample
+
 ## 2.3.1
   - Increase android core
   - Improve setup camera

@@ -33,8 +33,7 @@ export const LoginApiKeyScreen = () => {
   var [usrUuid, setUsrUuid] = useState(
     Platform.OS === 'android' ? '124aaa' : '123aaa'
   );
-  var apiKey =
-    '0ACE08B2F03BE1D6B3F7F5CCD34D9AC08CB92976E2AB6CEE6EA38C5C96F1B858';
+  var apiKey = '';
   const navigation = useNavigation();
 
   useEffect(() => {

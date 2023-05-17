@@ -305,8 +305,9 @@ if (@available(iOS 10.0, *)) {
     incomingDeclineButtonImage : "hangup", //image name
     backImage : "ic_back", //image name: icon of back button
     userImage : "calling_face", //image name: icon of user default
-    prefixMissedCallMessage: 'Cuộc gọi nhỡ từ' //config prefix message for the missed call
-    missedCallTitle: 'Cuộc gọi nhỡ' //config title for the missed call
+    prefixMissedCallMessage: 'Cuộc gọi nhỡ từ', //config prefix message for the missed call
+    missedCallTitle: 'Cuộc gọi nhỡ', //config title for the missed call
+    userNameKey: 'uuid', //we have 3 values: uuid, full_name, extension.
   });
   //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
   ```
