@@ -99,10 +99,15 @@ class CallManager {
     }
     
     func configNotification(data: [String: Any]) {
+        let user = UserDefaults.standard
+        if let prefix = data["prefix"] as? String, let userNameKey = data["userNameKey"] as? String {
+            user.set(prefix, forKey: KEY_OMI_PREFIX)
+            user.set(userNameKey, forKey: KEY_OMI_USER_NAME_KEY)
+        }
         if let title = data["missedCallTitle"] as? String, let message = data["prefixMissedCallMessage"] as? String {
             let user = UserDefaults.standard
-            user.set(title, forKey: "missedCallTitle")
-            user.set(message, forKey: "prefixMissedCallMessage")
+            user.set(title, forKey: "omicall/missedCallTitle")
+            user.set(message, forKey: "omicall/prefixMissedCallMessage")
         }
     }
     
@@ -114,8 +119,8 @@ class CallManager {
                        break
                     case .authorized, .provisional:
                         let user = UserDefaults.standard
-                        let title = user.string(forKey: "missedCallTitle") ?? ""
-                        let message = user.string(forKey: "prefixMissedCallMessage") ?? ""
+                        let title = user.string(forKey: "omicall/missedCallTitle") ?? ""
+                        let message = user.string(forKey: "omicall/prefixMissedCallMessage") ?? ""
                         let content      = UNMutableNotificationContent()
                         content.title    = title
                         content.body = "\(message) \(call.callerNumber!)"

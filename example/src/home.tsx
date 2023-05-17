@@ -140,35 +140,12 @@ export const HomeScreen = () => {
     };
   }, [incomingReceived, establishedReceived, clickMissedCall, onCallEnd]);
 
-  // const call = async () => {
-  //   // navigation.navigate('Call' as never);
-  //   if (phone.trim().length === 0) {
-  //     return;
-  //   }
-  //   const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
-  //   if (result) {
-  //     const data = {
-  //       callerNumber: phone,
-  //       status: CallStatus.calling,
-  //     };
-  //     if (callVideo === true) {
-  //       navigation.navigate('VideoCall' as never, data as never);
-  //     } else {
-  //       navigation.navigate('DialCall' as never, data as never);
-  //     }
-  //   }
-  // };
-
   const call = async () => {
     // navigation.navigate('Call' as never);
     if (phone.trim().length === 0) {
       return;
     }
-    const result = await startCallWithUuid({
-      usrUuid: phone,
-      isVideo: callVideo,
-    });
-    console.log(result);
+    const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
     if (result) {
       const data = {
         callerNumber: phone,
@@ -179,27 +156,50 @@ export const HomeScreen = () => {
       } else {
         navigation.navigate('DialCall' as never, data as never);
       }
-    } else {
-      console.log('faaaaaaa');
-      const PLATFORM_PERMISSIONS = Platform.select<
-        typeof PERMISSIONS.ANDROID | typeof PERMISSIONS.IOS | {}
-      >({
-        android: PERMISSIONS.ANDROID.RECORD_AUDIO,
-        ios: PERMISSIONS.IOS.MICROPHONE,
-        default: {},
-      });
-      const PERMISSIONS_VALUES: Permission[] =
-        Object.values(PLATFORM_PERMISSIONS);
-      const audioPermission = PERMISSIONS_VALUES[0];
-      if (audioPermission) {
-        const value = await RNPermissions.check(audioPermission);
-        console.log(value);
-        if (value !== 'granted') {
-          showAlert('Check audio permission!');
-        }
-      }
     }
   };
+
+  // const call = async () => {
+  //   // navigation.navigate('Call' as never);
+  //   if (phone.trim().length === 0) {
+  //     return;
+  //   }
+  //   const result = await startCallWithUuid({
+  //     usrUuid: phone,
+  //     isVideo: callVideo,
+  //   });
+  //   console.log(result);
+  //   if (result) {
+  //     const data = {
+  //       callerNumber: phone,
+  //       status: CallStatus.calling,
+  //     };
+  //     if (callVideo === true) {
+  //       navigation.navigate('VideoCall' as never, data as never);
+  //     } else {
+  //       navigation.navigate('DialCall' as never, data as never);
+  //     }
+  //   } else {
+  //     console.log('faaaaaaa');
+  //     const PLATFORM_PERMISSIONS = Platform.select<
+  //       typeof PERMISSIONS.ANDROID | typeof PERMISSIONS.IOS | {}
+  //     >({
+  //       android: PERMISSIONS.ANDROID.RECORD_AUDIO,
+  //       ios: PERMISSIONS.IOS.MICROPHONE,
+  //       default: {},
+  //     });
+  //     const PERMISSIONS_VALUES: Permission[] =
+  //       Object.values(PLATFORM_PERMISSIONS);
+  //     const audioPermission = PERMISSIONS_VALUES[0];
+  //     if (audioPermission) {
+  //       const value = await RNPermissions.check(audioPermission);
+  //       console.log(value);
+  //       if (value !== 'granted') {
+  //         showAlert('Check audio permission!');
+  //       }
+  //     }
+  //   }
+  // };
 
   const showAlert = (message: string) =>
     Alert.alert('Notification', message, [

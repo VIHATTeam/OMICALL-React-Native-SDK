@@ -29,15 +29,17 @@
         </intent-filter>
       </activity>
     <receiver
-      android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
-      android:exported="true"
-      android:permission="com.google.android.c2dm.permission.SEND">
-      <intent-filter>
-        <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-      </intent-filter>
+        android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
+        android:exported="true"
+        android:enabled="true"
+        android:permission="com.google.android.c2dm.permission.SEND">
+        <intent-filter>
+            <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+        </intent-filter>
     </receiver>
     <service
       android:name="vn.vihat.omicall.omisdk.service.NotificationService"
+      android:enable="true"
       android:exported="false">
     </service>
     </application>
