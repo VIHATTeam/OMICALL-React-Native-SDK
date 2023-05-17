@@ -1,0 +1,2 @@
+npm pack
+npm publish
