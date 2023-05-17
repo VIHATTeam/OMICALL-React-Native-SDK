@@ -29,6 +29,7 @@ export const Main = () => {
       userImage: 'assets_images_calling_face',
       missedCallTitle: 'Cuộc gọi nhớ',
       prefixMissedCallMessage: 'Cuộc gọi nhỡ từ',
+      userNameKey: 'full_name',
     });
     const data = localStorage.getString('login_info');
     const isLogin = data !== undefined;

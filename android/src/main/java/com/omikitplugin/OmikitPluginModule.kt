@@ -146,6 +146,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val prefixMissedCallMessage = data.getString("prefixMissedCallMessage")
       val backImage = data.getString("backImage")
       val userImage = data.getString("userImage")
+      val userNameKey = data.getString("userNameKey")
       OmiClient.instance.configPushNotification(
         notificationIcon = notificationIcon ?: "",
         prefix = prefix ?: "Cuộc gọi tới từ: ",
@@ -155,7 +156,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         backImage = backImage ?: "ic_back",
         userImage = userImage ?: "calling_face",
         prefixMissedCallMessage = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
-        missedCallTitle = prefixMissedCallMessage ?: "Cuộc gọi nhỡ"
+        missedCallTitle = prefixMissedCallMessage ?: "Cuộc gọi nhỡ",
+        userNameKey = userNameKey ?: "extension",
       )
       promise.resolve(true)
     }

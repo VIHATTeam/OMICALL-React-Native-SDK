@@ -14,3 +14,4 @@
 }
 
 -keep class com.google.android.gms.common.** {*;}
+-keepclassmembers enum * {*;}
