@@ -125,12 +125,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   override fun initialize() {
     super.initialize()
     reactApplicationContext!!.addActivityEventListener(this)
+    OmiClient(context = reactApplicationContext!!)
+    OmiClient.instance.setListener(callListener)
   }
 
   @ReactMethod
   fun startServices(promise: Promise) {
-    OmiClient(context = reactApplicationContext!!)
-    OmiClient.instance.setListener(callListener)
     OmiClient.instance.addAccountListener(accountListener)
     promise.resolve(true)
   }
