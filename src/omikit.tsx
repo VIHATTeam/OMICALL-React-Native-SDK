@@ -106,8 +106,12 @@ export function getGuestUser(): Promise<any> {
   return OmikitPlugin.getGuestUser();
 }
 
-export function getUserInfo(phone: String): Promise<any> {
-  return OmikitPlugin.getUserInfo(phone);
+export function systemAlertWindow(): Promise<boolean> {
+  return OmikitPlugin.systemAlertWindow();
+}
+
+export function openSystemAlertSetting(): Promise<void> {
+  return OmikitPlugin.openSystemAlertSetting();
 }
 
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);

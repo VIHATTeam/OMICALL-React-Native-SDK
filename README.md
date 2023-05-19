@@ -458,6 +458,26 @@ if (@available(iOS 10.0, *)) {
 
     logout();
     ```
+  - Permission: Check system alert window permission (only Android).
+
+    ```
+    import {systemAlertWindow} from 'omikit-plugin';
+
+    if (Platform.OS === 'android') {
+      const isAllow = await systemAlertWindow();
+      //true => allow
+      //false => denied
+    }
+    ```
+  - Setting: Open to enable system alert window (only Android).
+
+    ```
+    import {openSystemAlertSetting} from 'omikit-plugin';
+
+    if (Platform.OS === 'android') {
+      openSystemAlertSetting();
+    }
+    ```
 
 - Video Call functions: Support only video call, You need enable video in `init functions` and `start call` to implements under functions.
 

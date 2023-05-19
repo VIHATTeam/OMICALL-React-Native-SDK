@@ -4,11 +4,14 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.content.ContextCompat
 import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
@@ -125,14 +128,30 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   override fun initialize() {
     super.initialize()
     reactApplicationContext!!.addActivityEventListener(this)
-    OmiClient(context = reactApplicationContext!!)
-    OmiClient.instance.setListener(callListener)
+    Handler(Looper.getMainLooper()).post {
+      OmiClient(context = reactApplicationContext!!)
+      OmiClient.instance.setListener(callListener)
+    }
   }
 
   @ReactMethod
   fun startServices(promise: Promise) {
     OmiClient.instance.addAccountListener(accountListener)
     promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun systemAlertWindow(promise: Promise) {
+      val result = Settings.canDrawOverlays(reactApplicationContext)
+      promise.resolve(result)
+  }
+
+  @ReactMethod
+  fun openSystemAlertSetting(promise: Promise) {
+    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+      Uri.parse("package:" + reactApplicationContext.packageName))
+    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    reactApplicationContext.startActivity(intent)
   }
 
   @ReactMethod
