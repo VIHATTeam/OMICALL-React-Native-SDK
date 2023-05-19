@@ -14,6 +14,8 @@ import {
   startCall,
   logout,
   startCallWithUuid,
+  systemAlertWindow,
+  openSystemAlertSetting,
 } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
@@ -44,7 +46,17 @@ export const HomeScreen = () => {
   useEffect(() => {
     prepareForUpdateToken();
     checkInitCall();
+    checkSystemAlert();
   }, [checkInitCall]);
+
+  const checkSystemAlert = async () => {
+    if (Platform.OS === 'android') {
+      const isAllow = await systemAlertWindow();
+      if (!isAllow) {
+        openSystemAlertSetting();
+      }
+    }
+  };
 
   const _videoTrigger = useCallback(() => {
     setCallVideo(!callVideo);
