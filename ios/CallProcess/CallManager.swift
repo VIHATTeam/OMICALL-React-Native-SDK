@@ -94,8 +94,17 @@ class CallManager {
                                                    name: NSNotification.Name.OMICallSwitchBoardAnswer,
                                                    object: nil
             )
+            NotificationCenter.default.addObserver(CallManager.instance!, selector: #selector(self.updateNetworkHealth(_:)), name: NSNotification.Name.OMICallNetworkQuality, object: nil)
             self.showMissedCall()
         }
+    }
+    
+    @objc func updateNetworkHealth(_ notification: NSNotification) {
+        guard let userInfo = notification.userInfo,
+              let state     = userInfo[OMINotificationNetworkStatusKey] as? Int else {
+            return;
+        }
+        OmikitPlugin.instance.sendEvent(withName: CALL_QUALITY, body: ["quality": state])
     }
     
     func configNotification(data: [String: Any]) {

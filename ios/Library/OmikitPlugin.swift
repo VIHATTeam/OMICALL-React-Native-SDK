@@ -204,7 +204,8 @@ public class OmikitPlugin: RCTEventEmitter {
             REMOTE_VIDEO_READY,
             LOCAL_VIDEO_READY,
             CLICK_MISSED_CALL,
-            SWITCHBOARD_ANSWER
+            SWITCHBOARD_ANSWER,
+            CALL_QUALITY
         ]
     }
 }

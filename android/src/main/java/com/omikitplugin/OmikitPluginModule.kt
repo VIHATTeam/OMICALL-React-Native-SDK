@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.content.ContextCompat
@@ -29,92 +30,96 @@ import vn.vihat.omicall.omisdk.utils.SipServiceConstants
 
 
 class OmikitPluginModule(reactContext: ReactApplicationContext?) :
-  ReactContextBaseJavaModule(reactContext), ActivityEventListener {
+  ReactContextBaseJavaModule(reactContext), ActivityEventListener, OmiListener {
   private val mainScope = CoroutineScope(Dispatchers.Main)
 
   override fun getName(): String {
     return NAME
   }
 
-  private val callListener = object : OmiListener {
+  override fun incomingReceived(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
+    val map: WritableMap = WritableNativeMap()
+    map.putBoolean("isVideo", isVideo ?: true)
+    map.putString("callerNumber", phoneNumber)
+    sendEvent(INCOMING_RECEIVED, map)
+    Log.d("omikit", "incomingReceived: ")
+  }
 
-    override fun incomingReceived(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
+  override fun onCallEnd(callInfo: Any?, statusCode: Int) {
+    if (callInfo is Map<*, *>) {
+      val call = callInfo as Map<*, *>
       val map: WritableMap = WritableNativeMap()
-      map.putBoolean("isVideo", isVideo ?: true)
+      val timeStartToAnswer = call["time_start_to_answer"] as Long?
+      val timeEnd = call["time_end"] as Long
+      map.putString("transaction_id", call["transaction_id"] as String?)
+      map.putString("direction", call["direction"] as String)
+      map.putString("source_number", call["source_number"] as String)
+      map.putString("destination_number", call["destination_number"] as String)
+      map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
+      map.putDouble("time_end", timeEnd.toDouble())
+      map.putString("sip_user", call["sip_user"] as String)
+      map.putString("disposition", call["disposition"] as String)
+      sendEvent(CALL_END, map)
+    } else {
+      sendEvent(CALL_END, null)
+    }
+  }
+
+  override fun networkHealth(mos: Float, quality: Int) {
+    val map: WritableMap = WritableNativeMap()
+    map.putInt("quality", quality)
+    map.putDouble("mos", mos.toDouble())
+    sendEvent(CALL_QUALITY, map)
+  }
+
+  override fun onCallEstablished(
+    callerId: Int,
+    phoneNumber: String?,
+    isVideo: Boolean?,
+    startTime: Long,
+    transactionId: String?,
+  ) {
+    Handler(Looper.getMainLooper()).postDelayed({
+      Log.d("OmikitReactNative", "onCallEstablished")
+      val map: WritableMap = WritableNativeMap()
       map.putString("callerNumber", phoneNumber)
-      sendEvent(INCOMING_RECEIVED, map)
-      Log.d("omikit", "incomingReceived: ")
-    }
+      map.putBoolean("isVideo", isVideo ?: true)
+      map.putString("transactionId", transactionId)
+      sendEvent(CALL_ESTABLISHED, map)
+    }, 500)
+  }
 
-    override fun onCallEnd(callInfo: Any?) {
-      if (callInfo is Map<*, *>) {
-        val call = callInfo as Map<*, *>
-        val map: WritableMap = WritableNativeMap()
-        val timeStartToAnswer = call["time_start_to_answer"] as Long?
-        val timeEnd = call["time_end"] as Long
-        map.putString("transaction_id", call["transaction_id"] as String?)
-        map.putString("direction", call["direction"] as String)
-        map.putString("source_number", call["source_number"] as String)
-        map.putString("destination_number", call["destination_number"] as String)
-        map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
-        map.putDouble("time_end", timeEnd.toDouble())
-        map.putString("sip_user", call["sip_user"] as String)
-        map.putString("disposition", call["disposition"] as String)
-        sendEvent(CALL_END, map)
-      } else {
-        sendEvent(CALL_END, null)
-      }
-    }
+  override fun onConnectionTimeout() {
+  //      sendEvent("onConnectionTimeout", null)
+  }
 
-    override fun onCallEstablished(
-      callerId: Int,
-      phoneNumber: String?,
-      isVideo: Boolean?,
-      startTime: Long,
-      transactionId: String?,
-    ) {
-      Handler(Looper.getMainLooper()).postDelayed({
-        Log.d("OmikitReactNative", "onCallEstablished")
-        val map: WritableMap = WritableNativeMap()
-        map.putString("callerNumber", phoneNumber)
-        map.putBoolean("isVideo", isVideo ?: true)
-        map.putString("transactionId", transactionId)
-        sendEvent(CALL_ESTABLISHED, map)
-      }, 500)
-    }
+  override fun onHold(isHold: Boolean) {
+  //      val map: WritableMap = WritableNativeMap()
+  //      map.putBoolean("isHold", isHold)
+  //      sendEvent(HOLD, map)
+  }
 
-    override fun onConnectionTimeout() {
-//      sendEvent("onConnectionTimeout", null)
-    }
+  override fun onMuted(isMuted: Boolean) {
+  //      val map: WritableMap = WritableNativeMap()
+  //      map.putBoolean("isMuted", isMuted)
+  //      sendEvent(MUTED, map)
+  }
 
-    override fun onHold(isHold: Boolean) {
-//      val map: WritableMap = WritableNativeMap()
-//      map.putBoolean("isHold", isHold)
-//      sendEvent(HOLD, map)
-    }
+  override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
 
-    override fun onMuted(isMuted: Boolean) {
-//      val map: WritableMap = WritableNativeMap()
-//      map.putBoolean("isMuted", isMuted)
-//      sendEvent(MUTED, map)
-    }
+  }
 
-    override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
+  override fun onRinging() {
+  }
 
-    }
+  override fun onSwitchBoardAnswer(sip: String) {
+    val map: WritableMap = WritableNativeMap()
+    map.putString("sip", sip)
+    sendEvent(SWITCHBOARD_ANSWER, map)
+  }
 
-    override fun onRinging() {
-    }
+  override fun onVideoSize(width: Int, height: Int) {
 
-    override fun onSwitchBoardAnswer(sip: String) {
-      val map: WritableMap = WritableNativeMap()
-      map.putString("sip", sip)
-      sendEvent(SWITCHBOARD_ANSWER, map)
-    }
-
-    override fun onVideoSize(width: Int, height: Int) {
-
-    }
   }
 
   private val accountListener = object : OmiAccountListener {
@@ -130,7 +135,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     reactApplicationContext!!.addActivityEventListener(this)
     Handler(Looper.getMainLooper()).post {
       OmiClient(context = reactApplicationContext!!)
-      OmiClient.instance.setListener(callListener)
+      OmiClient.instance.setListener(this)
     }
   }
 
@@ -140,6 +145,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     promise.resolve(true)
   }
 
+  @RequiresApi(Build.VERSION_CODES.M)
   @ReactMethod
   fun systemAlertWindow(promise: Promise) {
       val result = Settings.canDrawOverlays(reactApplicationContext)
@@ -166,6 +172,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val backImage = data.getString("backImage")
       val userImage = data.getString("userImage")
       val userNameKey = data.getString("userNameKey")
+      val channelId = data.getString("channelId")
       OmiClient.instance.configPushNotification(
         notificationIcon = notificationIcon ?: "",
         prefix = prefix ?: "Cuộc gọi tới từ: ",
@@ -177,6 +184,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         prefixMissedCallMessage = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
         missedCallTitle = prefixMissedCallMessage ?: "Cuộc gọi nhỡ",
         userNameKey = userNameKey ?: "extension",
+        channelId = channelId ?: "",
       )
       promise.resolve(true)
     }
