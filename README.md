@@ -308,6 +308,7 @@ if (@available(iOS 10.0, *)) {
     prefixMissedCallMessage: 'Cuộc gọi nhỡ từ', //config prefix message for the missed call
     missedCallTitle: 'Cuộc gọi nhỡ', //config title for the missed call
     userNameKey: 'uuid', //we have 3 values: uuid, full_name, extension.
+    channelId: 'com.channel.sample', //your notification channel id
   });
   //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
   ```
@@ -541,6 +542,7 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, onSwitchboardAnswer);
+    omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
     if (Platform.OS === 'ios') {
       registerVideoEvent();
       omiEmitter.addListener(
@@ -571,4 +573,5 @@ useEffect(() => {
   - `OmiCallEvent.onSpeaker`: Audio changed.
   - `OmiCallEvent.onClickMissedCall`: Click missed call notification.
   - `OmiCallEvent.onSwitchboardAnswer`: Switchboard sip is listening.
+  - `OmiCallEvent.onCallQuality`: The calling quality.
 - Data value: We return `callerNumber`, `sip`, `isVideo: true/false` information

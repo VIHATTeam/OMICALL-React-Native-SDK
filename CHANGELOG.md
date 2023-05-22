@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.4
+  - Increase android/iOS core
+  - Support to custom channel id
+  - Return call quality
+  - Update sample
+
 ## 2.3.3
   - Increase android core
   - Add `systemAlertWindow`, `openSystemAlertSetting` to check system alert window permission
