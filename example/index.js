@@ -30,6 +30,7 @@ export const Main = () => {
       missedCallTitle: 'Cuộc gọi nhớ',
       prefixMissedCallMessage: 'Cuộc gọi nhỡ từ',
       userNameKey: 'full_name',
+      channelId: 'com.channel.sample',
     });
     const data = localStorage.getString('login_info');
     const isLogin = data !== undefined;
