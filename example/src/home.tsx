@@ -1,6 +1,5 @@
-import { StyleSheet, View, Platform, Alert } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import {
-  CallStatus,
   CustomButton,
   CustomCheckBox,
   CustomTextField,
@@ -13,25 +12,26 @@ import {
   omiEmitter,
   startCall,
   logout,
-  startCallWithUuid,
+  // startCallWithUuid,
   systemAlertWindow,
   openSystemAlertSetting,
+  OmiCallState,
 } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 import { LiveData } from './livedata';
 import { localStorage } from './local_storage';
-import RNPermissions, {
-  Permission,
-  PERMISSIONS,
-} from 'react-native-permissions';
+// import RNPermissions, {
+//   Permission,
+//   PERMISSIONS,
+// } from 'react-native-permissions';
 
 export const HomeScreen = () => {
   ///need add call phone
-  var [phone, setPhone] = useState(
-    Platform.OS === 'android' ? '123aaa' : '124aaa'
-  );
-  // var [phone, setPhone] = useState(Platform.OS === 'android' ? '110' : '111');
+  // var [phone, setPhone] = useState(
+  //   Platform.OS === 'android' ? '123aaa' : '124aaa'
+  // );
+  var [phone, setPhone] = useState(Platform.OS === 'android' ? '100' : '100');
   const navigation = useNavigation();
   const [callVideo, setCallVideo] = useState(true);
 
@@ -62,50 +62,41 @@ export const HomeScreen = () => {
     setCallVideo(!callVideo);
   }, [callVideo]);
 
-  const incomingReceived = useCallback(
+  const onCallStateChanged = useCallback(
     (data: any) => {
-      console.log('incomingReceived');
-      console.log(data);
-      const { callerNumber, isVideo } = data;
-      const input = {
-        callerNumber: callerNumber,
-        status: CallStatus.ringing,
-      };
-      console.log(isVideo);
-      if (isVideo === true) {
-        navigation.navigate('VideoCall' as never, input as never);
-      } else {
-        navigation.navigate('DialCall' as never, input as never);
+      const { status, transactionId, callerNumber, isVideo } = data;
+      console.log(transactionId);
+      if (status === OmiCallState.incoming) {
+        const input = {
+          callerNumber: callerNumber,
+          status: status,
+          isOutGoingCall: false,
+        };
+        console.log(isVideo);
+        if (isVideo === true) {
+          navigation.navigate('VideoCall' as never, input as never);
+        } else {
+          navigation.navigate('DialCall' as never, input as never);
+        }
+      }
+      if (status === OmiCallState.confirmed) {
+        if (LiveData.isOpenedCall === true) {
+          return;
+        }
+        const input = {
+          callerNumber: callerNumber,
+          status: status,
+          isOutGoingCall: false,
+        };
+        if (isVideo === true) {
+          navigation.navigate('VideoCall' as never, input as never);
+        } else {
+          navigation.navigate('DialCall' as never, input as never);
+        }
       }
     },
     [navigation]
   );
-
-  const establishedReceived = useCallback(
-    (data: any) => {
-      console.log(LiveData.isOpenedCall);
-      if (LiveData.isOpenedCall === true) {
-        return;
-      }
-      console.log('establishedReceived');
-      console.log(data);
-      const { callerNumber, isVideo } = data;
-      const input = {
-        callerNumber: callerNumber,
-        status: CallStatus.established,
-      };
-      if (isVideo === true) {
-        navigation.navigate('VideoCall' as never, input as never);
-      } else {
-        navigation.navigate('DialCall' as never, input as never);
-      }
-    },
-    [navigation]
-  );
-
-  const onCallEnd = useCallback((data: any) => {
-    console.log(data);
-  }, []);
 
   const callWithParam = useCallback(
     async (data: any) => {
@@ -117,7 +108,8 @@ export const HomeScreen = () => {
       if (result) {
         const param = {
           callerNumber: callerNumber,
-          status: CallStatus.calling,
+          status: OmiCallState.calling,
+          isOutGoingCall: true,
         };
         if (isVideo === true) {
           navigation.navigate('VideoCall' as never, param as never);
@@ -140,24 +132,44 @@ export const HomeScreen = () => {
   );
 
   useEffect(() => {
-    omiEmitter.addListener(OmiCallEvent.incomingReceived, incomingReceived);
-    omiEmitter.addListener(OmiCallEvent.onCallEstablished, establishedReceived);
-    omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
+    omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     return () => {
-      omiEmitter.removeAllListeners(OmiCallEvent.incomingReceived);
-      omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
-      omiEmitter.removeAllListeners(OmiCallEvent.onCallEstablished);
+      omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
       omiEmitter.removeAllListeners(OmiCallEvent.onClickMissedCall);
     };
-  }, [incomingReceived, establishedReceived, clickMissedCall, onCallEnd]);
+  }, [onCallStateChanged, clickMissedCall]);
+
+  const call = async () => {
+    // navigation.navigate('Call' as never);
+    if (phone.trim().length === 0) {
+      return;
+    }
+    const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
+    if (result) {
+      const data = {
+        callerNumber: phone,
+        status: OmiCallState.calling,
+        isOutGoingCall: true,
+      };
+      if (callVideo === true) {
+        navigation.navigate('VideoCall' as never, data as never);
+      } else {
+        navigation.navigate('DialCall' as never, data as never);
+      }
+    }
+  };
 
   // const call = async () => {
   //   // navigation.navigate('Call' as never);
   //   if (phone.trim().length === 0) {
   //     return;
   //   }
-  //   const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
+  //   const result = await startCallWithUuid({
+  //     usrUuid: phone,
+  //     isVideo: callVideo,
+  //   });
+  //   console.log(result);
   //   if (result) {
   //     const data = {
   //       callerNumber: phone,
@@ -168,57 +180,34 @@ export const HomeScreen = () => {
   //     } else {
   //       navigation.navigate('DialCall' as never, data as never);
   //     }
+  //   } else {
+  //     console.log('faaaaaaa');
+  //     const PLATFORM_PERMISSIONS = Platform.select<
+  //       typeof PERMISSIONS.ANDROID | typeof PERMISSIONS.IOS | {}
+  //     >({
+  //       android: PERMISSIONS.ANDROID.RECORD_AUDIO,
+  //       ios: PERMISSIONS.IOS.MICROPHONE,
+  //       default: {},
+  //     });
+  //     const PERMISSIONS_VALUES: Permission[] =
+  //       Object.values(PLATFORM_PERMISSIONS);
+  //     const audioPermission = PERMISSIONS_VALUES[0];
+  //     if (audioPermission) {
+  //       const value = await RNPermissions.check(audioPermission);
+  //       console.log(value);
+  //       if (value !== 'granted') {
+  //         showAlert('Check audio permission!');
+  //       }
+  //     }
   //   }
   // };
 
-  const call = async () => {
-    // navigation.navigate('Call' as never);
-    if (phone.trim().length === 0) {
-      return;
-    }
-    const result = await startCallWithUuid({
-      usrUuid: phone,
-      isVideo: callVideo,
-    });
-    console.log(result);
-    if (result) {
-      const data = {
-        callerNumber: phone,
-        status: CallStatus.calling,
-      };
-      if (callVideo === true) {
-        navigation.navigate('VideoCall' as never, data as never);
-      } else {
-        navigation.navigate('DialCall' as never, data as never);
-      }
-    } else {
-      console.log('faaaaaaa');
-      const PLATFORM_PERMISSIONS = Platform.select<
-        typeof PERMISSIONS.ANDROID | typeof PERMISSIONS.IOS | {}
-      >({
-        android: PERMISSIONS.ANDROID.RECORD_AUDIO,
-        ios: PERMISSIONS.IOS.MICROPHONE,
-        default: {},
-      });
-      const PERMISSIONS_VALUES: Permission[] =
-        Object.values(PLATFORM_PERMISSIONS);
-      const audioPermission = PERMISSIONS_VALUES[0];
-      if (audioPermission) {
-        const value = await RNPermissions.check(audioPermission);
-        console.log(value);
-        if (value !== 'granted') {
-          showAlert('Check audio permission!');
-        }
-      }
-    }
-  };
-
-  const showAlert = (message: string) =>
-    Alert.alert('Notification', message, [
-      {
-        text: 'Cancel',
-      },
-    ]);
+  // const showAlert = (message: string) =>
+  //   Alert.alert('Notification', message, [
+  //     {
+  //       text: 'Cancel',
+  //     },
+  //   ]);
 
   const logoutCB = async () => {
     await logout();

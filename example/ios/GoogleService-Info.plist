@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>682956500665-557iqmr94lt6u0n2m7p977tc7mqbfpcc.apps.googleusercontent.com</string>
+	<string>682956500665-29l5ao20md15lci5banil2em7e4hj3ut.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.682956500665-557iqmr94lt6u0n2m7p977tc7mqbfpcc</string>
+	<string>com.googleusercontent.apps.682956500665-29l5ao20md15lci5banil2em7e4hj3ut</string>
 	<key>API_KEY</key>
 	<string>AIzaSyB4HEo5e1IPdYmvBOwMyKvvbe1NweVHk2A</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>vn.vihat.omikit</string>
+	<string>dev.omicall.production</string>
 	<key>PROJECT_ID</key>
 	<string>concung-5772a</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:682956500665:ios:b6e99d277a99bbffd9f568</string>
+	<string>1:682956500665:ios:8c7760258736d3d8d9f568</string>
 </dict>
 </plist>

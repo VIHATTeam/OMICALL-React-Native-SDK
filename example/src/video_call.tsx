@@ -1,7 +1,7 @@
 import { Image, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { CallStatus, KeyboardAvoid } from './components';
+import { KeyboardAvoid } from './components';
 import { useNavigation } from '@react-navigation/native';
 import {
   OmiLocalCameraView,
@@ -16,6 +16,7 @@ import {
   endCall,
   registerVideoEvent,
   removeVideoEvent,
+  OmiCallState,
 } from 'omikit-plugin';
 import { LiveData } from './livedata';
 import { BackHandler } from 'react-native';
@@ -25,31 +26,30 @@ import { Platform } from 'react-native';
 export const VideoCallScreen = ({ route }: any) => {
   // const callerNumber = route.params.callerNumber;
   const navigation = useNavigation();
-  const [status, setStatus] = useState(route.params.status);
+  const [currentStatus, setCurrentStatus] = useState(route.params.status);
   const [micOn, setMicOn] = useState(false);
   const [muted, setMuted] = useState(false);
-  // const [title, setTitle] = useState('');
-  const [needBack, setNeedBack] = useState(true);
 
-  const onCallEstablished = () => {
-    console.log('onCallEstablished');
-    if (Platform.OS === 'android') {
-      refreshRemoteCamera();
-      refreshLocalCamera();
-    }
-    setStatus(CallStatus.established);
-  };
-
-  const onCallEnd = useCallback(
+  const callStateChanged = useCallback(
     (data: any) => {
-      setStatus(CallStatus.end);
-      console.log('onCallEnd');
-      console.log(data);
-      if (needBack) {
+      console.log('onCallEstablished');
+      const { status, transactionId, callerNumber, isVideo } = data;
+      console.log(transactionId);
+      console.log(isVideo);
+      console.log(callerNumber);
+      setCurrentStatus(status);
+      if (status === OmiCallState.confirmed) {
+        if (Platform.OS === 'android') {
+          refreshRemoteCamera();
+          refreshLocalCamera();
+        }
+        return;
+      }
+      if (status == OmiCallState.disconnected) {
         navigation.goBack();
       }
     },
-    [navigation, needBack]
+    [navigation]
   );
 
   const onMuted = useCallback((data: any) => {
@@ -82,11 +82,10 @@ export const VideoCallScreen = ({ route }: any) => {
   }, []);
 
   useEffect(() => {
-    const established = omiEmitter.addListener(
-      OmiCallEvent.onCallEstablished,
-      onCallEstablished
+    const onCallStateChanged = omiEmitter.addListener(
+      OmiCallEvent.onCallStateChanged,
+      callStateChanged
     );
-    const end = omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     if (Platform.OS === 'ios') {
@@ -98,9 +97,7 @@ export const VideoCallScreen = ({ route }: any) => {
     }
     LiveData.isOpenedCall = true;
     return () => {
-      console.log('remove widget');
-      established.remove();
-      end.remove();
+      onCallStateChanged.remove();
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       if (Platform.OS === 'ios') {
@@ -109,7 +106,7 @@ export const VideoCallScreen = ({ route }: any) => {
       }
       LiveData.isOpenedCall = false;
     };
-  }, [onCallEnd, onMuted, onSpeaker, refreshRemoteCameraEvent]);
+  }, [callStateChanged, onMuted, onSpeaker, refreshRemoteCameraEvent]);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -127,7 +124,7 @@ export const VideoCallScreen = ({ route }: any) => {
         <OmiRemoteCameraView style={styles.remoteCamera} />
         <OmiLocalCameraView style={styles.localCamera} />
         <View style={styles.call}>
-          {status === CallStatus.established ? (
+          {currentStatus === OmiCallState.confirmed ? (
             <TouchableOpacity onPress={triggerMute}>
               <Image
                 source={!muted ? UIImages.micOn : UIImages.micOff}
@@ -137,15 +134,13 @@ export const VideoCallScreen = ({ route }: any) => {
           ) : null}
           <TouchableOpacity
             onPress={async () => {
-              setNeedBack(false);
               endCall();
-              omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
               navigation.goBack();
             }}
           >
             <Image source={UIImages.hangup} style={styles.hangup} />
           </TouchableOpacity>
-          {status === CallStatus.ringing ? (
+          {currentStatus === OmiCallState.calling ? (
             <TouchableOpacity
               onPress={async () => {
                 await joinCall();
@@ -154,7 +149,7 @@ export const VideoCallScreen = ({ route }: any) => {
               <Image source={UIImages.joinCall} style={styles.hangup} />
             </TouchableOpacity>
           ) : null}
-          {status === CallStatus.established ? (
+          {currentStatus === OmiCallState.confirmed ? (
             <TouchableOpacity onPress={triggerSpeak}>
               <Image
                 source={micOn ? UIImages.audioOn : UIImages.audioOff}

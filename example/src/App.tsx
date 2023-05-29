@@ -24,7 +24,7 @@ export const App = (props: AppProps) => {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
-        initialRouteName={isLogin ? 'Home' : 'LoginAPIKey'}
+        initialRouteName={isLogin ? 'Home' : 'Login'}
         screenOptions={{
           headerStyle: { backgroundColor: UIColors.mainColor },
           headerTintColor: '#fff',

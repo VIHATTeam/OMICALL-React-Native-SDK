@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { CallStatus, CustomTimer, KeyboardAvoid, UIColors } from './components';
-import React, { useCallback, useEffect, useState } from 'react';
+import { CustomTimer, KeyboardAvoid, UIColors } from './components';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   endCall,
   OmiCallEvent,
@@ -18,6 +18,7 @@ import {
   joinCall,
   getCurrentUser,
   getGuestUser,
+  OmiCallState,
 } from 'omikit-plugin';
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
@@ -28,30 +29,51 @@ import { UserView } from './components/custom_view/user_view';
 export const DialCallScreen = ({ route }: any) => {
   // const callerNumber = route.params.callerNumber;
   const navigation = useNavigation();
-  const [status, setStatus] = useState(route.params.status);
+  const [currentStatus, setCurrentStatus] = useState(route.params.status);
+  const isOutGoingCall = route.params.isOutGoingCall;
   const [micOn, setMicOn] = useState(false);
   const [muted, setMuted] = useState(false);
   const [keyboardOn, setKeyboardOn] = useState(false);
   const [title, setTitle] = useState('');
-  const [needBack, setNeedBack] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [guestUser, setGuestUser] = useState<any>(null);
+  const currentStatusText = useMemo(
+    () => getDescriptionFromStatus(currentStatus),
+    [currentStatus]
+  );
 
-  const onCallEstablished = () => {
-    console.log('onCallEstablished');
-    setStatus(CallStatus.established);
-  };
+  function getDescriptionFromStatus(status: number) {
+    if (status === OmiCallState.calling) {
+      return 'Đang kết nối tới cuộc gọi';
+    }
+    if (status === OmiCallState.connecting) {
+      return 'Đang kết nối';
+    }
+    if (status === OmiCallState.early) {
+      return 'Cuộc gọi đang đổ chuông';
+    }
+    if (status === OmiCallState.confirmed) {
+      return 'Cuộc gọi bắt đầu';
+    }
+    if (status === OmiCallState.disconnected) {
+      return 'Cuộc gọi kết thúc';
+    }
+    return '';
+  }
 
-  const onCallEnd = useCallback(
+  const callStateChanged = useCallback(
     (data: any) => {
-      setStatus(CallStatus.end);
-      console.log('onCallEnd');
-      console.log(data);
-      if (needBack) {
+      const { status, transactionId, callerNumber, isVideo } = data;
+      console.log(transactionId);
+      console.log(isVideo);
+      console.log(status);
+      console.log(callerNumber);
+      setCurrentStatus(status);
+      if (status === OmiCallState.disconnected) {
         navigation.goBack();
       }
     },
-    [navigation, needBack]
+    [navigation]
   );
 
   const onMuted = useCallback((data: any) => {
@@ -102,11 +124,10 @@ export const DialCallScreen = ({ route }: any) => {
   }, []);
 
   useEffect(() => {
-    const established = omiEmitter.addListener(
-      OmiCallEvent.onCallEstablished,
-      onCallEstablished
+    const onCallStateChanged = omiEmitter.addListener(
+      OmiCallEvent.onCallStateChanged,
+      callStateChanged
     );
-    const end = omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
@@ -116,16 +137,20 @@ export const DialCallScreen = ({ route }: any) => {
     );
     LiveData.isOpenedCall = true;
     return () => {
-      established.remove();
-      console.log('remove widget');
-      end.remove();
+      onCallStateChanged.remove();
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onCallQuality);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
       LiveData.isOpenedCall = false;
     };
-  }, [onCallEnd, onMuted, onSpeaker, onSwitchboardAnswer, onCallQuality]);
+  }, [
+    callStateChanged,
+    onMuted,
+    onSpeaker,
+    onSwitchboardAnswer,
+    onCallQuality,
+  ]);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -156,20 +181,20 @@ export const DialCallScreen = ({ route }: any) => {
             full_name={currentUser == null ? null : currentUser.extension}
             avatar_url={currentUser == null ? null : currentUser.avatar_url}
           />
-          <View style={styles.title}>
-            {status === CallStatus.established ? (
-              <CustomTimer />
-            ) : (
-              <Text style={styles.status}>{status}</Text>
-            )}
-          </View>
           <UserView
             full_name={guestUser == null ? null : guestUser.extension}
             avatar_url={guestUser == null ? null : guestUser.avatar_url}
           />
         </View>
+        <View style={styles.title}>
+          {currentStatus === OmiCallState.confirmed ? (
+            <CustomTimer />
+          ) : (
+            <Text style={styles.status}>{currentStatusText}</Text>
+          )}
+        </View>
         <View style={styles.feature}>
-          {status === CallStatus.established ? (
+          {currentStatus === OmiCallState.confirmed ? (
             keyboardOn ? (
               <View style={styles.keyboard}>
                 <CustomKeyboard
@@ -211,17 +236,18 @@ export const DialCallScreen = ({ route }: any) => {
           ) : null}
         </View>
         <View style={styles.call}>
-          <TouchableOpacity
-            onPress={async () => {
-              setNeedBack(false);
-              endCall();
-              omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
-              navigation.goBack();
-            }}
-          >
-            <Image source={UIImages.hangup} style={styles.hangup} />
-          </TouchableOpacity>
-          {status === CallStatus.ringing ? (
+          {currentStatus > OmiCallState.calling ? (
+            <TouchableOpacity
+              onPress={async () => {
+                endCall();
+                navigation.goBack();
+              }}
+            >
+              <Image source={UIImages.hangup} style={styles.hangup} />
+            </TouchableOpacity>
+          ) : null}
+          {currentStatus === OmiCallState.incoming ||
+          (currentStatus === OmiCallState.early && isOutGoingCall === false) ? (
             <TouchableOpacity
               onPress={async () => {
                 await joinCall();
@@ -246,7 +272,8 @@ const styles = StyleSheet.create({
   },
   titleBackground: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
+    width: '100%',
     alignItems: 'center',
   },
   phone: {
@@ -255,7 +282,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   title: {
-    marginHorizontal: 24,
+    marginTop: 16,
+    marginBottom: 24,
   },
   status: {
     fontSize: 20,

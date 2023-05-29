@@ -117,12 +117,9 @@ export function openSystemAlertSetting(): Promise<void> {
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 
 export const OmiCallEvent = {
-  onCallEstablished: 'CALL_ESTABLISHED',
-  onCallEnd: 'CALL_END',
-  incomingReceived: 'INCOMING_RECEIVED',
+  onCallStateChanged: 'CALL_STATE_CHANGED',
   onSpeaker: 'SPEAKER',
   onMuted: 'MUTED',
-  onLocalVideoReady: 'LOCAL_VIDEO_READY',
   onRemoteVideoReady: 'REMOTE_VIDEO_READY',
   onClickMissedCall: 'CLICK_MISSED_CALL',
   onSwitchboardAnswer: 'SWITCHBOARD_ANSWER',

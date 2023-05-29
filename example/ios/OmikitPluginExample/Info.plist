@@ -24,13 +24,25 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Need camera access for video call functions</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Need location</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Need microphone access for make Call</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INStartCallIntent</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
 		<string>fetch</string>
-		<string>processing</string>
 		<string>remote-notification</string>
 		<string>voip</string>
 	</array>
@@ -40,6 +52,8 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<key>UIRequiresPersistentWiFi</key>
+	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -48,21 +62,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-  <key>NSAppTransportSecurity</key>
-  <dict>
-    <!--Include to allow all connections (DANGER)-->
-    <key>NSAllowsArbitraryLoads</key>
-        <true/>
-  </dict>
-  <key>NSUserActivityTypes</key>
-  <array>
-      <string>INStartCallIntent</string>
-  </array>
-  <key>UIRequiresPersistentWiFi</key>
-  <true/>
-  <key>NSCameraUsageDescription</key>
-  <string>Need camera access for video call functions</string>
-  <key>NSMicrophoneUsageDescription</key>
-  <string>Need microphone access for make Call</string>
 </dict>
 </plist>
