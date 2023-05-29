@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.0
+- **BREAKING CHANGE**
+  - Increase android/core core
+  - Support Swift document
+  - Support to return `outgoing`, `ringing`, `connecting`, `calling` status
+  - Fix null point on release mode Android
+  - Improve performance
+  - Update sample
+
 ## 2.3.4
   - Increase android/iOS core
   - Support to custom channel id

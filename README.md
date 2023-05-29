@@ -143,13 +143,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/android-sdk/cau-hinh-push-notification">Config Push for Android</a>
 
-#### iOS:
-
----
-
-We support both Object-C and Swift. But we only support documents for Object-C. We will write for Swift language later. Thank you.
-
----
+#### iOS(Object-C):
 
 - Add variables in Appdelegate.h:
 
@@ -230,7 +224,8 @@ if (@available(iOS 10.0, *)) {
 
 ```
 
-**_ Only use under lines when added `Cloud Messaging` plugin in your project _**
+
+*** Only use under lines when added `Cloud Messaging` plugin in your project ***
 
 - Setup push notification: We only support Firebase for push notification.
 
@@ -238,6 +233,64 @@ if (@available(iOS 10.0, *)) {
   - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/ios-sdk/cau-hinh-push-notification">Config Push for iOS</a>
+  
+#### iOS(Swift):
+
+- Add variables in Appdelegate.swift:
+
+```
+import OmiKit
+import PushKit
+import NotificationCenter
+
+var pushkitManager: PushKitManager?
+var provider: CallKitProviderDelegate?
+var voipRegistry: PKPushRegistry?
+```
+
+- Add these lines into `didFinishLaunchingWithOptions`:
+
+```
+OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_SANDBOX)
+provider = CallKitProviderDelegate.init(callManager: OMISIPLib.sharedInstance().callManager)
+voipRegistry = PKPushRegistry.init(queue: .main)
+pushkitManager = PushKitManager.init(voipRegistry: voipRegistry)
+```
+
+-  Add these lines into `Info.plist`:
+
+```
+<key>NSCameraUsageDescription</key>
+<string>Need camera access for video call functions</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>Need microphone access for make Call</string>
+```
+
+- Save token for `OmiClient`: if you added `firebase_messaging` in your project so you don't need add these lines.
+
+```
+func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    let deviceTokenString = deviceToken.hexString
+    OmiClient.setUserPushNotificationToken(deviceTokenString)
+}
+
+extension Data {
+    var hexString: String {
+        let hexString = map { String(format: "%02.2hhx", $0) }.joined()
+        return hexString
+    }
+}
+```
+
+*** Only use under lines when added `Cloud Messaging` plugin in your project ***
+
+- Setup push notification: We only support Firebase for push notification.
+
+  - Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
+  - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
+
+  - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/ios-sdk/cau-hinh-push-notification">Config Push for iOS</a>
+
 
 ## Implement
 
@@ -313,7 +366,7 @@ if (@available(iOS 10.0, *)) {
   //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
   ```
 
-- Get call when user open app from killed status(only iOS):
+- Get call when user open app from killed state(only iOS):
 
   ```
   import { getInitialCall } from 'omikit-plugin';
@@ -535,9 +588,7 @@ if (@available(iOS 10.0, *)) {
 
 ```
 useEffect(() => {
-    omiEmitter.addListener(OmiCallEvent.incomingReceived, incomingReceived);
-    omiEmitter.addListener(OmiCallEvent.onCallEstablished, onCallEstablished);
-    omiEmitter.addListener(OmiCallEvent.onCallEnd, onCallEnd);
+    omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
@@ -551,9 +602,7 @@ useEffect(() => {
       );
     }
     return () => {
-        omiEmitter.removeAllListeners(OmiCallEvent.incomingReceived);
-        omiEmitter.removeAllListeners('onCallEstablished');
-        omiEmitter.removeAllListeners(OmiCallEvent.onCallEnd);
+        omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
         omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
         omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
         omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
@@ -565,10 +614,13 @@ useEffect(() => {
 }, []);
 ```
 
+  - Important event `onCallStateChanged`: We provide it to listen call state change.
+
+    + It is call state tracking event. We will return status of state. Please refer `OmiCallState`.
+    + Incoming call state lifecycle: incoming(receive on foreround state) -> early -> connecting -> confirmed -> disconnected
+    + Outgoing call state lifecycle: calling -> early (call created) -> connecting -> confirmed -> disconnected
+
 - Action Name value:
-  - `OmiCallEvent.incomingReceived`: Have a incoming call. On Android this event work only foreground
-  - `OmiCallEvent.onCallEstablished`: Connected a call.
-  - `OmiCallEvent.onCallEnd`: End a call and return call information (like endCall)
   - `OmiCallEvent.onMuted`: Audio changed.
   - `OmiCallEvent.onSpeaker`: Audio changed.
   - `OmiCallEvent.onClickMissedCall`: Click missed call notification.
