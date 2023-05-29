@@ -246,8 +246,9 @@ export const DialCallScreen = ({ route }: any) => {
               <Image source={UIImages.hangup} style={styles.hangup} />
             </TouchableOpacity>
           ) : null}
-          {currentStatus === OmiCallState.incoming ||
-          (currentStatus === OmiCallState.early && isOutGoingCall === false) ? (
+          {(currentStatus === OmiCallState.incoming ||
+            currentStatus === OmiCallState.early) &&
+          isOutGoingCall === false ? (
             <TouchableOpacity
               onPress={async () => {
                 await joinCall();
