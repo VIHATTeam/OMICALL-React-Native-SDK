@@ -18,6 +18,7 @@ import com.facebook.react.ReactActivity
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.RCTNativeAppEventEmitter
 import com.omikitplugin.constants.*
+import com.omikitplugin.state.CallState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,6 +26,7 @@ import kotlinx.coroutines.withContext
 import vn.vihat.omicall.omisdk.OmiAccountListener
 import vn.vihat.omicall.omisdk.OmiClient
 import vn.vihat.omicall.omisdk.OmiListener
+import vn.vihat.omicall.omisdk.service.NotificationService
 import vn.vihat.omicall.omisdk.utils.OmiSDKUtils
 import vn.vihat.omicall.omisdk.utils.SipServiceConstants
 
@@ -41,35 +43,32 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     val map: WritableMap = WritableNativeMap()
     map.putBoolean("isVideo", isVideo ?: true)
     map.putString("callerNumber", phoneNumber)
-    sendEvent(INCOMING_RECEIVED, map)
+    map.putInt("status", CallState.incoming.value)
+    sendEvent(CALL_STATE_CHANGED, map)
     Log.d("omikit", "incomingReceived: ")
   }
 
-  override fun onCallEnd(callInfo: Any?, statusCode: Int) {
-    if (callInfo is Map<*, *>) {
-      val call = callInfo as Map<*, *>
-      val map: WritableMap = WritableNativeMap()
-      val timeStartToAnswer = call["time_start_to_answer"] as Long?
-      val timeEnd = call["time_end"] as Long
-      map.putString("transaction_id", call["transaction_id"] as String?)
-      map.putString("direction", call["direction"] as String)
-      map.putString("source_number", call["source_number"] as String)
-      map.putString("destination_number", call["destination_number"] as String)
-      map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
-      map.putDouble("time_end", timeEnd.toDouble())
-      map.putString("sip_user", call["sip_user"] as String)
-      map.putString("disposition", call["disposition"] as String)
-      sendEvent(CALL_END, map)
-    } else {
-      sendEvent(CALL_END, null)
-    }
-  }
-
-  override fun networkHealth(mos: Float, quality: Int) {
+  override fun networkHealth(stat: Map<String, *>, quality: Int) {
     val map: WritableMap = WritableNativeMap()
     map.putInt("quality", quality)
-    map.putDouble("mos", mos.toDouble())
     sendEvent(CALL_QUALITY, map)
+  }
+
+  override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
+    val call = callInfo as Map<*, *>
+    val map: WritableMap = WritableNativeMap()
+    val timeStartToAnswer = call["time_start_to_answer"] as Long?
+    val timeEnd = call["time_end"] as Long
+    map.putString("transaction_id", call["transaction_id"] as String?)
+    map.putString("direction", call["direction"] as String)
+    map.putString("source_number", call["source_number"] as String)
+    map.putString("destination_number", call["destination_number"] as String)
+    map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
+    map.putDouble("time_end", timeEnd.toDouble())
+    map.putString("sip_user", call["sip_user"] as String)
+    map.putString("disposition", call["disposition"] as String)
+    map.putInt("status", CallState.disconnected.value)
+    sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onCallEstablished(
@@ -85,31 +84,43 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       map.putString("callerNumber", phoneNumber)
       map.putBoolean("isVideo", isVideo ?: true)
       map.putString("transactionId", transactionId)
-      sendEvent(CALL_ESTABLISHED, map)
+      map.putInt("status", CallState.confirmed.value)
+      sendEvent(CALL_STATE_CHANGED, map)
     }, 500)
   }
 
-  override fun onConnectionTimeout() {
-  //      sendEvent("onConnectionTimeout", null)
+  override fun onConnecting() {
+    val map: WritableMap = WritableNativeMap()
+    map.putString("callerNumber", "")
+    map.putBoolean("isVideo", NotificationService.isVideo)
+    map.putString("transactionId", "")
+    map.putInt("status", CallState.connecting.value)
+    sendEvent(CALL_STATE_CHANGED, map)
   }
 
+
   override fun onHold(isHold: Boolean) {
-  //      val map: WritableMap = WritableNativeMap()
-  //      map.putBoolean("isHold", isHold)
-  //      sendEvent(HOLD, map)
   }
 
   override fun onMuted(isMuted: Boolean) {
-  //      val map: WritableMap = WritableNativeMap()
-  //      map.putBoolean("isMuted", isMuted)
-  //      sendEvent(MUTED, map)
   }
 
   override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
-
+    val map: WritableMap = WritableNativeMap()
+    map.putString("callerNumber", "")
+    map.putBoolean("isVideo", NotificationService.isVideo)
+    map.putString("transactionId", "")
+    map.putInt("status", CallState.calling.value)
+    sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onRinging() {
+    val map: WritableMap = WritableNativeMap()
+    map.putString("callerNumber", "")
+    map.putBoolean("isVideo", false)
+    map.putString("transactionId", "")
+    map.putInt("status", CallState.early.value)
+    sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onSwitchBoardAnswer(sip: String) {
@@ -152,6 +163,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       promise.resolve(result)
   }
 
+  @RequiresApi(Build.VERSION_CODES.M)
   @ReactMethod
   fun openSystemAlertSetting(promise: Promise) {
     val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -202,8 +214,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         OmiClient.register(
           userName,
           password,
-          isVideo,
           realm,
+          isVideo,
           host,
         )
       }
@@ -321,24 +333,19 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun endCall(promise: Promise) {
     currentActivity?.runOnUiThread {
-      val callInfo = OmiClient.instance.hangUp()
-      if (callInfo is Map<*, *>) {
-        val call = callInfo as Map<*, *>
-        val map: WritableMap = WritableNativeMap()
-        val timeStartToAnswer = call["time_start_to_answer"] as Long?
-        val timeEnd = call["time_end"] as Long
-        map.putString("transaction_id", call["transaction_id"] as String?)
-        map.putString("direction", call["direction"] as String)
-        map.putString("source_number", call["source_number"] as String)
-        map.putString("destination_number", call["destination_number"] as String)
-        map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
-        map.putDouble("time_end", timeEnd.toDouble())
-        map.putString("sip_user", call["sip_user"] as String)
-        map.putString("disposition", call["disposition"] as String)
-        sendEvent(CALL_END, map)
-      } else {
-        promise.resolve(null)
-      }
+      val call = OmiClient.instance.hangUp()
+      val map: WritableMap = WritableNativeMap()
+      val timeStartToAnswer = call["time_start_to_answer"] as Long?
+      val timeEnd = call["time_end"] as Long
+      map.putString("transaction_id", call["transaction_id"] as String?)
+      map.putString("direction", call["direction"] as String)
+      map.putString("source_number", call["source_number"] as String)
+      map.putString("destination_number", call["destination_number"] as String)
+      map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
+      map.putDouble("time_end", timeEnd.toDouble())
+      map.putString("sip_user", call["sip_user"] as String)
+      map.putString("disposition", call["disposition"] as String)
+      sendEvent(CALL_STATE_CHANGED, map)
     }
   }
 
@@ -536,9 +543,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   private fun sendEvent(eventName: String?, params: Any?) {
-    currentActivity!!.runOnUiThread {
-      reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
-        .emit(eventName, params)
+    if (currentActivity != null) {
+      currentActivity!!.runOnUiThread {
+        reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
+          .emit(eventName, params)
+      }
     }
   }
 
