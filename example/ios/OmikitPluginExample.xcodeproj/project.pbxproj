@@ -511,7 +511,7 @@
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = ZD8A96Y6GA;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = MY62U5R8XP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = OmikitPluginExample/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Omikit Plugin";
@@ -533,10 +533,10 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = vn.vihat.omikit;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.omicall.production;
 				PRODUCT_NAME = OmikitPluginExample;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Developer_vn.vihat.omikit;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match develop";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -550,10 +550,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = OmikitPluginExample/OmikitPluginExample.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = ZD8A96Y6GA;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = MY62U5R8XP;
 				INFOPLIST_FILE = OmikitPluginExample/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Omikit Plugin";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -574,10 +575,10 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = vn.vihat.omikit;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.omicall.production;
 				PRODUCT_NAME = OmikitPluginExample;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Developer_vn.vihat.omikit;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match release";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

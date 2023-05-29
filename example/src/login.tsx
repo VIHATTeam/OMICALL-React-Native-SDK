@@ -27,13 +27,13 @@ export const LoginScreen = () => {
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const [userName, setUserNumber] = useState(
-    Platform.OS === 'android' ? '116' : '115'
+    Platform.OS === 'android' ? '103' : '102'
   );
   const [password, setPassword] = useState(
-    Platform.OS === 'android' ? 'vWmFFBZwss' : 'VlAkzpm2Fn'
+    Platform.OS === 'android' ? 'a7JoGYJbJQ' : 'AwiZHdm2SY'
   );
-  const [realm, setRealm] = useState('');
-  const [host, setHost] = useState('');
+  const [realm, setRealm] = useState('devtestcallbot');
+  const [host, setHost] = useState('vh.omicrm.com');
   const navigation = useNavigation();
 
   useEffect(() => {

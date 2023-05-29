@@ -195,14 +195,10 @@ public class OmikitPlugin: RCTEventEmitter {
     
     public override func supportedEvents() -> [String]! {
         return [
-            INCOMING_RECEIVED,
-            CALL_ESTABLISHED,
-            CALL_END,
+            CALL_STATE_CHANGED,
             MUTED,
             SPEAKER,
-            VIDEO,
             REMOTE_VIDEO_READY,
-            LOCAL_VIDEO_READY,
             CLICK_MISSED_CALL,
             SWITCHBOARD_ANSWER,
             CALL_QUALITY
