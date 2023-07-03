@@ -14,7 +14,7 @@ public class OmikitPlugin: RCTEventEmitter {
     
     @objc(startServices:withRejecter:)
     func startServices(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
-        CallManager.shareInstance().registerNotificationCenter()
+        CallManager.shareInstance().registerNotificationCenter(showMissedCall: true)
         resolve(true)
     }
     
@@ -33,13 +33,12 @@ public class OmikitPlugin: RCTEventEmitter {
                 "callerNumber" : call.callerNumber,
                 "status": call.lastStatus,
                 "muted": call.muted,
-                "speaker": call.speaker,
                 "isVideo": call.isVideo
             ]
             resolve(data)
             return
         }
-        resolve(false)
+        resolve(nil)
     }
     
     @objc(initCallWithUserPassword:withResolver:withRejecter:)
@@ -67,22 +66,30 @@ public class OmikitPlugin: RCTEventEmitter {
     }
     
     @objc(startCall:withResolver:withRejecter:)
-    func startCall(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func startCall(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         if let dataOmi = data as? [String: Any] {
             let phoneNumber = dataOmi["phoneNumber"] as! String
-            let isVideo = dataOmi["isVideo"] as? Bool
-            let result = CallManager.shareInstance().startCall(phoneNumber, isVideo: isVideo ?? false)
-            resolve(result)
+            var isVideo = false
+            if let isVideoCall = dataOmi["isVideo"] as? Bool {
+                isVideo = isVideoCall
+            }
+            CallManager.shareInstance().startCall(phoneNumber, isVideo: isVideo) { callResult in
+                resolve(callResult)
+            }
         }
     }
     
     @objc(startCallWithUuid:withResolver:withRejecter:)
-    func startCallWithUuid(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    func startCallWithUuid(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         if let dataOmi = data as? [String: Any] {
             let uuid = dataOmi["usrUuid"] as! String
-            let isVideo = dataOmi["isVideo"] as? Bool
-            let result = CallManager.shareInstance().startCallWithUuid(uuid, isVideo: isVideo ?? false)
-            resolve(result)
+            var isVideo = false
+            if let isVideoCall = dataOmi["isVideo"] as? Bool {
+                isVideo = isVideoCall
+            }
+            CallManager.shareInstance().startCallWithUuid(uuid, isVideo: isVideo) { callResult in
+                resolve(callResult)
+            }
         }
     }
     
@@ -104,6 +111,7 @@ public class OmikitPlugin: RCTEventEmitter {
         if let call = CallManager.shareInstance().getAvailableCall() {
             resolve(call.muted)
         }
+        sendMuteStatus()
     }
     
     @objc(toggleSpeaker:withRejecter:)
@@ -171,6 +179,25 @@ public class OmikitPlugin: RCTEventEmitter {
         }
     }
     
+    @objc(getAudio:withRejecter:)
+    func getAudio(resolve: @escaping RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let audios = CallManager.shareInstance().getAudioOutputs()
+        resolve(audios)
+    }
+    
+    @objc(setAudio:withResolver:withRejecter:)
+    func setAudio(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        if let dataOmi = data as? [String: Any] {
+            let portType = dataOmi["portType"] as! String
+            CallManager.shareInstance().setAudioOutputs(portType: portType)
+        }
+    }
+    
+    @objc(getCurrentAudio:withRejecter:)
+    func getCurrentAudio(resolve: @escaping RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        let currentAudio = CallManager.shareInstance().getCurrentAudio()
+        resolve(currentAudio)
+    }
     
     func sendMuteStatus() {
         if let call = CallManager.shareInstance().getAvailableCall() {
@@ -183,7 +210,6 @@ public class OmikitPlugin: RCTEventEmitter {
     }
     
     @objc public func didReceive(data: [String: Any]) {
-        print(data)
         if let callerNumber = data["omisdkCallerNumber"] as? String, let isVideo = data["omisdkIsVideo"] as? Bool {
             sendEvent(withName: CLICK_MISSED_CALL, body: [
                 "callerNumber": callerNumber,
@@ -191,7 +217,6 @@ public class OmikitPlugin: RCTEventEmitter {
             ])
         }
     }
-    
     
     public override func supportedEvents() -> [String]! {
         return [
@@ -201,7 +226,8 @@ public class OmikitPlugin: RCTEventEmitter {
             REMOTE_VIDEO_READY,
             CLICK_MISSED_CALL,
             SWITCHBOARD_ANSWER,
-            CALL_QUALITY
+            CALL_QUALITY,
+            AUDIO_CHANGE,
         ]
     }
 }

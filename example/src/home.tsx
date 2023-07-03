@@ -7,7 +7,7 @@ import {
 } from './components';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  getInitialCall,
+  // getInitialCall,
   OmiCallEvent,
   omiEmitter,
   startCall,
@@ -36,12 +36,12 @@ export const HomeScreen = () => {
   const [callVideo, setCallVideo] = useState(true);
 
   const checkInitCall = useCallback(async () => {
-    const callingInfo = await getInitialCall();
-    if (callingInfo !== false) {
-      // const { callerNumber, muted, status } = callingInfo;
-      navigation.navigate('DialCall' as never, callingInfo as never);
-    }
-  }, [navigation]);
+    // const callingInfo = await getInitialCall();
+    // if (callingInfo !== null) {
+    // const { callerNumber, muted, status } = callingInfo;
+    // navigation.navigate('DialCall' as never, callingInfo as never);
+    // }
+  }, []);
 
   useEffect(() => {
     prepareForUpdateToken();

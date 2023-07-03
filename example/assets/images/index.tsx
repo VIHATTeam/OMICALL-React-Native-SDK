@@ -9,4 +9,7 @@ export const UIImages = {
   joinCall: require('./join_call.png'),
   callingFace: require('./calling_face.png'),
   icBack: require('./ic_back.png'),
+  icAirPod: require('./ic_airpod.png'),
+  icIphone: require('./ic_iphone.png'),
+  icSpeaker: require('./ic_speaker.png'),
 };

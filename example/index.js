@@ -21,7 +21,7 @@ export const Main = () => {
     startServices();
     configPushNotification({
       notificationIcon: 'assets_images_calling_face',
-      prefix: 'Cuộc gọi tới từ: ',
+      prefix: '',
       incomingBackgroundColor: '#FFFFFFFF',
       incomingAcceptButtonImage: 'assets_images_join_call',
       incomingDeclineButtonImage: 'assets_images_hangup',
