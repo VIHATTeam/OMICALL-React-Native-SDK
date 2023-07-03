@@ -14,11 +14,13 @@ import {
   omiEmitter,
   sendDTMF,
   toggleMute,
-  toggleSpeaker,
   joinCall,
   getCurrentUser,
   getGuestUser,
   OmiCallState,
+  getCurrentAudio,
+  getAudio,
+  setAudio,
 } from 'omikit-plugin';
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
@@ -31,7 +33,7 @@ export const DialCallScreen = ({ route }: any) => {
   const navigation = useNavigation();
   const [currentStatus, setCurrentStatus] = useState(route.params.status);
   const isOutGoingCall = route.params.isOutGoingCall;
-  const [micOn, setMicOn] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<any>(null);
   const [muted, setMuted] = useState(false);
   const [keyboardOn, setKeyboardOn] = useState(false);
   const [title, setTitle] = useState('');
@@ -63,11 +65,7 @@ export const DialCallScreen = ({ route }: any) => {
 
   const callStateChanged = useCallback(
     (data: any) => {
-      const { status, transactionId, callerNumber, isVideo } = data;
-      console.log(transactionId);
-      console.log(isVideo);
-      console.log(status);
-      console.log(callerNumber);
+      const { status } = data;
       setCurrentStatus(status);
       if (status === OmiCallState.disconnected) {
         navigation.goBack();
@@ -83,13 +81,6 @@ export const DialCallScreen = ({ route }: any) => {
     setMuted(data);
   }, []);
 
-  const onSpeaker = useCallback((data: any) => {
-    console.log('onSpeaker');
-    // const isSpeaker = data.isSpeaker;
-    console.log('is speaker ' + data);
-    setMicOn(data);
-  }, []);
-
   const pressKeyCap = useCallback(
     (text: string) => {
       setTitle(title + text);
@@ -99,10 +90,6 @@ export const DialCallScreen = ({ route }: any) => {
     },
     [title]
   );
-
-  const triggerSpeak = useCallback(() => {
-    toggleSpeaker();
-  }, []);
 
   const triggerMute = useCallback(() => {
     // setMicOn((prev) => !prev);
@@ -123,14 +110,44 @@ export const DialCallScreen = ({ route }: any) => {
     console.log(quality);
   }, []);
 
+  const onAudioChange = useCallback((audioData: any) => {
+    const { data } = audioData;
+    const { type } = data[0];
+    setCurrentAudio(type);
+  }, []);
+
+  const toggleAndCheckDevice = useCallback(async () => {
+    const audioList = await getAudio();
+    if (audioList.length > 2) {
+    } else {
+      if (currentAudio === 'Receiver') {
+        const speaker = audioList.find((element: any) => {
+          return element.name === 'Speaker';
+        });
+        console.log(speaker);
+        setAudio({
+          portType: speaker.type,
+        });
+      } else {
+        const receiver = audioList.find((element: any) => {
+          return element.name === 'Receiver';
+        });
+        console.log(receiver);
+        setAudio({
+          portType: receiver.type,
+        });
+      }
+    }
+  }, [currentAudio]);
+
   useEffect(() => {
     const onCallStateChanged = omiEmitter.addListener(
       OmiCallEvent.onCallStateChanged,
       callStateChanged
     );
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
-    omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
+    omiEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
     omiEmitter.addListener(
       OmiCallEvent.onSwitchboardAnswer,
       onSwitchboardAnswer
@@ -138,6 +155,7 @@ export const DialCallScreen = ({ route }: any) => {
     LiveData.isOpenedCall = true;
     return () => {
       onCallStateChanged.remove();
+      omiEmitter.removeAllListeners(OmiCallEvent.onAudioChange);
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onCallQuality);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
@@ -147,10 +165,27 @@ export const DialCallScreen = ({ route }: any) => {
   }, [
     callStateChanged,
     onMuted,
-    onSpeaker,
     onSwitchboardAnswer,
     onCallQuality,
+    onAudioChange,
   ]);
+
+  useEffect(() => {
+    getCurrentAudio().then((data: any) => {
+      const { type } = data[0];
+      setCurrentAudio(type);
+    });
+  }, []);
+
+  const audioImage = () => {
+    if (currentAudio === 'Receiver') {
+      return UIImages.icIphone;
+    }
+    if (currentAudio === 'Speaker') {
+      return UIImages.icSpeaker;
+    }
+    return UIImages.icAirPod;
+  };
 
   useEffect(() => {
     const onBackPress = () => {
@@ -186,12 +221,9 @@ export const DialCallScreen = ({ route }: any) => {
             avatar_url={guestUser == null ? null : guestUser.avatar_url}
           />
         </View>
+        <Text style={styles.status}>{currentStatusText}</Text>
         <View style={styles.title}>
-          {currentStatus === OmiCallState.confirmed ? (
-            <CustomTimer />
-          ) : (
-            <Text style={styles.status}>{currentStatusText}</Text>
-          )}
+          {currentStatus === OmiCallState.confirmed ? <CustomTimer /> : null}
         </View>
         <View style={styles.feature}>
           {currentStatus === OmiCallState.confirmed ? (
@@ -225,12 +257,17 @@ export const DialCallScreen = ({ route }: any) => {
                     style={styles.featureImage}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={triggerSpeak}>
+                {/* <TouchableOpacity onPress={triggerSpeak}>
                   <Image
                     source={micOn ? UIImages.audioOn : UIImages.audioOff}
                     style={styles.featureImage}
                   />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
+                {currentAudio != null ? (
+                  <TouchableOpacity onPress={toggleAndCheckDevice}>
+                    <Image source={audioImage()} style={styles.featureImage} />
+                  </TouchableOpacity>
+                ) : null}
               </View>
             )
           ) : null}
@@ -289,6 +326,7 @@ const styles = StyleSheet.create({
   status: {
     fontSize: 20,
     color: UIColors.textColor,
+    marginTop: 16,
   },
   feature: {
     flexGrow: 1,

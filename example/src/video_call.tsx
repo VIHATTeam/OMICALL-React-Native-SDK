@@ -45,7 +45,7 @@ export const VideoCallScreen = ({ route }: any) => {
         }
         return;
       }
-      if (status == OmiCallState.disconnected) {
+      if (status === OmiCallState.disconnected) {
         navigation.goBack();
       }
     },

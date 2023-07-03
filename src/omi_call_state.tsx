@@ -5,4 +5,5 @@ export enum OmiCallState {
   confirmed = 3,
   incoming = 4,
   disconnected = 5,
+  hold = 6,
 }

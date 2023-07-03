@@ -30,27 +30,22 @@ export function getInitialCall(): Promise<any> {
 }
 
 export function initCallWithUserPassword(data: any): Promise<boolean> {
-  console.log(data);
   return OmikitPlugin.initCallWithUserPassword(data);
 }
 
 export function initCallWithApiKey(data: any): Promise<boolean> {
-  console.log(data);
   return OmikitPlugin.initCallWithApiKey(data);
 }
 
 export function updateToken(data: any): Promise<void> {
-  console.log(data);
   return OmikitPlugin.updateToken(data);
 }
 
 export function startCall(data: any): Promise<boolean> {
-  console.log(data);
   return OmikitPlugin.startCall(data);
 }
 
 export function startCallWithUuid(data: any): Promise<boolean> {
-  console.log(data);
   return OmikitPlugin.startCallWithUuid(data);
 }
 
@@ -114,6 +109,18 @@ export function openSystemAlertSetting(): Promise<void> {
   return OmikitPlugin.openSystemAlertSetting();
 }
 
+export function getAudio(): Promise<any> {
+  return OmikitPlugin.getAudio();
+}
+
+export function setAudio(data: any): Promise<void> {
+  return OmikitPlugin.setAudio(data);
+}
+
+export function getCurrentAudio(): Promise<any> {
+  return OmikitPlugin.getCurrentAudio();
+}
+
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 
 export const OmiCallEvent = {
@@ -124,4 +131,5 @@ export const OmiCallEvent = {
   onClickMissedCall: 'CLICK_MISSED_CALL',
   onSwitchboardAnswer: 'SWITCHBOARD_ANSWER',
   onCallQuality: 'CALL_QUALITY',
+  onAudioChange: 'AUDIO_CHANGE',
 };

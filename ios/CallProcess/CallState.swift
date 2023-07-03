@@ -13,4 +13,5 @@ enum CallState: Int {
     case confirmed
     case incoming
     case disconnected
+    case hold
 }
