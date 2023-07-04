@@ -4,3 +4,4 @@ export * from './custom_checkbox';
 export * from './keyboard_avoid';
 export * from './custom_keyboard';
 export * from './custom_timer';
+export * from './custom_sound';

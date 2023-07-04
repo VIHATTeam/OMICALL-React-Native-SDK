@@ -6,7 +6,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { CustomTimer, KeyboardAvoid, UIColors } from './components';
+import {
+  CustomSound,
+  CustomTimer,
+  KeyboardAvoid,
+  UIColors,
+} from './components';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   endCall,
@@ -36,6 +41,8 @@ export const DialCallScreen = ({ route }: any) => {
   const [currentAudio, setCurrentAudio] = useState<any>(null);
   const [muted, setMuted] = useState(false);
   const [keyboardOn, setKeyboardOn] = useState(false);
+  const [onSoundSelection, setOnSoundSelection] = useState(false);
+  const [soundList, setSoundList] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [guestUser, setGuestUser] = useState<any>(null);
@@ -91,6 +98,15 @@ export const DialCallScreen = ({ route }: any) => {
     [title]
   );
 
+  const pressSoundType = useCallback((data: any) => {
+    setOnSoundSelection(false);
+    console.log('pressSoundType');
+    console.log(data);
+    setAudio({
+      portType: data.type,
+    });
+  }, []);
+
   const triggerMute = useCallback(() => {
     // setMicOn((prev) => !prev);
     toggleMute();
@@ -119,6 +135,8 @@ export const DialCallScreen = ({ route }: any) => {
   const toggleAndCheckDevice = useCallback(async () => {
     const audioList = await getAudio();
     if (audioList.length > 2) {
+      setSoundList(audioList);
+      setOnSoundSelection(true);
     } else {
       if (currentAudio === 'Receiver') {
         const speaker = audioList.find((element: any) => {
@@ -238,6 +256,14 @@ export const DialCallScreen = ({ route }: any) => {
                   }}
                 />
               </View>
+            ) : onSoundSelection ? (
+              <CustomSound
+                sounds={soundList}
+                callback={pressSoundType}
+                close={() => {
+                  setOnSoundSelection(false);
+                }}
+              />
             ) : (
               <View style={styles.feature}>
                 <TouchableOpacity onPress={triggerMute}>
