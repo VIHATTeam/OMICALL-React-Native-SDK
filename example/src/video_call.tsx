@@ -72,6 +72,7 @@ export const VideoCallScreen = ({ route }: any) => {
 
   const refreshRemoteCameraEvent = useCallback(() => {
     // setMicOn((prev) => !prev);
+    console.log('refresh');
     refreshRemoteCamera();
     refreshLocalCamera();
   }, []);

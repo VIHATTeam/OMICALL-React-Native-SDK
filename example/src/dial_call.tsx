@@ -128,8 +128,9 @@ export const DialCallScreen = ({ route }: any) => {
 
   const onAudioChange = useCallback((audioData: any) => {
     const { data } = audioData;
-    const { type } = data[0];
-    setCurrentAudio(type);
+    console.log(data);
+    const { name } = data[0];
+    setCurrentAudio(name);
   }, []);
 
   const toggleAndCheckDevice = useCallback(async () => {
@@ -190,8 +191,10 @@ export const DialCallScreen = ({ route }: any) => {
 
   useEffect(() => {
     getCurrentAudio().then((data: any) => {
-      const { type } = data[0];
-      setCurrentAudio(type);
+      console.log('current audio');
+      console.log(data);
+      const { name } = data[0];
+      setCurrentAudio(name);
     });
   }, []);
 

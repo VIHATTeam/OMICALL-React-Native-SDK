@@ -212,7 +212,8 @@ export const HomeScreen = () => {
   const logoutCB = async () => {
     await logout();
     localStorage.clearAll();
-    navigation.reset({ index: 0, routes: [{ name: 'LoginAPIKey' as never }] });
+    // navigation.reset({ index: 0, routes: [{ name: 'LoginAPIKey' as never }] });
+    navigation.reset({ index: 0, routes: [{ name: 'Login' as never }] });
   };
 
   return (
