@@ -268,7 +268,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun getInitialCall(promise: Promise) {
     currentActivity?.runOnUiThread {
-      promise.resolve(false)
+      val call = OmiClient.instance.getCurrentCallInfo()
+      if (call != null) {
+        val map: WritableMap = WritableNativeMap()
+        map.putString("callerNumber", call["callerNumber"] as String)
+        map.putInt("status", call["status"] as Int)
+        map.putBoolean("muted", call["muted"] as Boolean)
+        map.putBoolean("isVideo", call["isVideo"] as Boolean)
+        promise.resolve(map)
+      } else {
+        promise.resolve(false)
+      }
     }
   }
 

@@ -33,7 +33,7 @@ public class OmikitPlugin: RCTEventEmitter {
                 "callerNumber" : call.callerNumber,
                 "status": call.lastStatus,
                 "muted": call.muted,
-                "isVideo": call.isVideo
+                "isVideo": call.isVideo,
             ]
             resolve(data)
             return

@@ -26,6 +26,7 @@ import {
   getCurrentAudio,
   getAudio,
   setAudio,
+  getInitialCall,
 } from 'omikit-plugin';
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
@@ -71,11 +72,15 @@ export const DialCallScreen = ({ route }: any) => {
   }
 
   const callStateChanged = useCallback(
-    (data: any) => {
+    async (data: any) => {
       const { status } = data;
       setCurrentStatus(status);
       if (status === OmiCallState.disconnected) {
         navigation.goBack();
+      }
+      if (status === OmiCallState.confirmed) {
+        const callInfo = await getInitialCall();
+        console.log(callInfo);
       }
     },
     [navigation]
