@@ -16,6 +16,7 @@ import {
   systemAlertWindow,
   openSystemAlertSetting,
   OmiCallState,
+  getInitialCall,
 } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
@@ -36,11 +37,11 @@ export const HomeScreen = () => {
   const [callVideo, setCallVideo] = useState(true);
 
   const checkInitCall = useCallback(async () => {
-    // const callingInfo = await getInitialCall();
-    // if (callingInfo !== null) {
-    // const { callerNumber, muted, status } = callingInfo;
-    // navigation.navigate('DialCall' as never, callingInfo as never);
-    // }
+    const callingInfo = await getInitialCall();
+    if (callingInfo !== null && callingInfo !== false) {
+      const { callerNumber } = callingInfo;
+      console.log(callerNumber);
+    }
   }, []);
 
   useEffect(() => {
