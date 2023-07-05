@@ -17,6 +17,7 @@ import {
   registerVideoEvent,
   removeVideoEvent,
   OmiCallState,
+  switchOmiCamera,
 } from 'omikit-plugin';
 import { LiveData } from './livedata';
 import { BackHandler } from 'react-native';
@@ -25,9 +26,10 @@ import { Platform } from 'react-native';
 
 export const VideoCallScreen = ({ route }: any) => {
   // const callerNumber = route.params.callerNumber;
+  const isOutGoingCall = route.params.isOutGoingCall;
   const navigation = useNavigation();
   const [currentStatus, setCurrentStatus] = useState(route.params.status);
-  const [micOn, setMicOn] = useState(false);
+  const [micOn, setMicOn] = useState(true);
   const [muted, setMuted] = useState(false);
 
   const callStateChanged = useCallback(
@@ -124,6 +126,14 @@ export const VideoCallScreen = ({ route }: any) => {
       <View style={styles.background}>
         <OmiRemoteCameraView style={styles.remoteCamera} />
         <OmiLocalCameraView style={styles.localCamera} />
+        <TouchableOpacity
+          style={styles.toggleCamera}
+          onPress={async () => {
+            switchOmiCamera();
+          }}
+        >
+          <Image source={UIImages.icChange} style={styles.imageChange} />
+        </TouchableOpacity>
         <View style={styles.call}>
           {currentStatus === OmiCallState.confirmed ? (
             <TouchableOpacity onPress={triggerMute}>
@@ -141,7 +151,9 @@ export const VideoCallScreen = ({ route }: any) => {
           >
             <Image source={UIImages.hangup} style={styles.hangup} />
           </TouchableOpacity>
-          {currentStatus === OmiCallState.calling ? (
+          {(currentStatus === OmiCallState.incoming ||
+            currentStatus === OmiCallState.early) &&
+          isOutGoingCall === false ? (
             <TouchableOpacity
               onPress={async () => {
                 await joinCall();
@@ -174,10 +186,19 @@ const styles = StyleSheet.create({
   },
   localCamera: {
     position: 'absolute',
-    top: 32,
+    top: 80,
     right: 16,
     width: 120,
     height: 200,
+  },
+  toggleCamera: {
+    position: 'absolute',
+    top: 40,
+    right: 16,
+  },
+  imageChange: {
+    width: 24,
+    height: 24,
   },
   body: {},
   call: {

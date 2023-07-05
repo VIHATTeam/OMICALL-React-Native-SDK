@@ -100,8 +100,6 @@ export const DialCallScreen = ({ route }: any) => {
 
   const pressSoundType = useCallback((data: any) => {
     setOnSoundSelection(false);
-    console.log('pressSoundType');
-    console.log(data);
     setAudio({
       portType: data.type,
     });
@@ -115,8 +113,6 @@ export const DialCallScreen = ({ route }: any) => {
   const onSwitchboardAnswer = useCallback(async (data: any) => {
     const { sip } = data;
     console.log(sip);
-    console.log(sip);
-    //use sip to get info getUserInfo()
     const guest = await getGuestUser();
     setGuestUser(guest);
   }, []);
@@ -302,16 +298,14 @@ export const DialCallScreen = ({ route }: any) => {
           ) : null}
         </View>
         <View style={styles.call}>
-          {currentStatus > OmiCallState.calling ? (
-            <TouchableOpacity
-              onPress={async () => {
-                endCall();
-                navigation.goBack();
-              }}
-            >
-              <Image source={UIImages.hangup} style={styles.hangup} />
-            </TouchableOpacity>
-          ) : null}
+          <TouchableOpacity
+            onPress={async () => {
+              endCall();
+              navigation.goBack();
+            }}
+          >
+            <Image source={UIImages.hangup} style={styles.hangup} />
+          </TouchableOpacity>
           {(currentStatus === OmiCallState.incoming ||
             currentStatus === OmiCallState.early) &&
           isOutGoingCall === false ? (
