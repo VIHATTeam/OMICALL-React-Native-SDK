@@ -12,4 +12,5 @@ export const UIImages = {
   icAirPod: require('./ic_airpod.png'),
   icIphone: require('./ic_iphone.png'),
   icSpeaker: require('./ic_speaker.png'),
+  icChange: require('./ic_change.png'),
 };
