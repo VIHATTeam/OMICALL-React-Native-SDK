@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.0.0
+- **BREAKING CHANGE**
+  - Increase android/core core
+  - We support lifecycle for calling
+  - Support cancel a call 
+  - Return `startCallStatus`
+  - Update sample
+
 ## 2.4.0
 - **BREAKING CHANGE**
   - Increase android/core core

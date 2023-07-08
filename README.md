@@ -96,21 +96,26 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 
 ```
 //need request this permission
+//need request this permission
 <uses-permission android:name="android.permission.INTERNET" />
-//add this lines inside <activity>
+//add these lines inside <activity>
 <intent-filter>
     <action android:name="com.omicall.sdk.CallingActivity"/>
     <category android:name="android.intent.category.DEFAULT" />
 </intent-filter>
-//add this lines outside <activity>
+//add these lines outside <activity>
 <receiver
-  android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
-  android:exported="true"
-  android:permission="com.google.android.c2dm.permission.SEND">
-  <intent-filter>
-    <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-  </intent-filter>
+    android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
+    android:exported="true"
+    android:permission="com.google.android.c2dm.permission.SEND">
+    <intent-filter>
+        <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+    </intent-filter>
 </receiver>
+<service
+    android:name="vn.vihat.omicall.omisdk.service.NotificationService"
+    android:exported="false">
+</service>
 ```
 
 You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/app/src/main/AndroidManifest.xml">AndroidManifest</a> to know more informations.
@@ -130,7 +135,6 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-<uses-permission android:name="android.permission.WAKE_LOCK"/>
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -139,7 +143,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 - Setup remote push notification: Only support Firebase for remote push notification.
 
   - Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
-  - Add Fire Messaging to receive `fcm_token` (You can refer <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> to setup notification for React native)
+  - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> to setup notification for React native)
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/android-sdk/cau-hinh-push-notification">Config Push for Android</a>
 
@@ -322,9 +326,9 @@ extension Data {
       usrUuid: usrUuid,
       fullName: fullName,
       apiKey: apiKey,
+      phone: phone,
       isVideo: isVideo,
     };
-    console.log(loginInfo);
     const result = await initCallWithApiKey(loginInfo);
     //result is true then user login successfully.
     ```
@@ -366,18 +370,6 @@ extension Data {
   //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
   ```
 
-- Get call when user open app from killed state(only iOS):
-
-  ```
-  import { getInitialCall } from 'omikit-plugin';
-
-  const callingInfo = await getInitialCall();
-  if (callingInfo !== false) {
-    navigation.navigate('DialCall' as never, callingInfo as never);
-  }
-  //callingInfo != false then user have a calling.
-  ```
-
 - Upload token: OmiKit need FCM for Android and APNS to push notification on user devices. We use more packages: <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> and <a href="https://www.npmjs.com/package/react-native-device-info?activeTab=readme">react-native-device-info</a>
 
   ```
@@ -394,6 +386,18 @@ extension Data {
   });
   ```
 
+- Get call when user open application at first time:
+
+  ```
+  import { getInitialCall } from 'omikit-plugin';
+
+  const callingInfo = await getInitialCall();
+  if (callingInfo !== false) {
+    navigation.navigate('DialCall' as never, callingInfo as never);
+  }
+  //callingInfo != false then user have a calling.
+  ```
+
 - Other functions:
 
   - Call with phone number (mobile phone or internal number):
@@ -404,6 +408,17 @@ extension Data {
       phoneNumber: phone, //phone number
       isVideo: false //allow video call: true/false
   });
+  //we will return OmiStartCallStatus with:
+    - invalidUuid: uuid is invalid (we can not find on my page)
+    - invalidPhoneNumber: sip user is invalid.
+    - samePhoneNumber: Can not call same phone number.
+    - maxRetry: We try to refresh call but we can not start your call.
+    - permissionDenied: Check audio permission.
+    - couldNotFindEndpoint: Please login before make your call.
+    - accountRegisterFailed: We can not register your account.
+    - startCallFailed: We can not start you call.
+    - startCallSuccess: Start call successfully.
+    - haveAnotherCall: We can not start you call because you are joining another call.
   ```
 
   - Call with UUID (only support with Api key):
@@ -414,6 +429,7 @@ extension Data {
       usrUuid: uuid, //phone number
       isVideo: false //allow video call: true/false
   });
+  // Result is the same with startCall
   ```
 
   - Accept a call:
@@ -505,7 +521,7 @@ extension Data {
     }
     ```
 
-  - Logout: Can't receive call.
+  - Logout: logout and remove all information.
 
     ```
     import {logout} from 'omikit-plugin';
