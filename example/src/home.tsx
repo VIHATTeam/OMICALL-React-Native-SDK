@@ -22,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 import { LiveData } from './livedata';
 import { localStorage } from './local_storage';
+import { OmiStartCallStatus } from 'src/omi_start_call_status';
 // import RNPermissions, {
 //   Permission,
 //   PERMISSIONS,
@@ -106,7 +107,7 @@ export const HomeScreen = () => {
         phoneNumber: callerNumber,
         isVideo: isVideo,
       });
-      if (result) {
+      if (result === OmiStartCallStatus.startCallSuccess) {
         const param = {
           callerNumber: callerNumber,
           status: OmiCallState.calling,
@@ -171,7 +172,7 @@ export const HomeScreen = () => {
   //     isVideo: callVideo,
   //   });
   //   console.log(result);
-  //   if (result) {
+  //   if (result === OmiStartCallStatus.startCallSuccess) {
   //     const data = {
   //       callerNumber: phone,
   //       status: CallStatus.calling,
@@ -182,24 +183,6 @@ export const HomeScreen = () => {
   //       navigation.navigate('DialCall' as never, data as never);
   //     }
   //   } else {
-  //     console.log('faaaaaaa');
-  //     const PLATFORM_PERMISSIONS = Platform.select<
-  //       typeof PERMISSIONS.ANDROID | typeof PERMISSIONS.IOS | {}
-  //     >({
-  //       android: PERMISSIONS.ANDROID.RECORD_AUDIO,
-  //       ios: PERMISSIONS.IOS.MICROPHONE,
-  //       default: {},
-  //     });
-  //     const PERMISSIONS_VALUES: Permission[] =
-  //       Object.values(PLATFORM_PERMISSIONS);
-  //     const audioPermission = PERMISSIONS_VALUES[0];
-  //     if (audioPermission) {
-  //       const value = await RNPermissions.check(audioPermission);
-  //       console.log(value);
-  //       if (value !== 'granted') {
-  //         showAlert('Check audio permission!');
-  //       }
-  //     }
   //   }
   // };
 

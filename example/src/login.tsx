@@ -32,7 +32,7 @@ export const LoginScreen = () => {
   const [password, setPassword] = useState(
     Platform.OS === 'android' ? 'OdJBU8kFlE' : 'OdJBU8kFlE'
   );
-  const [realm, setRealm] = useState('devtestcallbot');
+  const [realm, setRealm] = useState('');
   const [host, setHost] = useState('vh.omicrm.com');
   const navigation = useNavigation();
 

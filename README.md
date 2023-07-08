@@ -173,7 +173,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 #import <OmiKit/OmiKit.h>
 #import <omicall_flutter_plugin/omicall_flutter_plugin-Swift.h>
 
-[OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX];
+[OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"extension" maxCall:1];
 provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
 voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
 pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
@@ -255,7 +255,7 @@ var voipRegistry: PKPushRegistry?
 - Add these lines into `didFinishLaunchingWithOptions`:
 
 ```
-OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_SANDBOX)
+OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_SANDBOX, userNameKey: "extension", maxCall: 1)
 provider = CallKitProviderDelegate.init(callManager: OMISIPLib.sharedInstance().callManager)
 voipRegistry = PKPushRegistry.init(queue: .main)
 pushkitManager = PushKitManager.init(voipRegistry: voipRegistry)
