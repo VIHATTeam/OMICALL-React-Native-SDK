@@ -41,11 +41,11 @@ export function updateToken(data: any): Promise<void> {
   return OmikitPlugin.updateToken(data);
 }
 
-export function startCall(data: any): Promise<boolean> {
+export function startCall(data: any): Promise<Number> {
   return OmikitPlugin.startCall(data);
 }
 
-export function startCallWithUuid(data: any): Promise<boolean> {
+export function startCallWithUuid(data: any): Promise<Number> {
   return OmikitPlugin.startCallWithUuid(data);
 }
 
