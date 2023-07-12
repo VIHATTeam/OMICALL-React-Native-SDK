@@ -17,12 +17,12 @@ import {
   openSystemAlertSetting,
   OmiCallState,
   getInitialCall,
+  OmiStartCallStatus,
 } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 import { LiveData } from './livedata';
 import { localStorage } from './local_storage';
-import { OmiStartCallStatus } from 'src/omi_start_call_status';
 // import RNPermissions, {
 //   Permission,
 //   PERMISSIONS,

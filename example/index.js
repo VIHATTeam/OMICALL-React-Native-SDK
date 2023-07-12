@@ -31,6 +31,8 @@ export const Main = () => {
       prefixMissedCallMessage: 'Cuộc gọi nhỡ từ',
       userNameKey: 'full_name',
       channelId: 'com.channel.sample',
+      audioNotificationDescription: 'Cuộc gọi audio nè',
+      videoNotificationDescription: 'Cuộc gọi video nè',
     });
     const data = localStorage.getString('login_info');
     const isLogin = data !== undefined;

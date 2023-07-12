@@ -32,5 +32,5 @@ Pod::Spec.new do |s|
     s.dependency "RCTTypeSafety"
     s.dependency "ReactCommon/turbomodule/core"
   end
-  s.dependency "OmiKit", '1.5.62'
+  s.dependency "OmiKit", '1.5.64'
 end
