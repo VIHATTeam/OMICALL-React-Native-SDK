@@ -149,6 +149,8 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 
 #### iOS(Object-C):
 
+- Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
+
 - Add variables in Appdelegate.h:
 
 ```
@@ -173,7 +175,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 #import <OmiKit/OmiKit.h>
 #import <omicall_flutter_plugin/omicall_flutter_plugin-Swift.h>
 
-[OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"extension" maxCall:1];
+[OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image"];
 provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
 voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
 pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
@@ -238,7 +240,16 @@ if (@available(iOS 10.0, *)) {
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/ios-sdk/cau-hinh-push-notification">Config Push for iOS</a>
   
+*** Important release note ***
+```
+We support 2 environments. So you need set correct key in Appdelegate.
+- KEY_OMI_APP_ENVIROMENT_SANDBOX support on debug mode
+- KEY_OMI_APP_ENVIROMENT_PRODUCTION support on release mode
+- Visit on web admin to select correct enviroment.   
+```
+  
 #### iOS(Swift):
+- Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
 
 - Add variables in Appdelegate.swift:
 
@@ -255,7 +266,7 @@ var voipRegistry: PKPushRegistry?
 - Add these lines into `didFinishLaunchingWithOptions`:
 
 ```
-OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_SANDBOX, userNameKey: "extension", maxCall: 1)
+OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_SANDBOX, userNameKey: "extension", maxCall: 1, callKitImage: "call_image")
 provider = CallKitProviderDelegate.init(callManager: OMISIPLib.sharedInstance().callManager)
 voipRegistry = PKPushRegistry.init(queue: .main)
 pushkitManager = PushKitManager.init(voipRegistry: voipRegistry)
@@ -294,6 +305,13 @@ extension Data {
   - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/ios-sdk/cau-hinh-push-notification">Config Push for iOS</a>
+*** Important release note ***
+```
+We support 2 environments. So you need set correct key in Appdelegate.
+- KEY_OMI_APP_ENVIROMENT_SANDBOX support on debug mode
+- KEY_OMI_APP_ENVIROMENT_PRODUCTION support on release mode
+- Visit on web admin to select correct enviroment.   
+```
 
 
 ## Implement
@@ -366,6 +384,8 @@ extension Data {
     missedCallTitle: 'Cuộc gọi nhỡ', //config title for the missed call
     userNameKey: 'uuid', //we have 3 values: uuid, full_name, extension.
     channelId: 'com.channel.sample', //your notification channel id
+    audioNotificationDescription: '' //audio description
+    videoNotificationDescription: '' //video descriptipn
   });
   //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
   ```

@@ -195,6 +195,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val userImage = data.getString("userImage")
       val userNameKey = data.getString("userNameKey")
       val channelId = data.getString("channelId")
+      val audioNotificationDescription = data.getString("audioNotificationDescription")
+      val videoNotificationDescription = data.getString("videoNotificationDescription")
       OmiClient.instance.configPushNotification(
         notificationIcon = notificationIcon ?: "",
         prefix = prefix ?: "Cuộc gọi tới từ: ",
@@ -208,6 +210,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         channelId = channelId ?: "",
         ringtone = null,
         fullScreenUserImage = userImage ?: "calling_face",
+        showUserInfoInFullScreen = false,
+        audioNotificationDescription = audioNotificationDescription,
+        videoNotificationDescription = videoNotificationDescription
       )
       promise.resolve(true)
     }
