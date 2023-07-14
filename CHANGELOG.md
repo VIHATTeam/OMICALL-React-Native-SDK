@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.0.1
+  - Increase android core
+  - Update new readme
+  - Update sample
+
 ## 3.0.0
 - **BREAKING CHANGE**
   - Increase android/core core
