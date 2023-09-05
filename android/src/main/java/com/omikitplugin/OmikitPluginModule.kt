@@ -197,23 +197,23 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val channelId = data.getString("channelId")
       val audioNotificationDescription = data.getString("audioNotificationDescription")
       val videoNotificationDescription = data.getString("videoNotificationDescription")
-      OmiClient.instance.configPushNotification(
-        notificationIcon = notificationIcon ?: "",
-        prefix = prefix ?: "Cuộc gọi tới từ: ",
-        incomingBackgroundColor = incomingBackgroundColor ?: "#FFFFFFFF",
-        incomingAcceptButtonImage = incomingAcceptButtonImage ?: "join_call",
-        incomingDeclineButtonImage = incomingDeclineButtonImage ?: "hangup",
-        backImage = backImage ?: "ic_back",
-        userImage = userImage ?: "calling_face",
-        prefixMissedCallMessage = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
-        userNameKey = userNameKey ?: "extension",
-        channelId = channelId ?: "",
-        ringtone = null,
-        fullScreenUserImage = userImage ?: "calling_face",
-        showUserInfoInFullScreen = false,
-        audioNotificationDescription = audioNotificationDescription,
-        videoNotificationDescription = videoNotificationDescription
-      )
+      // OmiClient.instance.configPushNotification(
+      //   notificationIcon = notificationIcon ?: "",
+      //   prefix = prefix ?: "Cuộc gọi tới từ: ",
+      //   incomingBackgroundColor = incomingBackgroundColor ?: "#FFFFFFFF",
+      //   incomingAcceptButtonImage = incomingAcceptButtonImage ?: "join_call",
+      //   incomingDeclineButtonImage = incomingDeclineButtonImage ?: "hangup",
+      //   backImage = backImage ?: "ic_back",
+      //   userImage = userImage ?: "calling_face",
+      //   prefixMissedCallMessage = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
+      //   userNameKey = userNameKey ?: "extension",
+      //   channelId = channelId ?: "",
+      //   ringtone = null,
+      //   fullScreenUserImage = userImage ?: "calling_face",
+      //   showUserInfoInFullScreen = false,
+      //   audioNotificationDescription = audioNotificationDescription,
+      //   videoNotificationDescription = videoNotificationDescription
+      // )
       promise.resolve(true)
     }
   }
