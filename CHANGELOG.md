@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## 3.0.2
+  - Increase android core
+  - Increase android ios
+  - Update State call
 
 ## 3.0.1
   - Increase android core

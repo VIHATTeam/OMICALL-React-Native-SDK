@@ -657,10 +657,32 @@ useEffect(() => {
 ```
 
   - Important event `onCallStateChanged`: We provide it to listen call state change.
+ //OmiAction have 2 variables: actionName and data
+ ```
+    - Action Name value: 
+        - `onCallStateChanged`: Call state changed.
+        - `onSwitchboardAnswer`: Switchboard sip is listening. 
+        - List status call: 
+          + unknown(0),
+          + calling(1),
+          + incoming(2),
+          + early(3),
+          + connecting(4),
+          + confirmed(5),
+          + disconnected(6);
+    + onCallStateChanged is call state tracking event. We will return status of state. Please refer `OmiCallState`.
+          `onCallStateChanged value:`
+              + isVideo: value boolean (true is call Video)
+              + status: number (value matching with List status call )
+              + callerNumber: phone number 
+              + incoming: boolean - status call incoming or outgoing
+              + _id: option (id of every call)
 
-    + It is call state tracking event. We will return status of state. Please refer `OmiCallState`.
-    + Incoming call state lifecycle: incoming(receive on foreround state) -> early -> connecting -> confirmed -> disconnected
-    + Outgoing call state lifecycle: calling -> early (call created) -> connecting -> confirmed -> disconnected
+    + `Incoming call` state lifecycle: incoming -> connecting -> confirmed -> disconnected
+    + `Outgoing call` state lifecycle: calling -> early -> connecting -> confirmed -> disconnected 
+
+    + onSwitchboardAnswer have callback when employee answered script call.
+
 
 - Action Name value:
   - `OmiCallEvent.onMuted`: Audio changed.

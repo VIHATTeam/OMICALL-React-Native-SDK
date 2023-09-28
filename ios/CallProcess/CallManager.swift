@@ -209,74 +209,135 @@ class CallManager {
     }
     
     @objc fileprivate func callStateChanged(_ notification: NSNotification) {
+//         guard let userInfo = notification.userInfo,
+//               let call     = userInfo[OMINotificationUserInfoCallKey] as? OMICall,
+//               let callState = userInfo[OMINotificationUserInfoCallStateKey] as? Int else {
+//             return;
+//         }
+// //        print("call state")
+// //        print(call.callState)
+//         switch (callState) {
+//         case OMICallState.calling.rawValue:
+// //            NSLog("Outgoing call, in CALLING state, with UUID \(call.uuid)")
+//             var callInfo = baseInfoFromCall(call: call)
+//             callInfo["status"] = CallState.calling.rawValue
+//             OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
+//             break
+//         case OMICallState.early.rawValue:
+//             var callInfo = baseInfoFromCall(call: call)
+//             callInfo["status"] = CallState.early.rawValue
+//             OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
+//             break
+//         case OMICallState.connecting.rawValue:
+//             var callInfo = baseInfoFromCall(call: call)
+//             callInfo["status"] = CallState.connecting.rawValue
+//             OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
+//             break
+//         case OMICallState.hold.rawValue:
+//             var callInfo = baseInfoFromCall(call: call)
+//             callInfo["status"] = CallState.hold.rawValue
+//             OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
+//             break
+//         case OMICallState.confirmed.rawValue:
+// //            NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call)")
+//             if (videoManager == nil && call.isVideo) {
+//                 videoManager = OMIVideoViewManager.init()
+//             }
+//             isSpeaker = call.isVideo
+//             lastStatusCall = "answered"
+//             var callInfo = baseInfoFromCall(call: call)
+//             callInfo["status"] = CallState.confirmed.rawValue
+//             OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
+//             OmikitPlugin.instance.sendMuteStatus()
+//             break
+//         case OMICallState.incoming.rawValue:
+//             guestPhone = call.callerNumber ?? ""
+//             DispatchQueue.main.async {[weak self] in
+//                 guard let self = self else { return }
+//                 let state: UIApplication.State = UIApplication.shared.applicationState
+//                 if (state == .active) {
+//                     var callInfo = self.baseInfoFromCall(call: call)
+//                     callInfo["status"] = CallState.incoming.rawValue
+//                     OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
+//                 }
+//             }
+//             break
+//         case OMICallState.disconnected.rawValue:
+// //            if (!call.connected) {
+// //                NSLog("Call never connected, in DISCONNECTED state, with UUID: \(call.uuid)")
+// //            } else if (!call.userDidHangUp) {
+// //                NSLog("Call remotly ended, in DISCONNECTED state, with UUID: \(call.uuid)")
+// //            }
+//             tempCallInfo = getCallInfo(call: call)
+//             if (videoManager != nil) {
+//                 videoManager = nil
+//             }
+//             lastStatusCall = nil
+//             guestPhone = ""
+//             tempCallInfo!["status"] = CallState.disconnected.rawValue
+//             OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: tempCallInfo!)
+//             tempCallInfo = nil
+//             break
+//         default:
+//             break
+//         }
         guard let userInfo = notification.userInfo,
               let call     = userInfo[OMINotificationUserInfoCallKey] as? OMICall,
               let callState = userInfo[OMINotificationUserInfoCallStateKey] as? Int else {
             return;
         }
-//        print("call state")
-//        print(call.callState)
+       
+        var dataToSend: [String: Any] = [
+            "status": callState,
+            "callInfo": "",
+            "incoming": false,
+            "callerNumber": "",
+            "isVideo": false,
+            "transactionId": "",
+            "_id": ""
+        ]
+
+        if(call != nil){
+            if(call.isIncoming && callState == OMICallState.early.rawValue){
+                dataToSend["status"] = OMICallState.incoming.rawValue
+            }
+            dataToSend["_id"] = String(describing: OmiCallModel(omiCall: call).uuid)
+            dataToSend["incoming"] = call.isIncoming
+            dataToSend["callerNumber"] = call.callerNumber
+            dataToSend["isVideo"] = call.isVideo
+            dataToSend["transactionId"] =   call.omiId
+        }
+
+        if (callState != OMICallState.disconnected.rawValue) {
+            SwiftOmikitPlugin.instance?.sendEvent(CALL_STATE_CHANGED, dataToSend)
+        }
+       
         switch (callState) {
-        case OMICallState.calling.rawValue:
-//            NSLog("Outgoing call, in CALLING state, with UUID \(call.uuid)")
-            var callInfo = baseInfoFromCall(call: call)
-            callInfo["status"] = CallState.calling.rawValue
-            OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
-            break
-        case OMICallState.early.rawValue:
-            var callInfo = baseInfoFromCall(call: call)
-            callInfo["status"] = CallState.early.rawValue
-            OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
-            break
-        case OMICallState.connecting.rawValue:
-            var callInfo = baseInfoFromCall(call: call)
-            callInfo["status"] = CallState.connecting.rawValue
-            OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
-            break
-        case OMICallState.hold.rawValue:
-            var callInfo = baseInfoFromCall(call: call)
-            callInfo["status"] = CallState.hold.rawValue
-            OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
-            break
         case OMICallState.confirmed.rawValue:
-//            NSLog("Outgoing call, in CONFIRMED state, with UUID: \(call)")
             if (videoManager == nil && call.isVideo) {
                 videoManager = OMIVideoViewManager.init()
             }
             isSpeaker = call.isVideo
             lastStatusCall = "answered"
-            var callInfo = baseInfoFromCall(call: call)
-            callInfo["status"] = CallState.confirmed.rawValue
-            OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
-            OmikitPlugin.instance.sendMuteStatus()
+            SwiftOmikitPlugin.instance.sendMuteStatus()
             break
         case OMICallState.incoming.rawValue:
             guestPhone = call.callerNumber ?? ""
-            DispatchQueue.main.async {[weak self] in
-                guard let self = self else { return }
-                let state: UIApplication.State = UIApplication.shared.applicationState
-                if (state == .active) {
-                    var callInfo = self.baseInfoFromCall(call: call)
-                    callInfo["status"] = CallState.incoming.rawValue
-                    OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
-                }
-            }
             break
         case OMICallState.disconnected.rawValue:
-//            if (!call.connected) {
-//                NSLog("Call never connected, in DISCONNECTED state, with UUID: \(call.uuid)")
-//            } else if (!call.userDidHangUp) {
-//                NSLog("Call remotly ended, in DISCONNECTED state, with UUID: \(call.uuid)")
-//            }
-            tempCallInfo = getCallInfo(call: call)
+            tempCallInfo = getCallInfo(call: call) ?? [:]
             if (videoManager != nil) {
                 videoManager = nil
             }
             lastStatusCall = nil
             guestPhone = ""
-            tempCallInfo!["status"] = CallState.disconnected.rawValue
-            OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: tempCallInfo!)
-            tempCallInfo = nil
+            var combinedDictionary: [String: Any] = dataToSend
+            if (tempCallInfo.count > 0) {
+                combinedDictionary.merge(tempCallInfo, uniquingKeysWith: { (_, new) in new })
+            }
+            SwiftOmikitPlugin.instance?.sendEvent(CALL_STATE_CHANGED, combinedDictionary )
+            lastTimeCall = Date()
+            tempCallInfo = [:]
             break
         default:
             break

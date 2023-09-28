@@ -34,35 +34,45 @@ import vn.vihat.omicall.omisdk.utils.SipServiceConstants
 class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   ReactContextBaseJavaModule(reactContext), ActivityEventListener, OmiListener {
   private val mainScope = CoroutineScope(Dispatchers.Main)
+  private var isIncomming: Boolean = false
+  private var callerNumberTemp: String = ""
+  private var isAnserCall: Boolean = false
+
 
   override fun getName(): String {
     return NAME
   }
 
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
+    isIncomming = true;
     val map: WritableMap = WritableNativeMap()
     map.putBoolean("isVideo", isVideo ?: true)
+    map.putBoolean("incoming", isIncomming)
     map.putString("callerNumber", phoneNumber)
+    map.putString("_id", "")
     map.putInt("status", CallState.incoming.value)
     sendEvent(CALL_STATE_CHANGED, map)
     Log.d("omikit", "incomingReceived: ")
   }
 
-  override fun networkHealth(stat: Map<String, *>, quality: Int) {
-    val map: WritableMap = WritableNativeMap()
-    map.putInt("quality", quality)
-    sendEvent(CALL_QUALITY, map)
-  }
-
-  override fun onAudioChanged(audioInfo: Map<String, Any>) {
-    val audio: WritableMap = WritableNativeMap()
-    audio.putString("name", audioInfo["name"] as String)
-    audio.putInt("type", audioInfo["type"] as Int)
-    val map: WritableMap = WritableNativeMap()
-    val writeList = WritableNativeArray()
-    writeList.pushMap(audio)
-    map.putArray("data", writeList)
-    sendEvent(AUDIO_CHANGE, map)
+  override fun onCallEstablished(
+    callerId: Int,
+    phoneNumber: String?,
+    isVideo: Boolean?,
+    startTime: Long,
+    transactionId: String?,
+  ) {
+    isAnserCall = true
+    Handler(Looper.getMainLooper()).postDelayed({
+      Log.d("OmikitReactNative", "onCallEstablished")
+      val map: WritableMap = WritableNativeMap()
+      map.putString("callerNumber", phoneNumber)
+      map.putBoolean("isVideo", isVideo ?: true)
+      map.putBoolean("incoming", isIncomming)
+      map.putString("transactionId", transactionId)
+      map.putInt("status", CallState.confirmed.value)
+      sendEvent(CALL_STATE_CHANGED, map)
+    }, 500)
   }
 
   override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
@@ -82,31 +92,53 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     sendEvent(CALL_STATE_CHANGED, map)
   }
 
-  override fun onCallEstablished(
-    callerId: Int,
-    phoneNumber: String?,
-    isVideo: Boolean?,
-    startTime: Long,
-    transactionId: String?,
-  ) {
-    Handler(Looper.getMainLooper()).postDelayed({
-      Log.d("OmikitReactNative", "onCallEstablished")
-      val map: WritableMap = WritableNativeMap()
-      map.putString("callerNumber", phoneNumber)
-      map.putBoolean("isVideo", isVideo ?: true)
-      map.putString("transactionId", transactionId)
-      map.putInt("status", CallState.confirmed.value)
-      sendEvent(CALL_STATE_CHANGED, map)
-    }, 500)
-  }
-
   override fun onConnecting() {
     val map: WritableMap = WritableNativeMap()
     map.putString("callerNumber", "")
     map.putBoolean("isVideo", NotificationService.isVideo)
+    map.putBoolean("incoming", isIncomming)
     map.putString("transactionId", "")
+    map.putString("_id", "")
     map.putInt("status", CallState.connecting.value)
     sendEvent(CALL_STATE_CHANGED, map)
+  }
+
+  override fun onRinging(callerId: Int, transactionId: String?) {
+    var callDirection  = OmiClient.callDirection
+    val map: WritableMap = WritableNativeMap()
+
+    if(callDirection == "inbound") {
+      map.putString("callerNumber", OmiClient.prePhoneNumber)
+      map.putBoolean("isVideo", NotificationService.isVideo)
+      map.putBoolean("incoming", true)
+      map.putString("transactionId", transactionId ?: "")
+      map.putInt("status", CallState.incoming.value)
+    } else {
+      map.putString("callerNumber", "")
+      map.putBoolean("isVideo", NotificationService.isVideo)
+      map.putString("transactionId", transactionId ?: "")
+      map.putInt("status", CallState.early.value)
+      map.putBoolean("incoming", false)
+    }
+    sendEvent(CALL_STATE_CHANGED, map)
+  }
+
+
+  override fun networkHealth(stat: Map<String, *>, quality: Int) {
+    val map: WritableMap = WritableNativeMap()
+    map.putInt("quality", quality)
+    sendEvent(CALL_QUALITY, map)
+  }
+
+  override fun onAudioChanged(audioInfo: Map<String, Any>) {
+    val audio: WritableMap = WritableNativeMap()
+    audio.putString("name", audioInfo["name"] as String)
+    audio.putInt("type", audioInfo["type"] as Int)
+    val map: WritableMap = WritableNativeMap()
+    val writeList = WritableNativeArray()
+    writeList.pushMap(audio)
+    map.putArray("data", writeList)
+    sendEvent(AUDIO_CHANGE, map)
   }
 
 
@@ -122,15 +154,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     map.putBoolean("isVideo", NotificationService.isVideo)
     map.putString("transactionId", "")
     map.putInt("status", CallState.calling.value)
-    sendEvent(CALL_STATE_CHANGED, map)
-  }
-
-  override fun onRinging(callerId: Int, transactionId: String?) {
-    val map: WritableMap = WritableNativeMap()
-    map.putString("callerNumber", "")
-    map.putBoolean("isVideo", false)
-    map.putString("transactionId", transactionId ?: "")
-    map.putInt("status", CallState.early.value)
+    map.putString("_id", "")
+    map.putBoolean("incoming",isIncomming)
     sendEvent(CALL_STATE_CHANGED, map)
   }
 
@@ -147,6 +172,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   private val accountListener = object : OmiAccountListener {
     override fun onAccountStatus(online: Boolean) {
       Log.d("aaa", "Account status $online")
+    }
+  }
+
+  private fun messageCall(type: Int): String {
+    return when (type) {
+      0 -> "INVALID_UUID"
+      1 -> "INVALID_PHONE_NUMBER"
+      2 -> "SAME_PHONE_NUMBER_WITH_PHONE_REGISTER"
+      3 -> "MAX_RETRY"
+      4 -> "PERMISSION_DENIED"
+      5 -> "COULD_NOT_FIND_END_POINT"
+      6 -> "REGISTER_ACCOUNT_FAIL"
+      7 -> "START_CALL_FAIL"
+      8 -> "START_CALL_SUCCESS"
+      9 -> "HAVE_ANOTHER_CALL"
+      else -> "START_CALL_SUCCESS"
     }
   }
 
@@ -188,35 +229,38 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun configPushNotification(data: ReadableMap, promise: Promise) {
     currentActivity?.runOnUiThread {
-      val notificationIcon = data.getString("notificationIcon")
-      val prefix = data.getString("prefix")
-      val incomingBackgroundColor = data.getString("incomingBackgroundColor")
-      val incomingAcceptButtonImage = data.getString("incomingAcceptButtonImage")
-      val incomingDeclineButtonImage = data.getString("incomingDeclineButtonImage")
-      val prefixMissedCallMessage = data.getString("prefixMissedCallMessage")
-      val backImage = data.getString("backImage")
-      val userImage = data.getString("userImage")
-      val userNameKey = data.getString("userNameKey")
-      val channelId = data.getString("channelId")
-      val audioNotificationDescription = data.getString("audioNotificationDescription")
-      val videoNotificationDescription = data.getString("videoNotificationDescription")
-      // OmiClient.getInstance(applicationContext!!).configPushNotification(
-      //   notificationIcon = notificationIcon ?: "",
-      //   prefix = prefix ?: "Cuộc gọi tới từ: ",
-      //   incomingBackgroundColor = incomingBackgroundColor ?: "#FFFFFFFF",
-      //   incomingAcceptButtonImage = incomingAcceptButtonImage ?: "join_call",
-      //   incomingDeclineButtonImage = incomingDeclineButtonImage ?: "hangup",
-      //   backImage = backImage ?: "ic_back",
-      //   userImage = userImage ?: "calling_face",
-      //   prefixMissedCallMessage = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
-      //   userNameKey = userNameKey ?: "extension",
-      //   channelId = channelId ?: "",
-      //   ringtone = null,
-      //   fullScreenUserImage = userImage ?: "calling_face",
-      //   showUserInfoInFullScreen = false,
-      //   audioNotificationDescription = audioNotificationDescription,
-      //   videoNotificationDescription = videoNotificationDescription
-      // )
+      val notificationIcon =  data.getString("notificationIcon") ?: ""
+      val prefix = data?.getString("prefix")  ?: ""
+      val incomingBackgroundColor = data?.getString("incomingBackgroundColor") ?: ""
+      val incomingAcceptButtonImage = data?.getString("incomingAcceptButtonImage") ?: ""
+      val incomingDeclineButtonImage = data?.getString("incomingDeclineButtonImage") ?: ""
+      val prefixMissedCallMessage = data?.getString("prefixMissedCallMessage") ?: ""
+      val backImage = data?.getString("backImage") ?: ""
+      val userImage = data?.getString("userImage") ?: ""
+      val userNameKey = data?.getString("userNameKey") ?: ""
+      val channelId = data?.getString("channelId") ?: ""
+      val missedCallTitle = data?.getString("missedCallTitle") ?: ""
+      val audioNotificationDescription = data?.getString("audioNotificationDescription") ?: ""
+      val videoNotificationDescription = data?.getString("videoNotificationDescription") ?: ""
+      val displayNameType = data?.getString("displayNameType") ?: ""
+
+      OmiClient.getInstance(reactApplicationContext!!).configPushNotification(
+        showMissedCall = true,
+        notificationIcon = notificationIcon ?: "ic_notification",
+        notificationAvatar = userImage ?: "ic_inbound_avatar_notification",
+        fullScreenAvatar = userImage ?: "ic_inbound_avatar_fullscreen",
+        internalCallText = "Gọi nội bộ",
+        videoCallText = "Gọi Video",
+        inboundCallText = prefix,
+        unknownContactText = "Cuộc gọi không xác định",
+        showUUID = false,
+        inboundChannelId =  "${channelId}-inbound",
+        inboundChannelName = "Cuộc gọi đến",
+        missedChannelId =  "${channelId}-missed",
+        missedChannelName = "Cuộc gọi nhỡ",
+        displayNameType = userNameKey ?: "full_name",
+        notificationMissedCallPrefix = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ"
+      )
       promise.resolve(true)
     }
   }
@@ -249,6 +293,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val apiKey = data.getString("apiKey")
       val isVideo = data.getBoolean("isVideo")
       val phone = data.getString("phone")
+
       withContext(Dispatchers.Default) {
         try {
           if (usrName != null && usrUuid != null && apiKey != null) {
@@ -312,14 +357,25 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         reactApplicationContext!!,
         Manifest.permission.RECORD_AUDIO
       )
+    val map: WritableMap = WritableNativeMap()
     if (audio == PackageManager.PERMISSION_GRANTED) {
       currentActivity?.runOnUiThread {
         val phoneNumber = data.getString("phoneNumber") as String
         val isVideo = data.getBoolean("isVideo")
-        OmiClient.getInstance(reactApplicationContext!!).startCall(phoneNumber, isVideo)
+        val startCallResult =   OmiClient.getInstance(reactApplicationContext!!).startCall(phoneNumber, isVideo)
+        Log.d("dataOmi", "startCall  ==>> ${startCallResult} ")
+        Log.d("dataOmi", "startCall2  ==>> ${startCallResult.value} ")
+//        var status = startCallResult.value as String
+        //  map.putString("status", startCallResult)
+         map.putString("_id", "")
+          // map.putString("message", startCallResult as String)
+         Log.d("dataOmi", "startCall  ==>> ${map} ")
         promise.resolve(true)
       }
     } else {
+      map.putString("status","4")
+      map.putString("_id", "")
+      map.putString("message", messageCall(4) as String)
       promise.resolve(false)
     }
   }

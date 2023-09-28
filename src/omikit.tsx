@@ -42,19 +42,19 @@ export function updateToken(data: any): Promise<void> {
   return OmikitPlugin.updateToken(data);
 }
 
-export function startCall(data: any): Promise<Number> {
+export function startCall(data: any): Promise<boolean> {
   return OmikitPlugin.startCall(data);
 }
 
-export function startCallWithUuid(data: any): Promise<Number> {
+export function startCallWithUuid(data: any): Promise<boolean> {
   return OmikitPlugin.startCallWithUuid(data);
 }
 
-export function joinCall(): Promise<boolean> {
+export function joinCall(): Promise<any> {
   return OmikitPlugin.joinCall();
 }
 
-export function endCall(): Promise<boolean> {
+export function endCall(): Promise<any> {
   return OmikitPlugin.endCall();
 }
 
