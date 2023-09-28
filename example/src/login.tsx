@@ -12,7 +12,7 @@ import {
   CustomTextField,
   KeyboardAvoid,
 } from './components';
-import { initCallWithUserPassword } from 'omikit-plugin';
+import { initCallWithApiKey, initCallWithUserPassword } from 'omikit-plugin';
 // import { requestNotification } from './notification';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
@@ -46,23 +46,33 @@ export const LoginScreen = () => {
     console.log(password);
 
     setLoading(true);
-    const loginInfo = {
-      userName: userName,
-      password: password,
-      realm: realm,
-      isVideo: isVideo,
-      host: host,
+    // const loginInfo = {
+    //   userName: userName,
+    //   password: password,
+    //   realm: realm,
+    //   isVideo: isVideo,
+    //   host: host,
+    // };
+    
+     const loginInfoApiKey = {
+      fullName: "thanh mơis",
+      usrUuid: "0358380646",
+      apiKey: "E7AF81703203FC31F5658FAF3B875149CD57368ED07DB4AF414D93D3D2EBC76E",
+      isVideo: false,
+      phone: "0358380646",
     };
 
-    console.log("loginInfo ", loginInfo);
 
-    const result = await initCallWithUserPassword(loginInfo);
+    // console.log("loginInfo ", loginInfo);
+
+    // const result = await initCallWithUserPassword(loginInfo);
+    const result = await initCallWithApiKey(loginInfoApiKey);
     //save login info
     console.log("result initCallWithUserPassword: ", result);
 
     setLoading(false);
     if (result) {
-      const loginInfoString = JSON.stringify(loginInfo);
+      const loginInfoString = JSON.stringify(loginInfoApiKey);
       localStorage.set('login_info', loginInfoString);
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });

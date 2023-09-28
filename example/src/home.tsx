@@ -66,6 +66,7 @@ export const HomeScreen = () => {
 
   const onCallStateChanged = useCallback(
     (data: any) => {
+      console.log("data onCallStateChanged:  ", data)
       const { status, transactionId, callerNumber, isVideo } = data;
       console.log(transactionId);
       if (status === OmiCallState.incoming) {
@@ -107,18 +108,19 @@ export const HomeScreen = () => {
         phoneNumber: callerNumber,
         isVideo: isVideo,
       });
-      if (result === OmiStartCallStatus.startCallSuccess) {
-        const param = {
-          callerNumber: callerNumber,
-          status: OmiCallState.calling,
-          isOutGoingCall: true,
-        };
-        if (isVideo === true) {
-          navigation.navigate('VideoCall' as never, param as never);
-        } else {
-          navigation.navigate('DialCall' as never, param as never);
-        }
-      }
+      console.log("result ", result)
+      // if (result === OmiStartCallStatus.startCallSuccess) {
+      //   const param = {
+      //     callerNumber: callerNumber,
+      //     status: OmiCallState.calling,
+      //     isOutGoingCall: true,
+      //   };
+      //   if (isVideo === true) {
+      //     navigation.navigate('VideoCall' as never, param as never);
+      //   } else {
+      //     navigation.navigate('DialCall' as never, param as never);
+      //   }
+      // }
     },
     [navigation]
   );
@@ -149,18 +151,18 @@ export const HomeScreen = () => {
     }
     const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
     console.log(":result startCall: ", result)
-    if (result) {
-      const data = {
-        callerNumber: phone,
-        status: OmiCallState.calling,
-        isOutGoingCall: true,
-      };
-      if (callVideo === true) {
-        navigation.navigate('VideoCall' as never, data as never);
-      } else {
-        navigation.navigate('DialCall' as never, data as never);
-      }
-    }
+    // if (result) {
+    //   const data = {
+    //     callerNumber: phone,
+    //     status: OmiCallState.calling,
+    //     isOutGoingCall: true,
+    //   };
+    //   if (callVideo === true) {
+    //     navigation.navigate('VideoCall' as never, data as never);
+    //   } else {
+    //     navigation.navigate('DialCall' as never, data as never);
+    //   }
+    // }
   };
 
   // const call = async () => {
