@@ -26,7 +26,7 @@ class FLRemoteCameraModule(reactContext: ReactApplicationContext, remoteViewMana
   @ReactMethod
   fun refresh(promise: Promise) {
     cameraView.surfaceTexture?.let {
-      OmiClient.instance.setupIncomingVideoFeed(Surface(it))
+      // OmiClient.instance.setupIncomingVideoFeed(Surface(it))
       ScaleManager.adjustAspectRatio(cameraView,
         Size(cameraView.width, cameraView.height),
         Size(1280,720)

@@ -27,12 +27,12 @@ export const LoginScreen = () => {
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const [userName, setUserNumber] = useState(
-    Platform.OS === 'android' ? '154' : '154'
+    Platform.OS === 'android' ? '101' : '154'
   );
   const [password, setPassword] = useState(
-    Platform.OS === 'android' ? 'OdJBU8kFlE' : 'OdJBU8kFlE'
+    Platform.OS === 'android' ? 'M1zx7YyK30' : 'OdJBU8kFlE'
   );
-  const [realm, setRealm] = useState('');
+  const [realm, setRealm] = useState('hungth12');
   const [host, setHost] = useState('vh.omicrm.com');
   const navigation = useNavigation();
 
@@ -40,9 +40,11 @@ export const LoginScreen = () => {
     requestNotification();
   }, []);
 
-  const loginUser = useCallback(async () => {
+  const loginUser = async() => {
+
     console.log(userName);
     console.log(password);
+
     setLoading(true);
     const loginInfo = {
       userName: userName,
@@ -51,9 +53,13 @@ export const LoginScreen = () => {
       isVideo: isVideo,
       host: host,
     };
-    console.log(loginInfo);
+
+    console.log("loginInfo ", loginInfo);
+
     const result = await initCallWithUserPassword(loginInfo);
     //save login info
+    console.log("result initCallWithUserPassword: ", result);
+
     setLoading(false);
     if (result) {
       const loginInfoString = JSON.stringify(loginInfo);
@@ -61,7 +67,7 @@ export const LoginScreen = () => {
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
     }
-  }, [password, userName, navigation, realm, isVideo, host]);
+  }
 
   const _videoTrigger = useCallback(() => {
     setIsVideo(!isVideo);
@@ -122,7 +128,7 @@ export const LoginScreen = () => {
           />
           <CustomButton
             title="LOGIN"
-            callback={loginUser}
+            callback={() =>{loginUser()}}
             style={styles.button}
           />
           {loading ? <CustomLoading /> : null}

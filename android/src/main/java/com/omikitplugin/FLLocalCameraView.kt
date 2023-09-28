@@ -33,7 +33,7 @@ class FLLocalCameraView(private val context: ReactApplicationContext) :
 
   fun refreshTexture() {
       cameraView.surfaceTexture?.let {
-        OmiClient.instance.setupLocalVideoFeed(Surface(it))
+        // OmiClient.getInstance().setupLocalVideoFeed(Surface(it))
         ScaleManager.adjustAspectRatio(
           cameraView,
           Size(cameraView.width, cameraView.height),

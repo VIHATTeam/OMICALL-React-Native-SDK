@@ -148,6 +148,7 @@ export const HomeScreen = () => {
       return;
     }
     const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
+    console.log(":result startCall: ", result)
     if (result) {
       const data = {
         callerNumber: phone,
