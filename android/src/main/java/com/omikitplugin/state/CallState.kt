@@ -1,12 +1,13 @@
 package com.omikitplugin.state
 
 enum class CallState(_value: Int) {
-  calling(0),
-  early(1),
-  connecting(2),
-  confirmed(3),
-  incoming(4),
-  disconnected(5);
+    unknown(0),
+    calling(1),
+    incoming(2),
+    early(3),
+    connecting(4),
+    confirmed(5),
+    disconnected(6);
 
   val value = _value
 }

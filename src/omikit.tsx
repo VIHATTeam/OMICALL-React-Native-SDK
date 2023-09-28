@@ -30,6 +30,7 @@ export function getInitialCall(): Promise<any> {
 }
 
 export function initCallWithUserPassword(data: any): Promise<boolean> {
+    console.log("data OmikitPlugin: ", data)
   return OmikitPlugin.initCallWithUserPassword(data);
 }
 

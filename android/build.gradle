@@ -68,7 +68,7 @@ android {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
   }
-  
+
   // kotlinOptions {
   //     jvmTarget = '1.8'
   // }
@@ -107,15 +107,14 @@ dependencies {
   implementation "com.facebook.react:react-native:+" // From node_modules
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   // implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
-  api 'vn.vihat.omicall:omi-sdk:1.4.65'
+  api 'vn.vihat.omicall:omi-sdk:2.0.19'
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 //    implementation files('OmiSDK.aar')
   implementation "com.google.android.flexbox:flexbox:3.0.0"
   implementation "androidx.appcompat:appcompat:1.6.1"
   implementation "androidx.lifecycle:lifecycle-process:2.6.1"
-  implementation 'com.google.android.material:material:1.6.1'
+  implementation "com.google.android.material:material:1.9.0"
   implementation 'com.google.firebase:firebase-messaging-ktx:23.1.2'
-  implementation 'androidx.lifecycle:lifecycle-process:2.1.0'
   implementation("com.squareup.retrofit2:retrofit:2.9.0") {
     exclude module: 'okhttp'
   }
@@ -127,6 +126,14 @@ dependencies {
   implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
   implementation "androidx.security:security-crypto:1.1.0-alpha06"
   implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0"))
+  implementation "com.github.bumptech.glide:glide:4.15.1"
+  annotationProcessor "com.github.bumptech.glide:compiler:4.15.1"
+  implementation("androidx.work:work-runtime:2.8.1")
+
+  def coroutines_version = '1.7.2'
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+
 }
 
 if (isNewArchitectureEnabled()) {
