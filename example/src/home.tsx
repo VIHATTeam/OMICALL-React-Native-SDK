@@ -68,7 +68,7 @@ export const HomeScreen = () => {
     (data: any) => {
       console.log("data onCallStateChanged:  ", data)
       const { status, transactionId, callerNumber, isVideo } = data;
-      console.log(transactionId);
+      console.log("status call: ", status);
       if (status === OmiCallState.incoming) {
         const input = {
           callerNumber: callerNumber,
@@ -96,6 +96,9 @@ export const HomeScreen = () => {
         } else {
           navigation.navigate('DialCall' as never, input as never);
         }
+      }
+      if (status === OmiCallState.disconnected) {
+        navigation.goBack();
       }
     },
     [navigation]

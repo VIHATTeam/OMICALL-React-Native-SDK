@@ -27,10 +27,10 @@ export const LoginScreen = () => {
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const [userName, setUserNumber] = useState(
-    Platform.OS === 'android' ? '101' : '154'
+    Platform.OS === 'android' ? '101' : '101'
   );
   const [password, setPassword] = useState(
-    Platform.OS === 'android' ? 'M1zx7YyK30' : 'OdJBU8kFlE'
+    Platform.OS === 'android' ? 'M1zx7YyK30' : 'M1zx7YyK30'
   );
   const [realm, setRealm] = useState('hungth12');
   const [host, setHost] = useState('vh.omicrm.com');
@@ -46,33 +46,33 @@ export const LoginScreen = () => {
     console.log(password);
 
     setLoading(true);
-    // const loginInfo = {
-    //   userName: userName,
-    //   password: password,
-    //   realm: realm,
-    //   isVideo: isVideo,
-    //   host: host,
-    // };
-    
-     const loginInfoApiKey = {
-      fullName: "thanh mơis",
-      usrUuid: "0358380646",
-      apiKey: "E7AF81703203FC31F5658FAF3B875149CD57368ED07DB4AF414D93D3D2EBC76E",
-      isVideo: false,
-      phone: "0358380646",
+    const loginInfo = {
+      userName: userName,
+      password: password,
+      realm: realm,
+      isVideo: isVideo,
+      host: host,
     };
+    
+    //  const loginInfoApiKey = {
+    //   fullName: "thanh mơis",
+    //   usrUuid: "0358380646",
+    //   apiKey: "E7AF81703203FC31F5658FAF3B875149CD57368ED07DB4AF414D93D3D2EBC76E",
+    //   isVideo: false,
+    //   phone: "0358380646",
+    // };
 
 
     // console.log("loginInfo ", loginInfo);
 
-    // const result = await initCallWithUserPassword(loginInfo);
-    const result = await initCallWithApiKey(loginInfoApiKey);
+    const result = await initCallWithUserPassword(loginInfo);
+    // const result = await initCallWithApiKey(loginInfoApiKey);
     //save login info
     console.log("result initCallWithUserPassword: ", result);
 
     setLoading(false);
     if (result) {
-      const loginInfoString = JSON.stringify(loginInfoApiKey);
+      const loginInfoString = JSON.stringify(loginInfo);
       localStorage.set('login_info', loginInfoString);
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });

@@ -21,7 +21,7 @@ class CallManager {
     private var guestPhone : String = ""
     private var lastStatusCall : String?
     private var tempCallInfo : [String: Any]?
-    
+    private var lastTimeCall : Date = Date()
     /// Get instance
     static func shareInstance() -> CallManager {
         if (instance == nil) {
@@ -79,7 +79,7 @@ class CallManager {
     
     func initWithUserPasswordEndpoint(params: [String: Any]) -> Bool {
         if let userName = params["userName"] as? String, let password = params["password"] as? String, let realm = params["realm"] as? String {
-            OmiClient.initWithUsername(userName, password: password, realm: realm)
+            OmiClient.initWithUsername(userName, password: password, realm: realm, proxy: "")
         }
         let isVideo = (params["isVideo"] as? Bool) ?? true
         requestPermission(isVideo: isVideo)
@@ -309,7 +309,7 @@ class CallManager {
         }
 
         if (callState != OMICallState.disconnected.rawValue) {
-            SwiftOmikitPlugin.instance?.sendEvent(CALL_STATE_CHANGED, dataToSend)
+            OmikitPlugin.instance?.sendEvent(withName: CALL_STATE_CHANGED, body: dataToSend)
         }
        
         switch (callState) {
@@ -319,7 +319,7 @@ class CallManager {
             }
             isSpeaker = call.isVideo
             lastStatusCall = "answered"
-            SwiftOmikitPlugin.instance.sendMuteStatus()
+            OmikitPlugin.instance.sendMuteStatus()
             break
         case OMICallState.incoming.rawValue:
             guestPhone = call.callerNumber ?? ""
@@ -332,10 +332,10 @@ class CallManager {
             lastStatusCall = nil
             guestPhone = ""
             var combinedDictionary: [String: Any] = dataToSend
-            if (tempCallInfo.count > 0) {
-                combinedDictionary.merge(tempCallInfo, uniquingKeysWith: { (_, new) in new })
+            if (tempCallInfo != nil && tempCallInfo?.count ?? 0 > 0) {
+                combinedDictionary.merge(tempCallInfo ?? [:], uniquingKeysWith: { (_, new) in new })
             }
-            SwiftOmikitPlugin.instance?.sendEvent(CALL_STATE_CHANGED, combinedDictionary )
+            OmikitPlugin.instance?.sendEvent(withName: CALL_STATE_CHANGED, body: combinedDictionary )
             lastTimeCall = Date()
             tempCallInfo = [:]
             break
@@ -367,6 +367,7 @@ class CallManager {
     
     /// Start call
     func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_ : Int) -> Void) {
+        let secondsSinceCurrentTime = lastTimeCall.timeIntervalSinceNow
         guestPhone = phoneNumber
         OmiClient.startCall(phoneNumber, isVideo: isVideo) { status in
             DispatchQueue.main.async {
