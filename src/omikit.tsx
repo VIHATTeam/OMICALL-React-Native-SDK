@@ -122,6 +122,10 @@ export function getCurrentAudio(): Promise<any> {
   return OmikitPlugin.getCurrentAudio();
 }
 
+export function transferCall(data: any): Promise<boolean> {
+  return OmikitPlugin.transferCall(data);
+}
+
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 
 export const OmiCallEvent = {

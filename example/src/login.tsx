@@ -16,7 +16,7 @@ import { initCallWithApiKey, initCallWithUserPassword } from 'omikit-plugin';
 // import { requestNotification } from './notification';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
-import { requestNotification } from './notification';
+import { requestNotification , fcm} from './notification';
 import { localStorage } from './local_storage';
 
 export const LoginScreen = () => {
@@ -46,11 +46,14 @@ export const LoginScreen = () => {
     console.log(password);
 
     setLoading(true);
+    const fcmToken = await fcm;
+    console.log(fcmToken);
     const loginInfo = {
       userName: userName,
       password: password,
       realm: realm,
       isVideo: isVideo,
+      fcmToken: fcmToken,
       host: host,
     };
     
@@ -60,6 +63,7 @@ export const LoginScreen = () => {
     //   apiKey: "E7AF81703203FC31F5658FAF3B875149CD57368ED07DB4AF414D93D3D2EBC76E",
     //   isVideo: false,
     //   phone: "0358380646",
+    //   fcmToken: fcmToken
     // };
 
 

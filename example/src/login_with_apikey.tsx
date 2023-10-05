@@ -16,7 +16,7 @@ import { initCallWithApiKey } from 'omikit-plugin';
 // import { requestNotification } from './notification';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
-import { requestNotification } from './notification';
+import { requestNotification , fcm} from './notification';
 import { localStorage } from './local_storage';
 import { Alert } from 'react-native';
 

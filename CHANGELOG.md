@@ -2,11 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.0.7
+  - Pump core ios
+  - Fix status call ios when endcall
+
+## 3.0.6
+  - Pump core android
+  - Add function transferCall 
+
+## 3.0.5
+  - Fix bug android join call with end call 
+
+
 ## 3.0.4
   - Fix missing file ios
 
 
-  
+
   ## 3.0.3
   - Increase android core
   - Increase android ios
@@ -16,7 +28,7 @@ All notable changes to this project will be documented in this file.
 ## 3.0.2
   - Increase android core
   - Increase android ios
-  - Update State call
+  - Update State call 
 
 ## 3.0.1
   - Increase android core
