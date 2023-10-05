@@ -101,8 +101,8 @@ public class OmikitPlugin: RCTEventEmitter {
     
     @objc(endCall:withRejecter:)
     func endCall(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        let result = CallManager.shareInstance().endAvailableCall()
-        resolve(result)
+        CallManager.shareInstance().endCall()
+        resolve(true)
     }
     
     @objc(toggleMute:withRejecter:)
@@ -215,6 +215,14 @@ public class OmikitPlugin: RCTEventEmitter {
                 "callerNumber": callerNumber,
                 "isVideo": isVideo,
             ])
+        }
+    }
+
+    @objc(transferCall:withResolver:withRejecter:)
+    func transferCall(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+        if let dataOmi = data as? [String: Any] {
+            let phoneNumber = dataOmi["phoneNumber"] as! String
+            CallManager.shareInstance().transferCall(phoneNumber)
         }
     }
     

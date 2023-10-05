@@ -27,6 +27,7 @@ import {
   getAudio,
   setAudio,
   getInitialCall,
+  transferCall,
 } from 'omikit-plugin';
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
@@ -47,6 +48,8 @@ export const DialCallScreen = ({ route }: any) => {
   const [title, setTitle] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [guestUser, setGuestUser] = useState<any>(null);
+  const [transaction_id, setTransaction_id] = useState("");
+
   const currentStatusText = useMemo(
     () => getDescriptionFromStatus(currentStatus),
     [currentStatus]
@@ -71,20 +74,21 @@ export const DialCallScreen = ({ route }: any) => {
     return '';
   }
 
-  const callStateChanged = useCallback(
-    async (data: any) => {
+  const callStateChanged =  async (data: any) => {  
       const { status } = data;
+      console.log("Status CallStateChanged =>>>  ", status, data)
+      if(currentStatus != status && (currentStatus == OmiCallState.confirmed )){ // chặn update status cuộc gọi, khi đang trong cuộc gọi hiện tại 
+        return 
+      }
       setCurrentStatus(status);
       if (status === OmiCallState.disconnected) {
-        navigation.goBack();
+        // navigation.goBack();
       }
       if (status === OmiCallState.confirmed) {
         const callInfo = await getInitialCall();
         console.log(callInfo);
       }
-    },
-    [navigation]
-  );
+    }
 
   const onMuted = useCallback((data: any) => {
     console.log('onMuted');
@@ -161,10 +165,7 @@ export const DialCallScreen = ({ route }: any) => {
   }, [currentAudio]);
 
   useEffect(() => {
-    const onCallStateChanged = omiEmitter.addListener(
-      OmiCallEvent.onCallStateChanged,
-      callStateChanged
-    );
+    const onCallStateChanged = omiEmitter.addListener(OmiCallEvent.onCallStateChanged, callStateChanged);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
     omiEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
@@ -182,13 +183,7 @@ export const DialCallScreen = ({ route }: any) => {
       omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
       LiveData.isOpenedCall = false;
     };
-  }, [
-    callStateChanged,
-    onMuted,
-    onSwitchboardAnswer,
-    onCallQuality,
-    onAudioChange,
-  ]);
+  }, []);
 
   useEffect(() => {
     getCurrentAudio().then((data: any) => {
@@ -230,6 +225,10 @@ export const DialCallScreen = ({ route }: any) => {
     setGuestUser(guest);
   };
 
+  const onPressTransferCall = () => {
+    transferCall({phoneNumber: "102"}); // func from omikit-plugin
+  }
+  console.log("currentStatus =>> ", currentStatus)
   return (
     <KeyboardAvoid>
       <View style={styles.background}>
@@ -287,12 +286,12 @@ export const DialCallScreen = ({ route }: any) => {
                     style={styles.featureImage}
                   />
                 </TouchableOpacity>
-                {/* <TouchableOpacity onPress={triggerSpeak}>
+                <TouchableOpacity onPress={onPressTransferCall}>
                   <Image
-                    source={micOn ? UIImages.audioOn : UIImages.audioOff}
+                    source={UIImages.icChange}
                     style={styles.featureImage}
                   />
-                </TouchableOpacity> */}
+                </TouchableOpacity>
                 {currentAudio != null ? (
                   <TouchableOpacity onPress={toggleAndCheckDevice}>
                     <Image source={audioImage()} style={styles.featureImage} />
@@ -305,6 +304,7 @@ export const DialCallScreen = ({ route }: any) => {
         <View style={styles.call}>
           <TouchableOpacity
             onPress={async () => {
+              console.log("=>>>>>>>> end call =>>>>>>>>")
               endCall();
               navigation.goBack();
             }}

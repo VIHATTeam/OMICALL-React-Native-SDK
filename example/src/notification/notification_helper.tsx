@@ -14,8 +14,8 @@ export const prepareForUpdateToken = async () => {
   console.log(fcmToken);
   const apnsToken = await apns;
 
-  updateToken({
-    apnsToken: apnsToken,
-    fcmToken: fcmToken,
-  });
+  // updateToken({
+  //   apnsToken: apnsToken,
+  //   fcmToken: fcmToken,
+  // });
 };

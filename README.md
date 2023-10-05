@@ -342,8 +342,8 @@ We support 2 environments. So you need set correct key in Appdelegate.
     ```
 
   - Create OmiKit With ApiKey: OmiKit need apikey, username, user id to init enviroment. ViHAT Group will provide api key for you. Please contact for my sale:
-
-    ```
+    In This step, we need partner provide me  fcmToken of firebase Message.
+    ``
     import { initCallWithApiKey } from 'omikit-plugin';
 
     const loginInfo = {
@@ -351,6 +351,7 @@ We support 2 environments. So you need set correct key in Appdelegate.
       fullName: fullName,
       apiKey: apiKey,
       phone: phone,
+      fcmToken: fcmToken,  //string
       isVideo: isVideo,
     };
     const result = await initCallWithApiKey(loginInfo);
@@ -368,6 +369,7 @@ We support 2 environments. So you need set correct key in Appdelegate.
       realm: realm, //string
       isVideo: isVideo, //boolean: true/false
       host: host, //string
+            fcmToken: fcmToken, //string
     };
     const result = await initCall(loginInfo);
     //result is true then user login successfully.
@@ -691,3 +693,11 @@ useEffect(() => {
   - `OmiCallEvent.onSwitchboardAnswer`: Switchboard sip is listening.
   - `OmiCallEvent.onCallQuality`: The calling quality.
 - Data value: We return `callerNumber`, `sip`, `isVideo: true/false` information
+
+
+- Forward calls to internal staff:
+  + You can use function `transferCall` for transfer to staff you want.
+    example: 
+      transferCall({
+        phoneNumber: 102
+      })

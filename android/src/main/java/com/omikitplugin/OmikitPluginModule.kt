@@ -45,6 +45,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
     isIncomming = true;
+       Log.d("OMISDK", "=>> START IN COMMING CALL REVICED => ")
     val map: WritableMap = WritableNativeMap()
     map.putBoolean("isVideo", isVideo ?: true)
     map.putBoolean("incoming", isIncomming)
@@ -63,6 +64,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     transactionId: String?,
   ) {
     isAnserCall = true
+    Log.d("OMISDK", "=>> ON CALL ESTABLISHED => ")
     Handler(Looper.getMainLooper()).postDelayed({
       Log.d("OmikitReactNative", "onCallEstablished")
       val map: WritableMap = WritableNativeMap()
@@ -72,10 +74,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       map.putString("transactionId", transactionId)
       map.putInt("status", CallState.confirmed.value)
       sendEvent(CALL_STATE_CHANGED, map)
-    }, 500)
+    }, 200)
   }
 
   override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
+      Log.d("OMISDK", "=>> ON CALL END => ")
     val call = callInfo as Map<*, *>
     val map: WritableMap = WritableNativeMap()
     val timeStartToAnswer = call["time_start_to_answer"] as Long?
@@ -93,6 +96,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onConnecting() {
+    Log.d("OMISDK", "=>> ON CONNECTING CALL => ")
     val map: WritableMap = WritableNativeMap()
     map.putString("callerNumber", "")
     map.putBoolean("isVideo", NotificationService.isVideo)
@@ -108,6 +112,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     val map: WritableMap = WritableNativeMap()
 
     if(callDirection == "inbound") {
+       Log.d("OMISDK", "=>> ON IN COMMING CALL => ")
       map.putString("callerNumber", OmiClient.prePhoneNumber)
       map.putBoolean("isVideo", NotificationService.isVideo)
       map.putBoolean("incoming", true)
@@ -119,6 +124,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       map.putString("transactionId", transactionId ?: "")
       map.putInt("status", CallState.early.value)
       map.putBoolean("incoming", false)
+      Log.d("OMISDK", "=>> ON RINGING CALL => ")
     }
     sendEvent(CALL_STATE_CHANGED, map)
   }
@@ -149,6 +155,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
+    Log.d("OMISDK", "=>> ON OUT GOING STARTED CALL => ")
     val map: WritableMap = WritableNativeMap()
     map.putString("callerNumber", "")
     map.putBoolean("isVideo", NotificationService.isVideo)
@@ -177,17 +184,26 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   private fun messageCall(type: Int): String {
     return when (type) {
-      0 -> "INVALID_UUID"
-      1 -> "INVALID_PHONE_NUMBER"
-      2 -> "SAME_PHONE_NUMBER_WITH_PHONE_REGISTER"
-      3 -> "MAX_RETRY"
-      4 -> "PERMISSION_DENIED"
-      5 -> "COULD_NOT_FIND_END_POINT"
-      6 -> "REGISTER_ACCOUNT_FAIL"
-      7 -> "START_CALL_FAIL"
-      8 -> "START_CALL_SUCCESS"
-      9 -> "HAVE_ANOTHER_CALL"
-      else -> "START_CALL_SUCCESS"
+      // 401 -> "INVALID_UUID"
+      // 1 -> "INVALID_PHONE_NUMBER"
+      // 2 -> "SAME_PHONE_NUMBER_WITH_PHONE_REGISTER"
+      // 3 -> "MAX_RETRY"
+      // 405 -> "PERMISSION_DENIED"
+      // 406 -> "PERMISSION_DENIED"
+      // 5 -> "COULD_NOT_FIND_END_POINT"
+      // 6 -> "REGISTER_ACCOUNT_FAIL"
+      // 7 -> "START_CALL_FAIL"
+      // 8 -> "START_CALL_SUCCESS"
+      // 9 -> "HAVE_ANOTHER_CALL"
+      200 -> "START_CALL_SUCCESS"
+      400 -> "AL"
+      401 -> "INVALID_UUID"
+      402 -> "INVALID_PHONE_NUMBER"
+      403 -> "CAN_NOT_CALL_YOURSELF"
+      404 -> "SWITCHBOARD_NOT_CONNECTED"
+      405 -> "PERMISSION_DENIED"
+      406 -> "PERMISSION_DENIED"
+      else -> "HAVE_ANOTHER_CALL"
     }
   }
 
@@ -267,20 +283,25 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun initCallWithUserPassword(data: ReadableMap, promise: Promise) {
-    currentActivity?.runOnUiThread {
-      val userName = data.getString("userName")
-          Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $data ")
-      Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $userName ")
-       val password = data.getString("password")
-       val realm = data.getString("realm")
-       val host = data.getString("host")
-       val isVideo = data.getBoolean("isVideo")
-       if (userName != null && password != null && realm != null && host != null) {
-         Log.d("dataOmi", "INIT_CALL_USER_PASSWORD $userName -- $password --$realm --$isVideo -- $host ")
-         OmiClient.register(userName, password, realm ,  isVideo ?: true,  host)
-       }
-//       requestPermission(isVideo ?: true)
-      promise.resolve(true)
+      mainScope.launch {
+        val userName = data.getString("userName")
+            Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $data ")
+        Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $userName ")
+        val password = data.getString("password")
+        val realm = data.getString("realm")
+        val host = data.getString("host")
+        val isVideo = data.getBoolean("isVideo")
+          val firebaseToken = data.getString("fcmToken") as String
+          Log.d("dataOmi", "INIT_CALL_USER_PASSWORD $userName -- $password --$realm --$isVideo -- $host ")
+          withContext(Dispatchers.Default) {
+              try {
+              if (userName != null && password != null && realm != null && host != null) {
+                  OmiClient.register(userName, password, realm ,  isVideo ?: true, firebaseToken, host)
+                }
+              } catch (_: Throwable) {
+            }
+        }
+        promise.resolve(true)
     }
   }
 
@@ -293,7 +314,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val apiKey = data.getString("apiKey")
       val isVideo = data.getBoolean("isVideo")
       val phone = data.getString("phone")
-
+      val firebaseToken = data.getString("fcmToken") as String
       withContext(Dispatchers.Default) {
         try {
           if (usrName != null && usrUuid != null && apiKey != null) {
@@ -303,6 +324,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
               uuid = usrUuid,
               phone = phone ?: "",
               isVideo = isVideo,
+              firebaseToken
             )
           }
         } catch (_: Throwable) {
@@ -339,8 +361,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       withContext(Dispatchers.Default) {
         try {
           OmiClient.getInstance(reactApplicationContext!!).updatePushToken(
-            "",
-            deviceTokenAndroid,
+            deviceTokenAndroid
           )
         } catch (_: Throwable) {
 
@@ -365,17 +386,21 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         val startCallResult =   OmiClient.getInstance(reactApplicationContext!!).startCall(phoneNumber, isVideo)
         Log.d("dataOmi", "startCall  ==>> ${startCallResult} ")
         Log.d("dataOmi", "startCall2  ==>> ${startCallResult.value} ")
-//        var status = startCallResult.value as String
-        //  map.putString("status", startCallResult)
+        var statusCalltemp =  startCallResult.value as Int;
+        if(startCallResult.value == 200 ){
+          statusCalltemp = 8
+        }
+         map.putString("status", statusCalltemp.toString())
          map.putString("_id", "")
-          // map.putString("message", startCallResult as String)
-         Log.d("dataOmi", "startCall  ==>> ${map} ")
+          map.putString("message", messageCall(startCallResult.value) as String)
+      Log.d("OMISDK", "=>> ON START CALL =>  $map")
         promise.resolve(true)
       }
     } else {
       map.putString("status","4")
       map.putString("_id", "")
       map.putString("message", messageCall(4) as String)
+      Log.d("OMISDK", "=>> ON START CALL FAIL BECAUSE NEED PERMISSION =>  $map")
       promise.resolve(false)
     }
   }
@@ -409,28 +434,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun joinCall(promise: Promise) {
     currentActivity?.runOnUiThread {
-      OmiClient.getInstance(reactApplicationContext!!).pickUp()
-      promise.resolve(true)
+      if(reactApplicationContext != null) {
+          OmiClient.getInstance(reactApplicationContext!!).pickUp()
+          promise.resolve(true)
+      }
     }
   }
 
   @ReactMethod
   fun endCall(promise: Promise) {
-    currentActivity?.runOnUiThread {
-      val call = OmiClient.getInstance(reactApplicationContext!!).hangUp()
-      val map: WritableMap = WritableNativeMap()
-      val timeStartToAnswer = call?.get("time_start_to_answer") as Long?
-      val timeEnd = call?.get("time_end") as Long
-      map.putString("transaction_id", call["transaction_id"] as String?)
-      map.putString("direction", call["direction"] as String)
-      map.putString("source_number", call["source_number"] as String)
-      map.putString("destination_number", call["destination_number"] as String)
-      map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
-      map.putDouble("time_end", timeEnd.toDouble())
-      map.putString("sip_user", call["sip_user"] as String)
-      map.putString("disposition", call["disposition"] as String)
-      promise.resolve(map)
+    if(isIncomming && !isAnserCall){
+        OmiClient.getInstance(reactApplicationContext!!).decline()
+    } else {
+      OmiClient.getInstance(reactApplicationContext!!).hangUp()
     }
+      promise.resolve(true)
+
   }
 
   @ReactMethod
@@ -609,6 +628,19 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     val portType = data.getInt("portType")
     OmiClient.getInstance(reactApplicationContext!!).setAudio(portType)
     promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun transferCall(data: ReadableMap, promise: Promise) {
+    currentActivity?.runOnUiThread {
+      val phone = data.getString("phoneNumber")
+       Log.d("phone", "phone transferCall  ==>> ${phone} ")
+        if(reactApplicationContext != null) {
+          Log.d("phone", "phone transferCall  reactApplicationContext ==>> ${phone} ")
+            OmiClient.getInstance(reactApplicationContext!!).forwardCallTo(phone as String)
+            promise.resolve(true)
+        }
+    }
   }
 
   companion object {

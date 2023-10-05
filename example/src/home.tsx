@@ -128,24 +128,21 @@ export const HomeScreen = () => {
     [navigation]
   );
 
-  const clickMissedCall = useCallback(
-    (data: any) => {
+  const clickMissedCall = useCallback((data: any) => {
       if (LiveData.isOpenedCall === true) {
         return;
       }
       callWithParam(data);
-    },
-    [callWithParam]
-  );
+    },[]);
 
   useEffect(() => {
-    omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
+    // omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     return () => {
-      omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
       omiEmitter.removeAllListeners(OmiCallEvent.onClickMissedCall);
+      // omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
     };
-  }, [onCallStateChanged, clickMissedCall]);
+  }, []);
 
   const call = async () => {
     // navigation.navigate('Call' as never);
@@ -153,19 +150,21 @@ export const HomeScreen = () => {
       return;
     }
     const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
-    console.log(":result startCall: ", result)
-    // if (result) {
-    //   const data = {
-    //     callerNumber: phone,
-    //     status: OmiCallState.calling,
-    //     isOutGoingCall: true,
-    //   };
-    //   if (callVideo === true) {
-    //     navigation.navigate('VideoCall' as never, data as never);
-    //   } else {
-    //     navigation.navigate('DialCall' as never, data as never);
-    //   }
-    // }
+    console.log(":result startCall: ==>>> ", result)
+    if (result == 8) {
+      const data = {
+        callerNumber: phone,
+        status: OmiCallState.calling,
+        isOutGoingCall: true,
+      };
+      if (callVideo === true) {
+        navigation.navigate('VideoCall' as never, data as never);
+      } else {
+        navigation.navigate('DialCall' as never, data as never);
+      }
+    } else {
+      console.log("call error ==> ", result)
+    }
   };
 
   // const call = async () => {
