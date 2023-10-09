@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 3.0.7
+## 3.0.9
+  - Pump core android
+  - Add transfer call android 
+
+## 3.0.8
   - Pump core ios
   - Fix status call ios when endcall
 

@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'kotlin-android' // here
-apply plugin: 'kotlin-android-extensions' 
+apply plugin: 'kotlin-android-extensions'
 
 import com.android.build.OutputFile
 

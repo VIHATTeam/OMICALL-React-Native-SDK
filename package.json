@@ -1,6 +1,6 @@
 {
   "name": "omikit-plugin",
-  "version": "3.0.7",
+  "version": "3.0.9",
   "description": "Omikit Plugin by ViHAT",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -64,7 +64,7 @@
     "prettier": "^2.0.5",
     "react": "^18.0.0",
     "react-native": "^0.71.3",
-    "react-native-builder-bob": "^0.20.0",
+    "react-native-builder-bob": "0.20.0",
     "release-it": "^15.0.0",
     "typescript": "^4.5.2"
   },
@@ -115,13 +115,7 @@
     "output": "lib",
     "targets": [
       "commonjs",
-      "module",
-      [
-        "typescript",
-        {
-          "project": "tsconfig.build.json"
-        }
-      ]
+      "module"
     ]
   },
   "directories": {
