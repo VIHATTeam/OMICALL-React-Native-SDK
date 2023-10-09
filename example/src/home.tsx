@@ -151,7 +151,7 @@ export const HomeScreen = () => {
     }
     const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
     console.log(":result startCall: ==>>> ", result)
-    if (result == 8) {
+    if (result?.status == 8) {
       const data = {
         callerNumber: phone,
         status: OmiCallState.calling,

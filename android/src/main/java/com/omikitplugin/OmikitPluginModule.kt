@@ -394,14 +394,14 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
          map.putString("_id", "")
           map.putString("message", messageCall(startCallResult.value) as String)
       Log.d("OMISDK", "=>> ON START CALL =>  $map")
-        promise.resolve(true)
+        promise.resolve(map)
       }
     } else {
       map.putString("status","4")
       map.putString("_id", "")
       map.putString("message", messageCall(4) as String)
       Log.d("OMISDK", "=>> ON START CALL FAIL BECAUSE NEED PERMISSION =>  $map")
-      promise.resolve(false)
+      promise.resolve(map)
     }
   }
 
