@@ -107,7 +107,7 @@ dependencies {
   implementation "com.facebook.react:react-native:+" // From node_modules
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   // implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
-  api 'vn.vihat.omicall:omi-sdk:2.0.28'
+  api 'vn.vihat.omicall:omi-sdk:2.0.31'
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 //    implementation files('OmiSDK.aar')
   implementation "com.google.android.flexbox:flexbox:3.0.0"

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.1.0
+  - Pump core android
+  - Pump core ios
+  - Fix issues call outgoing with wifi in android
+
 ## 3.0.9
   - Pump core android
   - Add transfer call android 

@@ -45,7 +45,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
     isIncomming = true;
-       Log.d("OMISDK", "=>> START IN COMMING CALL REVICED => ")
+    Log.d("OMISDK", "=>> START IN COMMING CALL REVICED => ")
     val map: WritableMap = WritableNativeMap()
     map.putBoolean("isVideo", isVideo ?: true)
     map.putBoolean("incoming", isIncomming)
@@ -203,6 +203,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       404 -> "SWITCHBOARD_NOT_CONNECTED"
       405 -> "PERMISSION_DENIED"
       406 -> "PERMISSION_DENIED"
+      407 -> "COULD_NOT_REGISTER_ACCOUNT"
       else -> "HAVE_ANOTHER_CALL"
     }
   }
