@@ -35,7 +35,7 @@ export const HomeScreen = () => {
   // );
   var [phone, setPhone] = useState(Platform.OS === 'android' ? '100' : '100');
   const navigation = useNavigation();
-  const [callVideo, setCallVideo] = useState(true);
+  const [callVideo, setCallVideo] = useState(false);
 
   const checkInitCall = useCallback(async () => {
     const callingInfo = await getInitialCall();

@@ -20,7 +20,7 @@ import { requestNotification , fcm} from './notification';
 import { localStorage } from './local_storage';
 
 export const LoginScreen = () => {
-  const [isVideo, setIsVideo] = useState(true);
+  const [isVideo, setIsVideo] = useState(false);
   const [loading, setLoading] = useState(false);
   const phoneFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
