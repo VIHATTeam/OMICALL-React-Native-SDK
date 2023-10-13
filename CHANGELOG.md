@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.1.4
+  - Pump core android
+  - Fix issues first call with wifi of android
+
 ## 3.1.2
   - Pump core android
   - Fix issues call outgoing with wifi in android
