@@ -67,6 +67,14 @@ export const LoginScreen = () => {
     // };
 
 
+    //  const loginInfoApiKey = {
+    //   usrUuid:"094d4f52-255c-4cdb-ad24-5adff34c3c87",
+    //   fullName:"Lê Hồng Thái",
+    //   apiKey:"687CB3BF9703A7F434964CC64EE72213962AB18812D7EB2FC9C83B89D917E61F",
+    //   isVideo:false,
+    //   phone:"0963256096",
+    //   fcmToken: fcmToken
+    // };
     // console.log("loginInfo ", loginInfo);
 
     const result = await initCallWithUserPassword(loginInfo);
