@@ -37,7 +37,6 @@ export const App = (props: AppProps) => {
           headerBackTitleVisible: false,
         }}
       >
-        <Stack.Screen name="LoginAPIKey" component={LoginApiKeyScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen
           name="Home"

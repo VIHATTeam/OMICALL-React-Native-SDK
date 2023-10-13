@@ -286,7 +286,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun initCallWithUserPassword(data: ReadableMap, promise: Promise) {
       mainScope.launch {
         val userName = data.getString("userName")
-            Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $data ")
+        Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $data ")
         Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $userName ")
         val password = data.getString("password")
         val realm = data.getString("realm")
