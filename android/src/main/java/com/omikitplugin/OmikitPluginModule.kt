@@ -212,11 +212,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     super.initialize()
     reactApplicationContext!!.addActivityEventListener(this)
     Handler(Looper.getMainLooper()).post {
-       OmiClient(context = reactApplicationContext!!)
-       OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(this)
-          OmiClient.getInstance(reactApplicationContext!!)
-            OmiClient.isAppReady = true;
-            OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(this)
+      OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(this)
+      OmiClient.isAppReady = true;
     }
   }
 
@@ -313,22 +310,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val usrName = data.getString("fullName")
       val usrUuid = data.getString("usrUuid")
       val apiKey = data.getString("apiKey")
-      val isVideo = data.getBoolean("isVideo")
+      val isVideo = data.getBoolean("isVideo") ?: false
       val phone = data.getString("phone")
       val firebaseToken = data.getString("fcmToken") as String
-      withContext(Dispatchers.Default) {
-        try {
-          if (usrName != null && usrUuid != null && apiKey != null) {
-            loginResult = OmiClient.registerWithApiKey(
-              apiKey = apiKey,
-              userName = usrName,
-              uuid = usrUuid,
-              phone = phone ?: "",
-              isVideo = isVideo,
-              firebaseToken
-            )
-          }
-        } catch (_: Throwable) {
+       withContext(Dispatchers.Default) {
+         try {
+            if (usrName != null && usrUuid != null && apiKey != null) {
+              loginResult = OmiClient.registerWithApiKey(
+                    apiKey = apiKey,
+                    userName = usrName,
+                    uuid = usrUuid,
+                    phone = phone ?: "",
+                    isVideo = isVideo,
+                    firebaseToken
+                  )
+            }
+          } catch (_: Throwable) {
 
         }
       }
