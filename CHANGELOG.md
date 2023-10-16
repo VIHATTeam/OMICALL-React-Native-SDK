@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.1.5
+  - Pump core android
+  - Optimize Android performance
+
 ## 3.1.4
   - Pump core android
   - Fix issues first call with wifi of android
