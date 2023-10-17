@@ -50,7 +50,7 @@ export const App = (props: AppProps) => {
           component={DialCallScreen}
           options={{
             headerShown: false,
-            gestureEnabled: false,
+            gestureEnabled: true,
           }}
         />
         <Stack.Screen

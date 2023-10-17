@@ -209,8 +209,12 @@ export const HomeScreen = () => {
     if (phone.trim().length === 0) {
       return;
     }
-    const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
-    console.log(":result startCall: ==>>> ", result?.status,  result)
+    let result = await startCall({ phoneNumber: phone, isVideo: callVideo });
+    console.log(":result startCall: ==>>> ", result?.status,  result , JSON.parse(result))
+    if(Platform.OS == "ios"){
+      result = JSON.parse(result)
+    }
+    console.log(":result startCall: ==>>> ", result?.status)
     // if(Platform.OS == "ios" && result == 8){
     //   const data = {  
     //     callerNumber: phone,
