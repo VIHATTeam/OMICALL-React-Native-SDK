@@ -49,14 +49,14 @@ export const LoginScreen = () => {
     const fcmToken = await fcm;
     console.log(fcmToken);
 
-    // const loginInfo = {
-    //   userName: userName,
-    //   password: password,
-    //   realm: realm,
-    //   isVideo: isVideo,
-    //   fcmToken: fcmToken,
-    //   host: host,
-    // };
+    const loginInfo = {
+      userName: userName,
+      password: password,
+      realm: realm,
+      isVideo: isVideo,
+      fcmToken: fcmToken,
+      host: host,
+    };
 
 
     // const loginInfo = {
@@ -68,14 +68,14 @@ export const LoginScreen = () => {
       // host: host,
     // };
 
-    const loginInfo = {
-        userName: "100",
-        password: "Duongngocqui@98",
-        realm: "quidn",
-        isVideo: isVideo,
-        fcmToken: fcmToken,
-        host: host,
-    };
+    // const loginInfo = {
+    //     userName: "100",
+    //     password: "Duongngocqui@98",
+    //     realm: "quidn",
+    //     isVideo: isVideo,
+    //     fcmToken: fcmToken,
+    //     host: host,
+    // };
 
     //  const loginInfoApiKey = {
     //   fullName: "thanh mơis",

@@ -324,7 +324,7 @@ class CallManager {
             guestPhone = call.callerNumber ?? ""
             break
         case OMICallState.disconnected.rawValue:
-            tempCallInfo = getCallInfo(call: call) ?? [:]
+            tempCallInfo = getCallInfo(call: call)
             if (videoManager != nil) {
                 videoManager = nil
             }
