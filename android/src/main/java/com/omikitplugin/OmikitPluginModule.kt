@@ -184,7 +184,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   private fun messageCall(type: Int): String {
     return when (type) {
-      // 401 -> "INVALID_UUID"
+      // 0 -> "INVALID_UUID"
       // 1 -> "INVALID_PHONE_NUMBER"
       // 2 -> "SAME_PHONE_NUMBER_WITH_PHONE_REGISTER"
       // 3 -> "MAX_RETRY"
@@ -196,14 +196,14 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       // 8 -> "START_CALL_SUCCESS"
       // 9 -> "HAVE_ANOTHER_CALL"
       200 -> "START_CALL_SUCCESS"
-      400 -> "AL"
+      400 -> "ALREADY_IN_CALL"
       401 -> "INVALID_UUID"
       402 -> "INVALID_PHONE_NUMBER"
       403 -> "CAN_NOT_CALL_YOURSELF"
       404 -> "SWITCHBOARD_NOT_CONNECTED"
       405 -> "PERMISSION_DENIED"
       406 -> "PERMISSION_DENIED"
-      407 -> "COULD_NOT_REGISTER_ACCOUNT"
+      407 -> "SWITCHBOARD_REGISTERING"
       else -> "HAVE_ANOTHER_CALL"
     }
   }
@@ -290,10 +290,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         val host = data.getString("host")
         val isVideo = data.getBoolean("isVideo")
           val firebaseToken = data.getString("fcmToken") as String
-          Log.d("dataOmi", "INIT_CALL_USER_PASSWORD $userName -- $password --$realm --$isVideo -- $host ")
+
+          Log.d("dataOmi", "INIT_CALL_USER_PASSWORD $userName -- $password --$realm --$isVideo -- $host")
+
           withContext(Dispatchers.Default) {
               try {
-              if (userName != null && password != null && realm != null && host != null) {
+              if (userName != null && password != null && realm != null) {
                   OmiClient.register(userName, password, realm ,  isVideo ?: true, firebaseToken, host)
                 }
               } catch (_: Throwable) {
@@ -380,26 +382,23 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     if (audio == PackageManager.PERMISSION_GRANTED) {
       currentActivity?.runOnUiThread {
         val phoneNumber = data.getString("phoneNumber") as String
-        val isVideo = data.getBoolean("isVideo")
+        val isVideo = data.getBoolean("isVideo") ?: false ;
         val startCallResult =   OmiClient.getInstance(reactApplicationContext!!).startCall(phoneNumber, isVideo)
-        Log.d("dataOmi", "startCall  ==>> ${startCallResult} ")
-        Log.d("dataOmi", "startCall2  ==>> ${startCallResult.value} ")
         var statusCalltemp =  startCallResult.value as Int;
         if(startCallResult.value == 200 ){
           statusCalltemp = 8
         }
-         map.putString("status", statusCalltemp.toString())
-         map.putString("_id", "")
-          map.putString("message", messageCall(startCallResult.value) as String)
-      Log.d("OMISDK", "=>> ON START CALL =>  $map")
+        map.putInt("status", statusCalltemp)
+        map.putString("_id", "")
+        map.putString("message", messageCall(startCallResult.value) as String)
         promise.resolve(map)
       }
     } else {
-      map.putString("status","4")
-      map.putString("_id", "")
-      map.putString("message", messageCall(4) as String)
-      Log.d("OMISDK", "=>> ON START CALL FAIL BECAUSE NEED PERMISSION =>  $map")
-      promise.resolve(map)
+        map.putInt("status", 4)
+        map.putString("_id", "")
+        map.putString("message", messageCall(406) as String)
+        Log.d("OMISDK", "=>> ON START CALL FAIL BECAUSE NEED PERMISSION =>  $map")
+        promise.resolve(map)
     }
   }
 
