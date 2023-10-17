@@ -48,15 +48,35 @@ export const LoginScreen = () => {
     setLoading(true);
     const fcmToken = await fcm;
     console.log(fcmToken);
+
+    // const loginInfo = {
+    //   userName: userName,
+    //   password: password,
+    //   realm: realm,
+    //   isVideo: isVideo,
+    //   fcmToken: fcmToken,
+    //   host: host,
+    // };
+
+
+    // const loginInfo = {
+    //   userName: "102",
+    //   password: "Bao99@9999",
+    //   realm: "dathq",
+    //   isVideo: isVideo,
+    //   fcmToken: fcmToken,
+      // host: host,
+    // };
+
     const loginInfo = {
-      userName: userName,
-      password: password,
-      realm: realm,
-      isVideo: isVideo,
-      fcmToken: fcmToken,
-      host: host,
+        userName: "100",
+        password: "Duongngocqui@98",
+        realm: "quidn",
+        isVideo: isVideo,
+        fcmToken: fcmToken,
+        host: host,
     };
-    
+
     //  const loginInfoApiKey = {
     //   fullName: "thanh mơis",
     //   usrUuid: "0358380646",
@@ -70,16 +90,18 @@ export const LoginScreen = () => {
     //  const loginInfoApiKey = {
     //   usrUuid:"094d4f52-255c-4cdb-ad24-5adff34c3c87",
     //   fullName:"Lê Hồng Thái",
-    //   apiKey:"687CB3BF9703A7F434964CC64EE72213962AB18812D7EB2FC9C83B89D917E61F",
-    //   isVideo:false,
-    //   phone:"0963256096",
+    //   apiKey:"687CB3BF9703A7F434964CC64EE72213962AB18812D7EB2FC9C83B89D917E6",
+    //   isVideo: true,
+    //   phone: "0963256096",
     //   fcmToken: fcmToken
     // };
+
     // console.log("loginInfo ", loginInfo);
 
     const result = await initCallWithUserPassword(loginInfo);
     // const result = await initCallWithApiKey(loginInfoApiKey);
     //save login info
+    
     console.log("result initCallWithUserPassword: ", result);
 
     setLoading(false);

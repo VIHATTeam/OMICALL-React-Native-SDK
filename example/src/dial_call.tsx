@@ -77,12 +77,12 @@ export const DialCallScreen = ({ route }: any) => {
   const callStateChanged =  async (data: any) => {  
       const { status } = data;
       console.log("Status CallStateChanged =>>>  ", status, data)
-      if(currentStatus != status && (currentStatus == OmiCallState.confirmed )){ // chặn update status cuộc gọi, khi đang trong cuộc gọi hiện tại 
-        return 
-      }
+      // if(currentStatus != status && (currentStatus == OmiCallState.confirmed )){ // chặn update status cuộc gọi, khi đang trong cuộc gọi hiện tại 
+      //   return 
+      // }
       setCurrentStatus(status);
       if (status === OmiCallState.disconnected) {
-        // navigation.goBack();
+        navigation.goBack();
       }
       if (status === OmiCallState.confirmed) {
         const callInfo = await getInitialCall();
@@ -226,9 +226,14 @@ export const DialCallScreen = ({ route }: any) => {
   };
 
   const onPressTransferCall = () => {
-    transferCall({phoneNumber: "102"}); // func from omikit-plugin
+    try{
+      transferCall({phoneNumber: "100"}); // func from omikit-plugin
+    } catch(e){
+      console.log("e transferCall => ", e)
+    }
   }
-  console.log("currentStatus =>> ", currentStatus)
+
+
   return (
     <KeyboardAvoid>
       <View style={styles.background}>
@@ -244,10 +249,10 @@ export const DialCallScreen = ({ route }: any) => {
         </View>
         <Text style={styles.status}>{currentStatusText}</Text>
         <View style={styles.title}>
-          {currentStatus === OmiCallState.confirmed ? <CustomTimer /> : null}
+          {currentStatus == OmiCallState.confirmed ? <CustomTimer /> : null}
         </View>
         <View style={styles.feature}>
-          {currentStatus === OmiCallState.confirmed ? (
+          {currentStatus == OmiCallState.confirmed ? (
             keyboardOn ? (
               <View style={styles.keyboard}>
                 <CustomKeyboard
@@ -311,9 +316,9 @@ export const DialCallScreen = ({ route }: any) => {
           >
             <Image source={UIImages.hangup} style={styles.hangup} />
           </TouchableOpacity>
-          {(currentStatus === OmiCallState.incoming ||
-            currentStatus === OmiCallState.early) &&
-          isOutGoingCall === false ? (
+          {(currentStatus == OmiCallState.incoming ||
+            currentStatus == OmiCallState.early) &&
+          isOutGoingCall == false ? (
             <TouchableOpacity
               onPress={async () => {
                 await joinCall();

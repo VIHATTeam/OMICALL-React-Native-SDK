@@ -1,4 +1,4 @@
-//
+    //
 //  CallUtils.swift
 //  OMICall Contact Center
 //
@@ -38,14 +38,21 @@ class CallManager {
         return currentCall
     }
 
-     func transferCall(_ phoneNumber: String){
+     func transferCall(_ phoneNumber: String)-> Bool {
+        var result = false;
         do {
-            if let callInfo = omiLib.getCurrentCall() {
-                callInfo.blindTransferCall(withNumber: phoneNumber)
-            }
+                if let callInfo = self.omiLib.getCurrentConfirmCall() {
+                    dump(callInfo)
+                    if callInfo.callState != .disconnected {
+                        callInfo.blindTransferCall(withNumber: phoneNumber);
+                        result = true
+                    }
+                }
         } catch let error {
             print("ERROR_WHEN_TRANSFER_CALL_IOS: ", error)
         }
+        print("calllZiii 2 ==> \(result)")
+        return result
     }
 
     
@@ -78,6 +85,43 @@ class CallManager {
             user.set(message, forKey: "omicall/prefixMissedCallMessage")
         }
     }
+    
+    func convertDictionaryToJson(dictionary: [String: Any]) -> String? {
+           do {
+               let jsonData = try JSONSerialization.data(withJSONObject: dictionary, options: [])
+               if let jsonString = String(data: jsonData, encoding: .utf8) {
+                   return jsonString
+               }
+           } catch {
+               print("Error converting dictionary to JSON: \(error.localizedDescription)")
+           }
+           return nil
+       }
+
+     private func messageCall(type: Int) -> String {
+            switch(type){
+                case 0:
+                    return "INVALID_UUID"
+                case 1:
+                     return "INVALID_PHONE_NUMBER"
+                case 2:
+                     return "SAME_PHONE_NUMBER_WITH_PHONE_REGISTER"
+                case 3:
+                    return "MAX_RETRY"
+                case 4:
+                    return "PERMISSION_DENIED"
+                case 5:
+                    return "COULD_NOT_FIND_END_POINT"
+                case 6:
+                    return "REGISTER_ACCOUNT_FAIL"
+                case 7:
+                    return "START_CALL_FAIL"
+                case 9:
+                    return "HAVE_ANOTHER_CALL"
+                default:
+                    return "START_CALL_SUCCESS"
+            }
+        }
     
     private func requestPermission(isVideo: Bool) {
         AVCaptureDevice.requestAccess(for: .audio) { _ in
@@ -112,7 +156,7 @@ class CallManager {
         requestPermission(isVideo: isVideo)
         return true
     }
-    
+
     func showMissedCall() {
         OmiClient.setMissedCall { call in
             UNUserNotificationCenter.current().getNotificationSettings { settings in
@@ -321,29 +365,58 @@ class CallManager {
     
     
     /// Start call
-    func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_ : Int) -> Void) {
+    func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_ : String) -> Void) {
         let secondsSinceCurrentTime = lastTimeCall.timeIntervalSinceNow
         guestPhone = phoneNumber
         OmiClient.startCall(phoneNumber, isVideo: isVideo) { status in
             DispatchQueue.main.async {
-                completion(status.rawValue)
+                let callCurrent = self.omiLib.getCurrentCall()
+                     var dataToSend: [String: Any] = [
+                                        "status": status.rawValue,
+                                        "_id": "",
+                                        "message": self.messageCall(type: status.rawValue)
+                                    ]
+                                        if(callCurrent != nil){
+                                            dataToSend["_id"] = String(describing: OmiCallModel(omiCall: callCurrent!).uuid)
+                                        }
+                                    if let jsonString = self.convertDictionaryToJson(dictionary: dataToSend) {
+                                        completion(jsonString)
+                                    } else {
+                                        completion("Conversion to JSON failed")
+                                    }
+                                    return     
             }
         }
     }
     
     /// Start call
-    func startCallWithUuid(_ uuid: String, isVideo: Bool, completion: @escaping (_ : Int) -> Void) {
+    func startCallWithUuid(_ uuid: String, isVideo: Bool, completion: @escaping (_ : String) -> Void) {
         let phoneNumber = OmiClient.getPhone(uuid)
         if let phone = phoneNumber {
             guestPhone = phoneNumber ?? ""
-            OmiClient.startCall(phone, isVideo: isVideo) { status in
-                DispatchQueue.main.async {
-                    completion(status.rawValue)
+               DispatchQueue.main.async {
+                OmiClient.startCall(phone, isVideo: isVideo) { statusCall in
+                    let callCurrent = self.omiLib.getCurrentCall()
+                        // completion(status.rawValue)
+                        var dataToSend: [String: Any] = [
+                                        "status": statusCall.rawValue,
+                                        "_id": "",
+                                        "message": self.messageCall(type: statusCall.rawValue)
+                                    ]
+                                        if(callCurrent != nil){
+                                            dataToSend["_id"] = String(describing: OmiCallModel(omiCall: callCurrent!).uuid)
+                                        }
+                                    if let jsonString = self.convertDictionaryToJson(dictionary: dataToSend) {
+                                        completion(jsonString)
+                                    } else {
+                                        completion("Conversion to JSON failed")
+                                    }
+                                    return      
+                    
                 }
             }
             return
         }
-        completion(OMIStartCallStatus.invalidUuid.rawValue)
     }
     
     func endAvailableCall() -> [String: Any] {

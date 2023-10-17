@@ -23,10 +23,14 @@ import { useNavigation } from '@react-navigation/native';
 import { prepareForUpdateToken } from './notification';
 import { LiveData } from './livedata';
 import { localStorage } from './local_storage';
-// import RNPermissions, {
-//   Permission,
-//   PERMISSIONS,
-// } from 'react-native-permissions';
+import RNPermissions, {
+  Permission,
+  PERMISSIONS,
+  check,
+  checkMultiple,
+  RESULTS,
+  requestMultiple
+} from 'react-native-permissions';
 
 export const HomeScreen = () => {
   ///need add call phone
@@ -49,7 +53,63 @@ export const HomeScreen = () => {
     prepareForUpdateToken();
     checkInitCall();
     checkSystemAlert();
+    checkPermission()
   }, [checkInitCall]);
+
+  const checkPermission = () => {
+    checkMultiple([PERMISSIONS.IOS.MICROPHONE, PERMISSIONS.ANDROID.RECORD_AUDIO])
+    .then((result) => {
+      switch (result) {
+        case RESULTS.UNAVAILABLE:
+          requestPermission()
+          console.log('This feature is not available (on this device / in this context)');
+          break;
+        case RESULTS.DENIED:
+          requestPermission()
+          console.log('The permission has not been requested / is denied but requestable');
+          break;
+        case RESULTS.LIMITED:
+          console.log('The permission is limited: some actions are possible');
+          break;
+        case RESULTS.GRANTED:
+          console.log('The permission is granted');
+          break;
+        case RESULTS.BLOCKED:
+          requestPermission()
+          console.log('The permission is denied and not requestable anymore');
+          break;
+      }
+    })
+    .catch((error) => {
+      // …
+    });
+  }
+
+  const requestPermission = () => {
+    requestMultiple([PERMISSIONS.IOS.MICROPHONE, PERMISSIONS.ANDROID.RECORD_AUDIO])
+    .then((result) => {
+      switch (result) {
+        case RESULTS.UNAVAILABLE:
+          console.log('This feature is not available (on this device / in this context)');
+          break;
+        case RESULTS.DENIED:
+          console.log('The permission has not been requested / is denied but requestable');
+          break;
+        case RESULTS.LIMITED:
+          console.log('The permission is limited: some actions are possible');
+          break;
+        case RESULTS.GRANTED:
+          console.log('The permission is granted');
+          break;
+        case RESULTS.BLOCKED:
+          console.log('The permission is denied and not requestable anymore');
+          break;
+      }
+    })
+    .catch((error) => {
+      // …
+    });
+  }
 
   const checkSystemAlert = async () => {
     if (Platform.OS === 'android') {
@@ -150,18 +210,35 @@ export const HomeScreen = () => {
       return;
     }
     const result = await startCall({ phoneNumber: phone, isVideo: callVideo });
-    console.log(":result startCall: ==>>> ", result)
-    if (result?.status == 8) {
+    console.log(":result startCall: ==>>> ", result?.status,  result)
+    // if(Platform.OS == "ios" && result == 8){
+    //   const data = {  
+    //     callerNumber: phone,
+    //     status: OmiCallState.calling,
+    //     isOutGoingCall: true,
+    //   };
+    //   return navigation.navigate('DialCall' as never, data as never);
+    // }
+
+    if(result?.status == "4"){
+      requestPermission()
+    }
+
+    if (result?.status == "8" || result?.status == 8) {
       const data = {
         callerNumber: phone,
         status: OmiCallState.calling,
         isOutGoingCall: true,
       };
-      if (callVideo === true) {
-        navigation.navigate('VideoCall' as never, data as never);
-      } else {
-        navigation.navigate('DialCall' as never, data as never);
-      }
+      console.log("zô zzzzz: ==>>> ")
+
+      // if (callVideo === true) {
+      //   navigation.navigate('VideoCall' as never, data as never);
+      // } else {
+      //   navigation.navigate('DialCall' as never, data as never);
+      // }
+
+      navigation.navigate('DialCall' as never, data as never);
     } else {
       console.log("call error ==> ", result)
     }
@@ -216,6 +293,7 @@ export const HomeScreen = () => {
           onChange={(text: string) => {
             setPhone(text);
           }}
+          keyboardType={"phone-pad"}
         />
         <CustomCheckBox
           title="Video call"
