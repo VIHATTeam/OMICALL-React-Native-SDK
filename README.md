@@ -361,7 +361,7 @@ We support 2 environments. So you need set correct key in Appdelegate.
   - Create OmiKit: OmiKit need userName, password, realm, host to init enviroment. ViHAT Group will provide informations for you. Please contact for my sale:
 
 ```
-    import { initCall } from 'omikit-plugin';
+    import { initCallWithUserPassword } from 'omikit-plugin';
 
     const loginInfo = {
       userName: userName, //string
@@ -369,9 +369,9 @@ We support 2 environments. So you need set correct key in Appdelegate.
       realm: realm, //string
       isVideo: isVideo, //boolean: true/false
       host: host, //string
-            fcmToken: fcmToken, //string
+      fcmToken: fcmToken, //string
     };
-    const result = await initCall(loginInfo);
+    const result = await initCallWithUserPassword(loginInfo);
     //result is true then user login successfully.
 ```
 
