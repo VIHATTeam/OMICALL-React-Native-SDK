@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.1.6
+  - Pump core android
+  - Pump core ios
+
 ## 3.1.5
   - Pump core android
   - Optimize Android performance
