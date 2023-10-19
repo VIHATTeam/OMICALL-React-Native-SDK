@@ -82,7 +82,7 @@ export const DialCallScreen = ({ route }: any) => {
       // }
       setCurrentStatus(status);
       if (status === OmiCallState.disconnected) {
-        navigation.goBack();
+        // navigation.goBack();
       }
       if (status === OmiCallState.confirmed) {
         const callInfo = await getInitialCall();
@@ -311,7 +311,7 @@ export const DialCallScreen = ({ route }: any) => {
             onPress={async () => {
               console.log("=>>>>>>>> end call =>>>>>>>>")
               endCall();
-              navigation.goBack();
+              // navigation.goBack();
             }}
           >
             <Image source={UIImages.hangup} style={styles.hangup} />

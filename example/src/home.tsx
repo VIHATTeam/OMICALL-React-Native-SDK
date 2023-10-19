@@ -196,11 +196,11 @@ export const HomeScreen = () => {
     },[]);
 
   useEffect(() => {
-    // omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
+    omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     return () => {
       omiEmitter.removeAllListeners(OmiCallEvent.onClickMissedCall);
-      // omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
+      omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
     };
   }, []);
 
@@ -210,7 +210,7 @@ export const HomeScreen = () => {
       return;
     }
     let result = await startCall({ phoneNumber: phone, isVideo: callVideo });
-    console.log(":result startCall: ==>>> ", result?.status,  result , JSON.parse(result))
+    console.log(":result startCall: ==>>> ", result?.status,  result)
     if(Platform.OS == "ios"){
       result = JSON.parse(result)
     }
