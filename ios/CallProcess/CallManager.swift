@@ -376,9 +376,11 @@ class CallManager {
                                         "_id": "",
                                         "message": self.messageCall(type: status.rawValue)
                                     ]
-                                        if(callCurrent != nil){
-                                            dataToSend["_id"] = String(describing: OmiCallModel(omiCall: callCurrent!).uuid)
-                                        }
+
+                                    if(callCurrent != nil){
+                                        dataToSend["_id"] = String(describing: OmiCallModel(omiCall: callCurrent!).uuid)
+                                    }
+                                    
                                     if let jsonString = self.convertDictionaryToJson(dictionary: dataToSend) {
                                         completion(jsonString)
                                     } else {

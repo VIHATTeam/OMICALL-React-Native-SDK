@@ -172,6 +172,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     sendEvent(SWITCHBOARD_ANSWER, map)
   }
 
+  override fun onSlowRegister(){
+      Log.d("Kds", "MainActivity -> callListener -> onSlowRegister")
+  } 
+
+
   override fun onVideoSize(width: Int, height: Int) {
 
   }

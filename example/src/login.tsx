@@ -60,12 +60,12 @@ export const LoginScreen = () => {
 
 
     // const loginInfo = {
-    //   userName: "102",
+    //   userName: "103",
     //   password: "Bao99@9999",
     //   realm: "dathq",
     //   isVideo: isVideo,
     //   fcmToken: fcmToken,
-      // host: host,
+    //   host: host,
     // };
 
     // const loginInfo = {
