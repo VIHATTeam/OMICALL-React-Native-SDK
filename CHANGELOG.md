@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.1.7
+  - Pump core android
+
+
 ## 3.1.6
   - Pump core android
   - Pump core ios
