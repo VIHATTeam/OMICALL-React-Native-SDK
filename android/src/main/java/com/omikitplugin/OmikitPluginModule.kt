@@ -320,6 +320,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val isVideo = data.getBoolean("isVideo") ?: false
       val phone = data.getString("phone")
       val firebaseToken = data.getString("fcmToken") as String
+      requestPermission(isVideo)
        withContext(Dispatchers.Default) {
          try {
             if (usrName != null && usrUuid != null && apiKey != null) {
@@ -331,13 +332,13 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
                     isVideo = isVideo,
                     firebaseToken
                   )
+              promise.resolve(true)
             }
           } catch (_: Throwable) {
-
+            promise.resolve(loginResult)
         }
       }
-      requestPermission(isVideo)
-      promise.resolve(loginResult)
+    
     }
   }
 

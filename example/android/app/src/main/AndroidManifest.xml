@@ -20,6 +20,8 @@
         android:showWhenLocked="true"
         android:turnScreenOn="true"
         android:windowSoftInputMode="adjustResize"
+        android:showOnLockScreen="true"
+        android:supportsPictureInPicture="false"
         android:exported="true">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
