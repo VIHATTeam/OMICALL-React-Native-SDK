@@ -174,7 +174,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun onSlowRegister(){
       Log.d("Kds", "MainActivity -> callListener -> onSlowRegister")
-  } 
+  }
 
 
   override fun onVideoSize(width: Int, height: Int) {
@@ -218,6 +218,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     reactApplicationContext!!.addActivityEventListener(this)
     Handler(Looper.getMainLooper()).post {
       OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(this)
+      OmiClient.getInstance(reactApplicationContext!!).setDebug(false)
       OmiClient.isAppReady = true;
     }
   }
@@ -338,7 +339,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             promise.resolve(loginResult)
         }
       }
-    
+
     }
   }
 
