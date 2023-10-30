@@ -102,9 +102,9 @@ def kotlin_version = getExtOrDefault("kotlinVersion")
 dependencies {
   // For < 0.71, this will be from the local maven repo
   // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
-  //noinspection GradleDynamicVersion
-//   implementation "com.facebook.react:react-native"
-  api 'vn.vihat.omicall:omi-sdk:2.0.63'
+  // noinspection GradleDynamicVersion
+  // implementation "com.facebook.react:react-native"
+  api 'vn.vihat.omicall:omi-sdk:2.0.67'
 
   implementation "com.facebook.react:react-native:+" // From node_modules
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

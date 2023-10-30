@@ -1,6 +1,15 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## 3.2.14
+  - Pump core android
+  - Add delay check get call info 
+
+
+## 3.2.12
+  - Pump core android
+
 ## 3.2.11
   - Pump core android
 

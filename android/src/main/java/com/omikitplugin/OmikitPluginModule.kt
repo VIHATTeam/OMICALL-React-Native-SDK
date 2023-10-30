@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import kotlin.concurrent.thread
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -348,19 +349,28 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
 
   @ReactMethod
-  fun getInitialCall(promise: Promise) {
+  fun getInitialCall(counter: Int = 4, promise: Promise) {
     currentActivity?.runOnUiThread {
-      val call = OmiClient.getInstance(reactApplicationContext!!).getCurrentCallInfo()
-      Log.d("getInitialCall RN", "getInitialCall $call")
-      if (call != null) {
-        val map: WritableMap = WritableNativeMap()
-        map.putString("callerNumber", call["callerNumber"] as String)
-        map.putInt("status", call["status"] as Int)
-        map.putBoolean("muted", call["muted"] as Boolean)
-        map.putBoolean("isVideo", call["isVideo"] as Boolean)
-        promise.resolve(map)
-      } else {
-        promise.resolve(false)
+      if (reactApplicationContext != null && OmiClient.getInstance(reactApplicationContext!!) != null) {
+        val call = OmiClient.getInstance(reactApplicationContext!!).getCurrentCallInfo();
+        Log.d("getInitialCall RN", "getInitialCall $call")
+        if (call == null) {
+          if (counter <= 0) {
+            promise.resolve(false);
+          } else {
+            thread {
+              Thread.sleep(5000) // Chờ 5 giây
+              getInitialCall(counter - 1, promise); // Gọi lại hàm đệ quy
+            }
+          }
+        } else {
+          val map: WritableMap = WritableNativeMap()
+          map.putString("callerNumber", call["callerNumber"] as String)
+          map.putInt("status", call["status"] as Int)
+          map.putBoolean("muted", call["muted"] as Boolean)
+          map.putBoolean("isVideo", call["isVideo"] as Boolean)
+          promise.resolve(map)
+        }
       }
     }
   }
