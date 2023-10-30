@@ -26,7 +26,11 @@ export function configPushNotification(data: any): Promise<any> {
 }
 
 export function getInitialCall(): Promise<any> {
+  if(Platform.OS == "ios"){
   return OmikitPlugin.getInitialCall();
+  } else {
+    return OmikitPlugin.getInitialCall(4);
+  }
 }
 
 export function initCallWithUserPassword(data: any): Promise<boolean> {
