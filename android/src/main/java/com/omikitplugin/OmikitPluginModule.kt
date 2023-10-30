@@ -288,6 +288,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun initCallWithUserPassword(data: ReadableMap, promise: Promise) {
       mainScope.launch {
+        var loginResult = false
         val userName = data.getString("userName")
         Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $data ")
         Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $userName ")
@@ -301,13 +302,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
           withContext(Dispatchers.Default) {
               try {
-              if (userName != null && password != null && realm != null) {
-                  OmiClient.register(userName, password, realm ,  isVideo ?: true, firebaseToken, host)
+                if (userName != null && password != null && realm != null && firebaseToken != null) {
+                    loginResult = OmiClient.register(userName, password, realm ,  isVideo ?: true, firebaseToken, host)
+                    promise.resolve(loginResult)
                 }
               } catch (_: Throwable) {
+                promise.resolve(loginResult)
             }
         }
-        promise.resolve(true)
+       promise.resolve(loginResult)
     }
   }
 
@@ -324,7 +327,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       requestPermission(isVideo)
        withContext(Dispatchers.Default) {
          try {
-            if (usrName != null && usrUuid != null && apiKey != null) {
+            if (usrName != null && usrUuid != null && apiKey != null && firebaseToken != null ) {
               loginResult = OmiClient.registerWithApiKey(
                     apiKey = apiKey,
                     userName = usrName,
@@ -348,6 +351,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun getInitialCall(promise: Promise) {
     currentActivity?.runOnUiThread {
       val call = OmiClient.getInstance(reactApplicationContext!!).getCurrentCallInfo()
+      Log.d("getInitialCall RN", "getInitialCall $call")
       if (call != null) {
         val map: WritableMap = WritableNativeMap()
         map.putString("callerNumber", call["callerNumber"] as String)
