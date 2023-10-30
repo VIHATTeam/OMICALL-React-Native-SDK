@@ -1,6 +1,24 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## 3.2.11
+  - Pump core android
+
+## 3.2.10
+  - Pump core android
+
+## 3.2.9
+  - Pump core android
+
+## 3.2.8
+  - Pump core android
+
+## 3.2.7
+  - Pump core android
+
+## 3.2.6
+  - Pump core android
+
 ## 3.2.5
   - Pump core android
 
