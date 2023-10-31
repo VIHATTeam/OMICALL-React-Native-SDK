@@ -340,36 +340,52 @@ We support 2 environments. So you need set correct key in Appdelegate.
 
     startServices();
     ```
+  - OmiKit need FCM for Android and APNS to push notification on user devices. We use more packages: <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a>
 
-  - Create OmiKit With ApiKey: OmiKit need apikey, username, user id to init enviroment. ViHAT Group will provide api key for you. Please contact for my sale:
+  - Create OmiKit With ApiKey: OmiKit need apikey, username, user id to init environment(All information in innit is required). ViHAT Group will provide api key for you. Please contact for my sale:
     In This step, we need partner provide me  fcmToken of firebase Message.
     ``
     import { initCallWithApiKey } from 'omikit-plugin';
+    import messaging from '@react-native-firebase/messaging';
+    
+    let token: String 
+    if(Platform.OS == "ios"){
+      token = await messaging.getAPNSToken()
+    } else {
+      token = await messaging.getToken()
+    }
 
     const loginInfo = {
       usrUuid: usrUuid,
       fullName: fullName,
       apiKey: apiKey,
       phone: phone,
-      fcmToken: fcmToken,  //string
+      fcmToken: token,  //with android is fcm_token and ios is APNS token
       isVideo: isVideo,
     };
     const result = await initCallWithApiKey(loginInfo);
     //result is true then user login successfully.
     ```
 
-  - Create OmiKit: OmiKit need userName, password, realm, host to init enviroment. ViHAT Group will provide informations for you. Please contact for my sale:
+  - Create OmiKit: OmiKit need userName, password, realm, fcmToken to init environment(All information in innit is required). ViHAT Group will provide information for you. Please contact for my sale:
 
 ```
     import { initCallWithUserPassword } from 'omikit-plugin';
+    import messaging from '@react-native-firebase/messaging';
+    
+    let token: String 
+    if(Platform.OS == "ios"){
+      token = await messaging.getAPNSToken()
+    } else {
+      token = await messaging.getToken()
+    }
 
     const loginInfo = {
       userName: userName, //string
       password: password, //string
       realm: realm, //string
       isVideo: isVideo, //boolean: true/false
-      host: host, //string
-      fcmToken: fcmToken, //string
+      fcmToken: token, //with android is fcm_token and ios is APNS token
     };
     const result = await initCallWithUserPassword(loginInfo);
     //result is true then user login successfully.
@@ -398,21 +414,7 @@ We support 2 environments. So you need set correct key in Appdelegate.
   //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
   ```
 
-- Upload token: OmiKit need FCM for Android and APNS to push notification on user devices. We use more packages: <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> and <a href="https://www.npmjs.com/package/react-native-device-info?activeTab=readme">react-native-device-info</a>
 
-  ```
-  import { updateToken } from 'omikit-plugin';
-  const fcmToken = await fcm;
-  const apnsToken = await apns;
-  const deviceId = DeviceInfo.getDeviceId();
-  const appId = DeviceInfo.getBundleId();
-  updateToken({
-    apnsToken: apnsToken,
-    fcmToken: fcmToken,
-    deviceId: deviceId,
-    appId: appId,
-  });
-  ```
 
 - Get call when user open application at first time:
 

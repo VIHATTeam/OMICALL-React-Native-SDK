@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.15
+  - Pump core android
+  - Remove function updateToken
+  - Prevent registering account multiple times
+  - Add params token in fnc register
+
 ## 3.2.14
   - Pump core android
   - Add delay check get call info 

@@ -34,7 +34,6 @@ export function getInitialCall(): Promise<any> {
 }
 
 export function initCallWithUserPassword(data: any): Promise<boolean> {
-    console.log("data OmikitPlugin: ", data)
   return OmikitPlugin.initCallWithUserPassword(data);
 }
 
@@ -42,9 +41,6 @@ export function initCallWithApiKey(data: any): Promise<boolean> {
   return OmikitPlugin.initCallWithApiKey(data);
 }
 
-export function updateToken(data: any): Promise<void> {
-  return OmikitPlugin.updateToken(data);
-}
 
 export function startCall(data: any): Promise<boolean> {
   return OmikitPlugin.startCall(data);

@@ -22,9 +22,6 @@ RCT_EXTERN_METHOD(initCallWithApiKey:(id)data
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(updateToken:(id)data
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(startCall:(id)data
                  withResolver:(RCTPromiseResolveBlock)resolve

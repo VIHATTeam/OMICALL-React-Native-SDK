@@ -57,13 +57,6 @@ public class OmikitPlugin: RCTEventEmitter {
         }
     }
     
-    @objc(updateToken:withResolver:withRejecter:)
-    func updateToken(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
-        if let dataOmi = data as? [String: Any] {
-            CallManager.shareInstance().updateToken(params: dataOmi)
-            resolve(true)
-        }
-    }
     
     @objc(startCall:withResolver:withRejecter:)
     func startCall(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {

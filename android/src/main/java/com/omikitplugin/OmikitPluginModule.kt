@@ -295,11 +295,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $userName ")
         val password = data.getString("password")
         val realm = data.getString("realm")
-        val host = data.getString("host")
+        val host = data.getString("host") ?: "vh.omicrm.com"
         val isVideo = data.getBoolean("isVideo")
-          val firebaseToken = data.getString("fcmToken") as String
+        val firebaseToken = data.getString("fcmToken")
 
-          Log.d("dataOmi", "INIT_CALL_USER_PASSWORD $userName -- $password --$realm --$isVideo -- $host")
+        Log.d("dataOmi", "INIT_CALL_USER_PASSWORD $userName -- $password --$realm --$isVideo -- $host")
 
           withContext(Dispatchers.Default) {
               try {
@@ -375,22 +375,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
-  @ReactMethod
-  fun updateToken(data: ReadableMap, promise: Promise) {
-    mainScope.launch {
-      val deviceTokenAndroid = data.getString("fcmToken") as String
-      withContext(Dispatchers.Default) {
-        try {
-          OmiClient.getInstance(reactApplicationContext!!).updatePushToken(
-            deviceTokenAndroid
-          )
-        } catch (_: Throwable) {
-
-        }
-      }
-      promise.resolve(true)
-    }
-  }
 
   @ReactMethod
   fun startCall(data: ReadableMap, promise: Promise) {

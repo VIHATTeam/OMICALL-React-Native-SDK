@@ -227,7 +227,7 @@ export const DialCallScreen = ({ route }: any) => {
 
   const onPressTransferCall = () => {
     try{
-      transferCall({phoneNumber: "102"}); // func from omikit-plugin
+      transferCall({phoneNumber: "100"}); // func from omikit-plugin
     } catch(e){
       console.log("e transferCall => ", e)
     }
