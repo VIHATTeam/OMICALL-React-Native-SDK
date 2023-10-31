@@ -344,7 +344,7 @@ We support 2 environments. So you need set correct key in Appdelegate.
 
   - Create OmiKit With ApiKey: OmiKit need apikey, username, user id to init environment(All information in innit is required). ViHAT Group will provide api key for you. Please contact for my sale:
     In This step, we need partner provide me  fcmToken of firebase Message.
-    ``
+    ```
     import { initCallWithApiKey } from 'omikit-plugin';
     import messaging from '@react-native-firebase/messaging';
     
