@@ -16,7 +16,7 @@ import { initCallWithApiKey, initCallWithUserPassword } from 'omikit-plugin';
 // import { requestNotification } from './notification';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
-import { requestNotification , fcm} from './notification';
+import { requestNotification , fcm, token} from './notification';
 import { localStorage } from './local_storage';
 
 export const LoginScreen = () => {
@@ -46,7 +46,7 @@ export const LoginScreen = () => {
     console.log(password);
 
     setLoading(true);
-    const fcmToken = await fcm;
+    const fcmToken = await token;
     console.log(fcmToken);
 
     const loginInfo = {

@@ -71,13 +71,7 @@ class CallManager {
        }
    }
     
-    
-    func updateToken(params: [String: Any]) {
-        if let apnsToken = params["apnsToken"] as? String {
-            OmiClient.setUserPushNotificationToken(apnsToken)
-        }
-    }
-    
+     
     func configNotification(data: [String: Any]) {
         let user = UserDefaults.standard
         if let title = data["missedCallTitle"] as? String, let message = data["prefixMissedCallMessage"] as? String {
@@ -137,8 +131,9 @@ class CallManager {
     func initWithApiKeyEndpoint(params: [String: Any]) -> Bool {
         //request permission
         var result = false
-        if let usrUuid = params["usrUuid"] as? String, let fullName = params["fullName"] as? String, let apiKey = params["apiKey"] as? String {
+        if let usrUuid = params["usrUuid"] as? String, let fullName = params["fullName"] as? String, let apiKey = params["apiKey"] as? String, let token = params["fcmToken"] as? String {
             result = OmiClient.initWithUUID(usrUuid, fullName: fullName, apiKey: apiKey)
+            OmiClient.setUserPushNotificationToken(token)
         }
         if (result) {
             let isVideo = (params["isVideo"] as? Bool) ?? true
@@ -149,12 +144,15 @@ class CallManager {
     
     
     func initWithUserPasswordEndpoint(params: [String: Any]) -> Bool {
-        if let userName = params["userName"] as? String, let password = params["password"] as? String, let realm = params["realm"] as? String {
+        var result = false
+        if let userName = params["userName"] as? String, let password = params["password"] as? String, let realm = params["realm"] as? String, let token = params["fcmToken"] as? String {
             OmiClient.initWithUsername(userName, password: password, realm: realm, proxy: "")
+            OmiClient.setUserPushNotificationToken(token)
+            result = true
         }
         let isVideo = (params["isVideo"] as? Bool) ?? true
         requestPermission(isVideo: isVideo)
-        return true
+        return result
     }
 
     func showMissedCall() {

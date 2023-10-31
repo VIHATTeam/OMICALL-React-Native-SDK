@@ -16,7 +16,7 @@ import { initCallWithApiKey } from 'omikit-plugin';
 // import { requestNotification } from './notification';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
-import { requestNotification , fcm} from './notification';
+import { requestNotification , fcm, token} from './notification';
 import { localStorage } from './local_storage';
 import { Alert } from 'react-native';
 
@@ -44,11 +44,14 @@ export const LoginApiKeyScreen = () => {
     console.log(usrUuid);
     console.log(fullName);
     setLoading(true);
+    const fcmToken = await token;
+    console.log(fcmToken);
     const loginInfo = {
       usrUuid: usrUuid,
       fullName: fullName,
       apiKey: apiKey,
       isVideo: isVideo,
+      fcmToken: fcmToken
     };
     console.log(loginInfo);
     const result = await initCallWithApiKey(loginInfo);

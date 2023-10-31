@@ -43,6 +43,7 @@ export const HomeScreen = () => {
 
   const checkInitCall = useCallback(async () => {
     const callingInfo = await getInitialCall();
+    console.log("callerNumber getInitialCall =>>>> ", callingInfo)
     if (callingInfo !== null && callingInfo !== false) {
       const { callerNumber } = callingInfo;
       console.log(callerNumber);
@@ -50,7 +51,6 @@ export const HomeScreen = () => {
   }, []);
 
   useEffect(() => {
-    prepareForUpdateToken();
     checkInitCall();
     checkSystemAlert();
     checkPermission()
