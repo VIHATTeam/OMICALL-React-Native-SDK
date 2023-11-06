@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.19
+
+- Pump core android
+
+## 3.2.18
+
+- Turn on Log Debug
+
+## 3.2.16
+
+- Turn on Log Debug
+
 ## 3.2.15
   - Pump core android
   - Remove function updateToken
