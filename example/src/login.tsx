@@ -27,10 +27,10 @@ export const LoginScreen = () => {
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const [userName, setUserNumber] = useState(
-    Platform.OS === 'android' ? '101' : '101'
+    Platform.OS === 'android' ? '100' : '100'
   );
   const [password, setPassword] = useState(
-    Platform.OS === 'android' ? 'M1zx7YyK30' : 'M1zx7YyK30'
+    Platform.OS === 'android' ? 'Jx2hM9aYrT' : 'Jx2hM9aYrT'
   );
   const [realm, setRealm] = useState('hungth12');
   const [host, setHost] = useState('vh.omicrm.com');
@@ -44,7 +44,7 @@ export const LoginScreen = () => {
 
     console.log(userName);
     console.log(password);
-
+    
     setLoading(true);
     const fcmToken = await token;
     console.log(fcmToken);

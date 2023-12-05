@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## 3.2.21
+
+- Update Readme
+- Add field 'code_end_call' for get code end call 
+
+## 3.2.20
+
+- Pump core android 2.0.80
+- Pump core ios 1.6.14
+
 ## 3.2.19
 
 - Pump core android
