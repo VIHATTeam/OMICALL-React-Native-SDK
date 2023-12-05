@@ -358,6 +358,7 @@ class CallManager {
             "time_end" : timeEnd,
             "sip_user": user,
             "disposition" : lastStatusCall == nil ? "no_answered" : "answered",
+            "code_end_call" : call.lastStatus
         ]
     }
     

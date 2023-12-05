@@ -75,8 +75,8 @@ export const DialCallScreen = ({ route }: any) => {
   }
 
   const callStateChanged =  async (data: any) => {  
-      const { status } = data;
-      console.log("Status CallStateChanged =>>>  ", status, data)
+      const { status , code_end_call } = data;
+      console.log("Status CallStateChanged =>>>  ", status, code_end_call)
       // if(currentStatus != status && (currentStatus == OmiCallState.confirmed )){ // chặn update status cuộc gọi, khi đang trong cuộc gọi hiện tại 
       //   return 
       // }

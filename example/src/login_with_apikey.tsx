@@ -53,6 +53,7 @@ export const LoginApiKeyScreen = () => {
       isVideo: isVideo,
       fcmToken: fcmToken
     };
+    
     console.log(loginInfo);
     const result = await initCallWithApiKey(loginInfo);
     console.log(result);

@@ -79,7 +79,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
-      Log.d("OMISDK", "=>> ON CALL END => ")
     val call = callInfo as Map<*, *>
     val map: WritableMap = WritableNativeMap()
     val timeStartToAnswer = call["time_start_to_answer"] as Long?
@@ -93,6 +92,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     map.putString("sip_user", call["sip_user"] as String)
     map.putString("disposition", call["disposition"] as String)
     map.putInt("status", CallState.disconnected.value)
+    map.putInt("code_end_call", statusCode as Int)
     sendEvent(CALL_STATE_CHANGED, map)
   }
 

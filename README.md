@@ -681,11 +681,20 @@ useEffect(() => {
               + callerNumber: phone number 
               + incoming: boolean - status call incoming or outgoing
               + _id: option (id of every call)
+              + code_end_call: This is code when end call. 
 
     + `Incoming call` state lifecycle: incoming -> connecting -> confirmed -> disconnected
     + `Outgoing call` state lifecycle: calling -> early -> connecting -> confirmed -> disconnected 
 
     + onSwitchboardAnswer have callback when employee answered script call.
+
+- List of notable call codes `code_end_call`:
+  + 600, 503, 480 : These are the codes of the network operator or the user who did not answer the call
+  + 408: call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out)
+  + 403: Your service plan only allows calls to dialed numbers. Please upgrade your service pack
+  + 404: The current number is not allowed to make calls to the carrier
+  + 603: The call was rejected. Please check your account limit or call barring configuration!
+  + 850: Simultaneous call limit exceeded, please try again later
 
 
 - Action Name value:
