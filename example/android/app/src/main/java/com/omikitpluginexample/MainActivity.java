@@ -7,6 +7,11 @@ import com.facebook.react.modules.core.PermissionListener;
 import com.omikitplugin.OmikitPluginModule;
 
 import vn.vihat.omicall.omisdk.OmiClient;
+import android.os.Bundle;
+import com.facebook.react.ReactInstanceManager;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.ReactNativeHost;
+
 
 public class MainActivity extends ReactActivity {
 
@@ -54,6 +59,12 @@ public class MainActivity extends ReactActivity {
   public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     OmikitPluginModule.Companion.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    OmikitPluginModule.Companion.onResume(this);
   }
 
   @Override

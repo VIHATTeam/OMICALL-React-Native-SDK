@@ -695,6 +695,7 @@ useEffect(() => {
   + 404: The current number is not allowed to make calls to the carrier
   + 603: The call was rejected. Please check your account limit or call barring configuration!
   + 850: Simultaneous call limit exceeded, please try again later
+  + 486: The listener refuses the call and does not answer
 
 
 - Action Name value:
