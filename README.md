@@ -176,7 +176,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 </manifest>
 ```
 
-# In file MainActivity:
+##### In file MainActivity:
 ```
 public class MainActivity extends ReactActivity {
    .....  // your config 
@@ -387,10 +387,12 @@ We support 2 environments. So you need set correct key in Appdelegate.
 
 ## Implement
 
-## Request permission
-```
-We need you request permission about call before make call:
+### Request permission
 
+We need you request permission about call before make call:
+- You can use <a href="https://github.com/zoontek/react-native-permissions">react-native-permissions</a>  to do this
+
+```
 -Android: 
 + PERMISSIONS.ANDROID.RECORD_AUDIO
 + PERMISSIONS.ANDROID.CALL_PHONE
@@ -400,7 +402,6 @@ We need you request permission about call before make call:
 + PERMISSIONS.IOS.MICROPHONE;
 + PERMISSIONS.IOS.CAMERA; (if you want to make Video calls)
 
-You can use react native permissions to do this
 ```
 
 - Set up <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> plugin:
@@ -519,20 +520,19 @@ You can use react native permissions to do this
       phoneNumber: phone, //phone number
       isVideo: false //allow video call: true/false
   });
-
-  // The result will be in the form of object:
-  
   ```
-    result = {
+    - The result will be in the form of object:
+  ```
+  result = {
       "_id": String // This is call_id. it just have id for iOS,
       "status": Number // This is result code when make,
       "message": String // This is a string key, describing the status of the call
     }
   ```
 
-  ```
   - Describe in detail the results when startCall returns:
 
+  ```
     + message="INVALID_UUID" (status = 0) : uid is invalid (we can not find on my page).
     + message="INVALID_PHONE_NUMBER" (status = 1) : sip user is invalid.
     + message="SAME_PHONE_NUMBER_WITH_PHONE_REGISTER" (status = 2) :  Can not call same phone number.
@@ -542,7 +542,7 @@ You can use react native permissions to do this
     + message="REGISTER_ACCOUNT_FAIL" (status = 6) : Can't log in to OMI( maybe wrong login information).
     + message="START_CALL_FAIL" (status = 7) : Call failed, please try again
     + message="HAVE_ANOTHER_CALL" (status = 9) : There is another call in progress, please wait for that call to end
-    + message="START_CALL_SUCCESS" (status = 8) : Start call successfully.
+    + message="START_CALL_SUCCESS" (status = 8) : START CALL SUCCESSFULLY.
 
   ```
 
