@@ -756,8 +756,8 @@ useEffect(() => {
 ```
 
   - Important event `onCallStateChanged`: We provide it to listen call state change.
- //OmiAction have 2 variables: actionName and data
- ```
+ // OmiAction have 2 variables: actionName and data
+
     - Action Name value: 
         - `onCallStateChanged`: Call state changed.
         - `onSwitchboardAnswer`: Switchboard sip is listening. 
