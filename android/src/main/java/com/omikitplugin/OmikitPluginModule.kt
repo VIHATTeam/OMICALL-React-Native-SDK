@@ -222,7 +222,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     Handler(Looper.getMainLooper()).post {
       OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(this)
       OmiClient.getInstance(reactApplicationContext!!).setDebug(false)
-      OmiClient.isAppReady = true;
     }
   }
 
@@ -661,8 +660,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
    fun onResume(act: ReactActivity) {
       act?.let { context ->
         if (!OmiClient.getInstance(context).isRegistering) {
-            OmiClient.autoRegister();
+            OmiClient.autoRegister(true);
         } 
+        OmiClient.isAppReady = true;
       }
     }
 

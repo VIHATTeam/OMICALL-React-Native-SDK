@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.23
+- Update OMI core android to version 2.1.45
+- Update OMI core IOS to version 1.6.37
+- Fix error of not being able to turn off notifications when making a call and then killing the app.
+- Add log information call, you can easy see quality call in web. 
 
 ## 3.2.22
 - Update core android to version 2.1.27

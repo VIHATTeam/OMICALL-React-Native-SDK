@@ -15,3 +15,7 @@
 
 -keep class com.google.android.gms.common.** {*;}
 -keepclassmembers enum * {*;}
+
+-keepclassmembers class com.omikitplugin.** {
+  *;
+}
