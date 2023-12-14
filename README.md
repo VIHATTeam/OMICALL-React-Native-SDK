@@ -101,27 +101,92 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 - Update AndroidManifest.xml:
 
 ```
-//need request this permission
-//need request this permission
-<uses-permission android:name="android.permission.INTERNET" />
-//add these lines inside <activity>
-<intent-filter>
-    <action android:name="com.omicall.sdk.CallingActivity"/>
-    <category android:name="android.intent.category.DEFAULT" />
-</intent-filter>
-//add these lines outside <activity>
-<receiver
-    android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
-    android:exported="true"
-    android:permission="com.google.android.c2dm.permission.SEND">
-    <intent-filter>
-        <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-    </intent-filter>
-</receiver>
-<service
-    android:name="vn.vihat.omicall.omisdk.service.NotificationService"
-    android:exported="false">
-</service>
+<manifest 
+      ...... 
+      xmlns:tools="http://schemas.android.com/tools">
+      ..... // your config 
+      <uses-feature android:name="android.hardware.telephony" android:required="false" />
+      <uses-permission android:name="android.permission.INTERNET" />
+      <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
+      <uses-permission android:name="android.permission.CALL_PHONE"/>
+      ..... // your config 
+
+         <application
+                android:name=".MainApplication"
+                ...... // your config 
+                android:alwaysRetainTaskState="true"
+                android:largeHeap="true"
+                android:exported="true"
+                android:supportsRtl="true"
+                android:allowBackup="false"
+                android:enableOnBackInvokedCallback="true"
+                .....  // your config 
+        >
+                <activity
+                            android:name=".MainActivity"
+                        .....  // your config 
+                            android:windowSoftInputMode="adjustResize"
+                            android:showOnLockScreen="true"
+                            android:launchMode="singleTask"
+                            android:largeHeap="true"
+                            android:alwaysRetainTaskState="true"
+                            android:supportsPictureInPicture="false"
+                            android:showWhenLocked="true"
+                            android:turnScreenOn="true"
+                            android:exported="true"
+                        .....  // your config 
+                            >
+                        .....  // your config 
+                          <intent-filter>
+                              <action android:name="android.intent.action.MAIN" />
+                              <category android:name="android.intent.category.LAUNCHER" />
+                          </intent-filter>
+                          <intent-filter>
+                            <action 
+                                android:name="com.omicall.sdk.CallingActivity"
+                                android:launchMode="singleTask"
+                                android:largeHeap="true"
+                                android:alwaysRetainTaskState="true"
+                            />
+                            <category android:name="android.intent.category.DEFAULT" />
+                          </intent-filter>
+                        .....  // your config 
+                     </activity>
+                 .....  // your config 
+                <receiver
+                    android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
+                    android:exported="true"
+                    android:enabled="true"
+                    tools:replace="android:exported"
+                    android:permission="com.google.android.c2dm.permission.SEND">
+                    <intent-filter>
+                        <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                    </intent-filter>
+                </receiver>
+                <service
+                  android:name="vn.vihat.omicall.omisdk.service.NotificationService"
+                  android:enabled="true"
+                  android:exported="false">
+                </service>
+                 .....  // your config 
+           </application>
+</manifest>
+```
+
+# In file MainActivity:
+```
+public class MainActivity extends ReactActivity {
+   .....  // your config 
+  @Override
+  protected void onResume() {
+    super.onResume();
+    OmikitPluginModule.Companion.onResume(this);
+     .....  // your config 
+  }
+}
 ```
 
 You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/app/src/main/AndroidManifest.xml">AndroidManifest</a> to know more informations.
@@ -322,6 +387,22 @@ We support 2 environments. So you need set correct key in Appdelegate.
 
 ## Implement
 
+## Request permission
+```
+We need you request permission about call before make call:
+
+-Android: 
++ PERMISSIONS.ANDROID.RECORD_AUDIO
++ PERMISSIONS.ANDROID.CALL_PHONE
++ PERMISSIONS.ANDROID.CAMERA; (if you want to make Video calls)
+
+-IOS:
++ PERMISSIONS.IOS.MICROPHONE;
++ PERMISSIONS.IOS.CAMERA; (if you want to make Video calls)
+
+You can use react native permissions to do this
+```
+
 - Set up <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> plugin:
 
 ```
@@ -438,17 +519,31 @@ We support 2 environments. So you need set correct key in Appdelegate.
       phoneNumber: phone, //phone number
       isVideo: false //allow video call: true/false
   });
-  //we will return OmiStartCallStatus with:
-    - invalidUuid: uuid is invalid (we can not find on my page)
-    - invalidPhoneNumber: sip user is invalid.
-    - samePhoneNumber: Can not call same phone number.
-    - maxRetry: We try to refresh call but we can not start your call.
-    - permissionDenied: Check audio permission.
-    - couldNotFindEndpoint: Please login before make your call.
-    - accountRegisterFailed: We can not register your account.
-    - startCallFailed: We can not start you call.
-    - startCallSuccess: Start call successfully.
-    - haveAnotherCall: We can not start you call because you are joining another call.
+
+  // The result will be in the form of object:
+  
+  ```
+    result = {
+      "_id": String // This is call_id. it just have id for iOS,
+      "status": Number // This is result code when make,
+      "message": String // This is a string key, describing the status of the call
+    }
+  ```
+
+  ```
+  - Describe in detail the results when startCall returns:
+
+    + message="INVALID_UUID" (status = 0) : uid is invalid (we can not find on my page).
+    + message="INVALID_PHONE_NUMBER" (status = 1) : sip user is invalid.
+    + message="SAME_PHONE_NUMBER_WITH_PHONE_REGISTER" (status = 2) :  Can not call same phone number.
+    + message="MAX_RETRY" (status = 3) : call timeout exceeded, please try again later.
+    + message="PERMISSION_DENIED" (status = 4) : The user has not granted MIC or audio permissions.
+    + message="COULD_NOT_FIND_END_POINT" (status = 5) : Please login before make your call.
+    + message="REGISTER_ACCOUNT_FAIL" (status = 6) : Can't log in to OMI( maybe wrong login information).
+    + message="START_CALL_FAIL" (status = 7) : Call failed, please try again
+    + message="HAVE_ANOTHER_CALL" (status = 9) : There is another call in progress, please wait for that call to end
+    + message="START_CALL_SUCCESS" (status = 8) : Start call successfully.
+
   ```
 
   - Call with UUID (only support with Api key):
