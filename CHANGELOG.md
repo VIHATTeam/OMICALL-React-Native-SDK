@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.25
+- Update OMI core ios to version 1.6.38
+- Fix missing transactionID 
+
 ## 3.2.24
 - Update OMI core android to version 2.1.46
 - Fix error ARN in android 
