@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.24
+- Update OMI core android to version 2.1.46
+- Fix error ARN in android 
+
+
 ## 3.2.23
 - Update OMI core android to version 2.1.45
 - Update OMI core IOS to version 1.6.37

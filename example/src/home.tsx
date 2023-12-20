@@ -57,7 +57,7 @@ export const HomeScreen = () => {
   }, [checkInitCall]);
 
   const checkPermission = () => {
-    checkMultiple([PERMISSIONS.IOS.MICROPHONE, PERMISSIONS.ANDROID.RECORD_AUDIO])
+    checkMultiple([PERMISSIONS.IOS.MICROPHONE, PERMISSIONS.ANDROID.RECORD_AUDIO, PERMISSIONS.ANDROID.CALL_PHONE])
     .then((result) => {
       switch (result) {
         case RESULTS.UNAVAILABLE:
@@ -86,7 +86,7 @@ export const HomeScreen = () => {
   }
 
   const requestPermission = () => {
-    requestMultiple([PERMISSIONS.IOS.MICROPHONE, PERMISSIONS.ANDROID.RECORD_AUDIO])
+    requestMultiple([PERMISSIONS.IOS.MICROPHONE, PERMISSIONS.ANDROID.RECORD_AUDIO, PERMISSIONS.ANDROID.CALL_PHONE])
     .then((result) => {
       switch (result) {
         case RESULTS.UNAVAILABLE:

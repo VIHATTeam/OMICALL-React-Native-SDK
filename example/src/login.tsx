@@ -19,6 +19,17 @@ import { CustomLoading } from './components/custom_view/custom_loading';
 import { requestNotification , fcm, token} from './notification';
 import { localStorage } from './local_storage';
 
+////QUI-DN - 100
+//NSString * REALM = @"quidn";
+//NSString * USER_NAME1 = @"100";
+//NSString * PASS_WORD1 = @"Duongngocqui@98";
+
+////QUI-DN - 100
+//NSString * REALM = @"quidn";
+//NSString * USER_NAME1 = @"100";
+//NSString * PASS_WORD1 = @"Duongngocqui@98";
+
+
 export const LoginScreen = () => {
   const [isVideo, setIsVideo] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,12 +38,12 @@ export const LoginScreen = () => {
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const [userName, setUserNumber] = useState(
-    Platform.OS === 'android' ? '1113' : '100'
+    Platform.OS === 'android' ? '100' : '100'
   );
   const [password, setPassword] = useState(
-    Platform.OS === 'android' ? 'Vy1VBCQo80' : 'Jx2hM9aYrT'
+    Platform.OS === 'android' ? 'Jx2hM9aYrT' : 'Duongngocqui@98'
   );
-  const [realm, setRealm] = useState('dathq');
+  const [realm, setRealm] = useState('hungth12');
   const [host, setHost] = useState('vh.omicrm.com');
   const navigation = useNavigation();
 
