@@ -424,8 +424,9 @@ We need you request permission about call before make call:
     ```
   - OmiKit need FCM for Android and APNS to push notification on user devices. We use more packages: <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a>
 
-  - Create OmiKit With ApiKey: OmiKit need apikey, username, user id to init environment(All information in innit is required). ViHAT Group will provide api key for you. Please contact for my sale:
-    In This step, we need partner provide me  fcmToken of firebase Message.
+  - Create OmiKit With ApiKey: OmiKit need apikey, username, user id to init environment(All information in innit is required). ViHAT Group will provide api key for you. This function is used when making calls from customers to switchboard numbers (not making internal calls).
+    Please contact for my sale:
+    In This step, we need partner provide me  fcmToken of firebase Message. 
     ```
     import { initCallWithApiKey } from 'omikit-plugin';
     import messaging from '@react-native-firebase/messaging';
@@ -449,7 +450,9 @@ We need you request permission about call before make call:
     //result is true then user login successfully.
     ```
 
-  - Create OmiKit: OmiKit need userName, password, realm, fcmToken to init environment(All information in innit is required). ViHAT Group will provide information for you. Please contact for my sale:
+  - Create OmiKit: OmiKit need userName, password, realm, fcmToken to init environment(All information in innit is required). ViHAT Group will provide information for you.
+    This function is used when you want to call any telecommunication number, calling back and forth between internal groups. 
+    Please contact for my sale:
 
 ```
     import { initCallWithUserPassword } from 'omikit-plugin';
