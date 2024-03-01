@@ -30,6 +30,16 @@ import { localStorage } from './local_storage';
 //NSString * PASS_WORD1 = @"Duongngocqui@98";
 
 
+////HUNG-TH - 100
+//NSString * REALM = @"hungth12";
+//NSString * USER_NAME1 = @"100";
+//NSString * PASS_WORD1 = @"Duongngocqui@98";
+
+// HUNGTH
+const REALM = "hungth12";
+const USER_NAME = "100";
+const PASS_WORD = "Jx2hM9aYrT";
+
 export const LoginScreen = () => {
   const [isVideo, setIsVideo] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,13 +47,9 @@ export const LoginScreen = () => {
   const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
   const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  const [userName, setUserNumber] = useState(
-    Platform.OS === 'android' ? '100' : '100'
-  );
-  const [password, setPassword] = useState(
-    Platform.OS === 'android' ? 'Jx2hM9aYrT' : 'Duongngocqui@98'
-  );
-  const [realm, setRealm] = useState('hungth12');
+  const [userName, setUserNumber] = useState(USER_NAME);
+  const [password, setPassword] = useState(PASS_WORD);
+  const [realm, setRealm] = useState(REALM);
   const [host, setHost] = useState('vh.omicrm.com');
   const navigation = useNavigation();
 
@@ -71,8 +77,8 @@ export const LoginScreen = () => {
 
 
     // const loginInfo = {
-    //   userName: "103",
-    //   password: "Bao99@9999",
+    //   userName: "102",
+    //   password: "OzF2aaCEqk",
     //   realm: "dathq",
     //   isVideo: isVideo,
     //   fcmToken: fcmToken,

@@ -63,7 +63,9 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   self.window.rootViewController = rootViewController;
   [self.window makeKeyAndVisible];
 //  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"extension" maxCall:1 callKitImage: @"call_image"];
-  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image" typePushVoip:@"default"];
+//  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image" typePushVoip:@"default"];
+  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:1 callKitImage:@"call_image" typePushVoip:@"default" representName:@"H-Solutions"];
+  
   [OmiClient setLogLevel:5];
   self.provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
   self.voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
@@ -89,6 +91,16 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
     }
     completionHandler();
 }
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+    @try {
+        [OmiClient OMICloseCall];
+    }
+    @catch (NSException *exception) {
+
+    }
+}
+
 /// This method controls whether the `concurrentRoot`feature of React18 is turned on or off.
 ///
 /// @see: https://reactjs.org/blog/2022/03/29/react-v18.html
