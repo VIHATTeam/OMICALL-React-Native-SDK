@@ -7,6 +7,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:682956500665:android:22362822274fff51d9f568",
+        "android_client_info": {
+          "package_name": "com.vihat.omicalltest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC22nNQ2MPkN7n_MVOUTHtNbzQhNZyrSME"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "682956500665-29l5ao20md15lci5banil2em7e4hj3ut.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "dev.omicall.production"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:682956500665:android:d46b82b41354abb1d9f568",
         "android_client_info": {
           "package_name": "com.vihat.omisdkandroid"
