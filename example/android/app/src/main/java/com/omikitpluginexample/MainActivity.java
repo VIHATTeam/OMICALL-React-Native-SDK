@@ -3,14 +3,11 @@ package com.omikitpluginexample;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
-import com.facebook.react.modules.core.PermissionListener;
 import com.omikitplugin.OmikitPluginModule;
-
-import vn.vihat.omicall.omisdk.OmiClient;
+import android.content.Intent;
 import android.os.Bundle;
-import com.facebook.react.ReactInstanceManager;
+
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.ReactNativeHost;
 
 
 public class MainActivity extends ReactActivity {
@@ -23,6 +20,8 @@ public class MainActivity extends ReactActivity {
   protected String getMainComponentName() {
     return "OmikitPluginExample";
   }
+
+  private ReactApplicationContext reactApplicationContext;
 
   /**
    * Returns the instance of the {@link ReactActivityDelegate}. There the RootView is created and
@@ -38,6 +37,8 @@ public class MainActivity extends ReactActivity {
     public MainActivityDelegate(ReactActivity activity, String mainComponentName) {
       super(activity, mainComponentName);
     }
+
+    //get intent from notification
 
     @Override
     protected ReactRootView createRootView() {
@@ -62,9 +63,27 @@ public class MainActivity extends ReactActivity {
   }
 
   @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    reactApplicationContext = new ReactApplicationContext(this);
+  }
+
+  @Override
+  public void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    if (intent != null) {
+      OmikitPluginModule.Companion.onGetIntentFromNotification(reactApplicationContext, intent, this);
+    }
+  }
+
+  @Override
   protected void onResume() {
     super.onResume();
     OmikitPluginModule.Companion.onResume(this);
+    Intent intent = getIntent();
+    if (intent != null) {
+      OmikitPluginModule.Companion.onGetIntentFromNotification(reactApplicationContext, intent, this);
+    }
   }
 
   @Override

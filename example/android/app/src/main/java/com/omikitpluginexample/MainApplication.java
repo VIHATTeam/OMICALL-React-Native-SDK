@@ -2,6 +2,9 @@ package com.omikitpluginexample;
 
 import android.app.Application;
 import android.content.Context;
+
+import androidx.lifecycle.ProcessLifecycleOwner;
+
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
@@ -14,7 +17,9 @@ import com.omikitplugin.OmikitPluginModule;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-public class MainApplication extends Application implements ReactApplication, LifecycleListener {
+import vn.vihat.omicall.omisdk.OmiClient;
+
+public class MainApplication extends Application implements ReactApplication {
 
   private final ReactNativeHost mReactNativeHost =
     new ReactNativeHost(this) {
@@ -51,8 +56,6 @@ public class MainApplication extends Application implements ReactApplication, Li
     ReactFeatureFlags.useTurboModules = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
     SoLoader.init(this, /* native exopackage */ false);
     initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
-    OmiClient.getInstance(applicationContext).registerLifecycleListener(this);
-    registerActivityLifecycleCallbacks(SdkLifecycleManagerHolder.lifecycleManager);
   }
 
   @Override
