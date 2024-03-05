@@ -36,9 +36,9 @@ import { localStorage } from './local_storage';
 //NSString * PASS_WORD1 = @"Duongngocqui@98";
 
 // HUNGTH
-const REALM = "hungth12";
-const USER_NAME = "100";
-const PASS_WORD = "Jx2hM9aYrT";
+const REALM = 'testtuanla2k1';
+const USER_NAME = '100';
+const PASS_WORD = 'TestTuanLa2001';
 
 export const LoginScreen = () => {
   const [isVideo, setIsVideo] = useState(false);
@@ -57,11 +57,10 @@ export const LoginScreen = () => {
     requestNotification();
   }, []);
 
-  const loginUser = async() => {
-
+  const loginUser = async () => {
     console.log(userName);
     console.log(password);
-    
+
     setLoading(true);
     const fcmToken = await token;
     console.log(fcmToken);
@@ -74,7 +73,6 @@ export const LoginScreen = () => {
       fcmToken: fcmToken,
       host: host,
     };
-
 
     // const loginInfo = {
     //   userName: "102",
@@ -103,7 +101,6 @@ export const LoginScreen = () => {
     //   fcmToken: fcmToken
     // };
 
-
     //  const loginInfoApiKey = {
     //   usrUuid:"094d4f52-255c-4cdb-ad24-5adff34c3c87",
     //   fullName:"Lê Hồng Thái",
@@ -118,8 +115,8 @@ export const LoginScreen = () => {
     const result = await initCallWithUserPassword(loginInfo);
     // const result = await initCallWithApiKey(loginInfoApiKey);
     //save login info
-    
-    console.log("result initCallWithUserPassword: ", result);
+
+    console.log('result initCallWithUserPassword: ', result);
 
     setLoading(false);
     if (result) {
@@ -128,7 +125,7 @@ export const LoginScreen = () => {
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
     }
-  }
+  };
 
   const _videoTrigger = useCallback(() => {
     setIsVideo(!isVideo);
@@ -153,7 +150,7 @@ export const LoginScreen = () => {
             placeHolder="Password"
             style={styles.passwordInput}
             value={password}
-            isPassword={true}
+            isPassword={false}
             currentFocus={passwordFocus}
             nextFocus={realmFocus}
             onChange={(text: string) => {
@@ -164,7 +161,7 @@ export const LoginScreen = () => {
             placeHolder="Realm"
             style={styles.passwordInput}
             value={host}
-            isPassword={true}
+            isPassword={false}
             currentFocus={realmFocus}
             nextFocus={hostFocus}
             onChange={(text: string) => {
@@ -175,7 +172,7 @@ export const LoginScreen = () => {
             placeHolder="Host"
             style={styles.passwordInput}
             value={realm}
-            isPassword={true}
+            isPassword={false}
             currentFocus={hostFocus}
             onChange={(text: string) => {
               setHost(text);
@@ -189,7 +186,9 @@ export const LoginScreen = () => {
           />
           <CustomButton
             title="LOGIN"
-            callback={() =>{loginUser()}}
+            callback={() => {
+              loginUser();
+            }}
             style={styles.button}
           />
           {loading ? <CustomLoading /> : null}
