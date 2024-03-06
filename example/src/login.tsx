@@ -160,7 +160,7 @@ export const LoginScreen = () => {
           <CustomTextField
             placeHolder="Realm"
             style={styles.passwordInput}
-            value={host}
+            value={realm}
             isPassword={false}
             currentFocus={realmFocus}
             nextFocus={hostFocus}
@@ -171,7 +171,7 @@ export const LoginScreen = () => {
           <CustomTextField
             placeHolder="Host"
             style={styles.passwordInput}
-            value={realm}
+            value={host}
             isPassword={false}
             currentFocus={hostFocus}
             onChange={(text: string) => {
