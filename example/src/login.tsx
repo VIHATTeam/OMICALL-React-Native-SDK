@@ -139,6 +139,7 @@ export const LoginScreen = () => {
             placeHolder="User name"
             // keyboardType="phone-pad"
             value={userName}
+            label="User name"
             returnKey={'next'}
             currentFocus={phoneFocus}
             nextFocus={passwordFocus}
@@ -148,6 +149,7 @@ export const LoginScreen = () => {
           />
           <CustomTextField
             placeHolder="Password"
+            label="Password"
             style={styles.passwordInput}
             value={password}
             isPassword={false}
@@ -159,6 +161,7 @@ export const LoginScreen = () => {
           />
           <CustomTextField
             placeHolder="Realm"
+            label="Realm"
             style={styles.passwordInput}
             value={realm}
             isPassword={false}
@@ -169,7 +172,8 @@ export const LoginScreen = () => {
             }}
           />
           <CustomTextField
-            placeHolder="Host"
+            label="Host"
+            placeHolder="vh.omicrm.com"
             style={styles.passwordInput}
             value={host}
             isPassword={false}

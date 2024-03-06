@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TextInput,
   View,
+  Text,
   ViewStyle,
 } from 'react-native';
 import React, { MutableRefObject } from 'react';
@@ -11,6 +12,7 @@ import React, { MutableRefObject } from 'react';
 interface CustomTextFieldProps {
   style?: ViewStyle | undefined;
   placeHolder?: string;
+  label?: string;
   keyboardType?: KeyboardTypeOptions | undefined;
   value?: string;
   isPassword?: boolean | false;
@@ -24,6 +26,7 @@ export const CustomTextField = (props: CustomTextFieldProps) => {
   const {
     style,
     placeHolder,
+    label,
     keyboardType,
     value,
     isPassword,
@@ -33,20 +36,23 @@ export const CustomTextField = (props: CustomTextFieldProps) => {
     onChange,
   } = props;
   return (
-    <View style={[styles.background, { ...style }]}>
-      <TextInput
-        onChangeText={onChange}
-        ref={currentFocus}
-        style={styles.textInput}
-        placeholder={placeHolder}
-        keyboardType={keyboardType}
-        secureTextEntry={isPassword}
-        returnKeyType={returnKey}
-        defaultValue={value}
-        onSubmitEditing={() => {
-          nextFocus && nextFocus.current.focus();
-        }}
-      />
+    <View style={{ ...style }}>
+      {label && <Text style={styles.label}>{label}</Text>}
+      <View style={styles.background}>
+        <TextInput
+          onChangeText={onChange}
+          ref={currentFocus}
+          style={styles.textInput}
+          placeholder={placeHolder}
+          keyboardType={keyboardType}
+          secureTextEntry={isPassword}
+          returnKeyType={returnKey}
+          defaultValue={value}
+          onSubmitEditing={() => {
+            nextFocus && nextFocus.current.focus();
+          }}
+        />
+      </View>
     </View>
   );
 };
@@ -59,6 +65,11 @@ const styles = StyleSheet.create({
   },
   textInput: {
     fontSize: 15,
-    color:"red"
+    color: 'red',
+  },
+  label: {
+    fontSize: 15,
+    color: 'black',
+    marginBottom: 4,
   },
 });
