@@ -144,14 +144,12 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
                               <action android:name="android.intent.action.MAIN" />
                               <category android:name="android.intent.category.LAUNCHER" />
                           </intent-filter>
-                          <intent-filter>
-                            <action 
-                                android:name="com.omicall.sdk.CallingActivity"
-                                android:launchMode="singleTask"
-                                android:largeHeap="true"
-                                android:alwaysRetainTaskState="true"
-                            />
-                            <category android:name="android.intent.category.DEFAULT" />
+                            <intent-filter>
+                          <action android:name="android.intent.action.CALL" />
+                              <category android:name="android.intent.category.DEFAULT" />
+                              <data
+                                  android:host="incoming_call"
+                                  android:scheme="omisdk" />
                           </intent-filter>
                         .....  // your config 
                      </activity>
@@ -180,10 +178,30 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 ```
 public class MainActivity extends ReactActivity {
    .....  // your config 
+
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    reactApplicationContext = new ReactApplicationContext(this);
+  }
+
+  @Override
+  public void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    if (intent != null) {
+      OmikitPluginModule.Companion.onGetIntentFromNotification(reactApplicationContext, intent, this);
+    }
+  }
+
   @Override
   protected void onResume() {
     super.onResume();
     OmikitPluginModule.Companion.onResume(this);
+    Intent intent = getIntent();
+    if (intent != null) {
+      OmikitPluginModule.Companion.onGetIntentFromNotification(reactApplicationContext, intent, this);
+    }
      .....  // your config 
   }
 }
