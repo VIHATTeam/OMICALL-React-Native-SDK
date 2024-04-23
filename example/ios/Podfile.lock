@@ -126,9 +126,9 @@ PODS:
     - nanopb/encode (= 2.30909.0)
   - nanopb/decode (2.30909.0)
   - nanopb/encode (2.30909.0)
-  - OmiKit (1.5.84)
-  - omikit-plugin (3.1.5):
-    - OmiKit (= 1.5.84)
+  - OmiKit (1.7.12)
+  - omikit-plugin (3.2.25):
+    - OmiKit (= 1.7.12)
     - React-Core
   - Permission-Calendars (3.0.6):
     - RNPermissions
@@ -619,8 +619,8 @@ SPEC CHECKSUMS:
   MMKV: 5a07930c70c70b86cd87761a42c8f3836fb681d7
   MMKVCore: e50135dbd33235b6ab390635991bab437ab873c0
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
-  OmiKit: 5d3de23dc6e4b83261739611a6eb7a8c28681d71
-  omikit-plugin: d919e8a4bdb8f9f96f74997d6d1e78b27fd13bb0
+  OmiKit: 4a32f76260036ad69298f44e795324dd2d8e46ed
+  omikit-plugin: e625e3f6f8c6dd00ff933d6248c7107ab3bfa150
   Permission-Calendars: a1cfb95796d44627044810dfd0c83120de7d6cb3
   Permission-Camera: b9e622ea4c6d8e88d19e0906a615ee033e897fc5
   Permission-Microphone: 577aa341ec0667dbdaad91d319867c89a1fb775a
@@ -661,6 +661,6 @@ SPEC CHECKSUMS:
   RNScreens: 218801c16a2782546d30bd2026bb625c0302d70f
   Yoga: 0b84a956f7393ef1f37f3bb213c516184e4a689d
 
-PODFILE CHECKSUM: 00dbcceaa801222230e5353be9c2011059daf514
+PODFILE CHECKSUM: 47ca1ce569f64be51b97847ffc63350d7c0f6a9a
 
-COCOAPODS: 1.13.0
+COCOAPODS: 1.14.3
