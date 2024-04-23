@@ -8,6 +8,7 @@ import { UIColors } from './src/components';
 import { localStorage } from './src/local_storage';
 import { startServices, configPushNotification } from 'omikit-plugin';
 import { CustomLoading } from './src/components/custom_view/custom_loading';
+import { LogBox } from 'react-native';
 
 export const Main = () => {
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,9 @@ export const Main = () => {
     setIsLogin(isLogin);
     setLoading(false);
   }, []);
+
+  //turn off warning
+  LogBox.ignoreAllLogs();
 
   return loading === true ? (
     <View styles={styles.loading}>
