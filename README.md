@@ -287,6 +287,15 @@ if (@available(iOS 10.0, *)) {
     }
     completionHandler();
 }
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+    @try {
+        [OmiClient OMICloseCall];
+    }
+    @catch (NSException *exception) {
+
+    }
+}
 ```
 
 - Add these lines into `Info.plist`:
