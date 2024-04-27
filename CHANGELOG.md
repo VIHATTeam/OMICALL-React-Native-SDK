@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.26
+- Update OMI core ios to version 1.7.15
+- Fix callkit bug when forwarding multiple times back to self
+- Update OMI core android to version 2.2.35
+- Improved long call quality for android
+
 ## 3.2.25
 - Update OMI core ios to version 1.6.38
 - Fix missing transactionID 
