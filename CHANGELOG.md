@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## 3.2.27
+- Update OMI core android to version 2.2.40
+
+
+
 ## 3.2.26
 - Update OMI core ios to version 1.7.15
 - Fix callkit bug when forwarding multiple times back to self
