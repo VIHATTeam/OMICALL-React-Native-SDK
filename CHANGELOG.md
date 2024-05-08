@@ -2,10 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.28
+- Update OMI core android to version 1.7.16
 
 ## 3.2.27
 - Update OMI core android to version 2.2.40
-
 
 
 ## 3.2.26
