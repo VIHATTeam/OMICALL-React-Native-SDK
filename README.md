@@ -235,12 +235,12 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
   - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> to setup notification for React native)
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/android-sdk/cau-hinh-push-notification">Config Push for Android</a>
-
+##  Config for IOS 
 #### iOS(Object-C):
 
 - Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
 
-- Add variables in Appdelegate.h:
+- Add variables in **Appdelegate.h** for **Old Architecture**:
 
 ```
 #import <UIKit/UIKit.h>
@@ -257,20 +257,47 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 
 @end
 ```
+- Add variables in **Appdelegate.h** for **New Architecture**:
+
+```
+#import <UIKit/UIKit.h>
+#import <UserNotifications/UserNotifications.h>
+#import <OmiKit/OmiKit-umbrella.h>
+#import <OmiKit/Constants.h>
+
+@interface AppDelegate :  NSObject <UIApplicationDelegate, UNUserNotificationCenterDelegate, RCTBridgeDelegate>
+
+@property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, strong) PushKitManager *pushkitManager;
+@property (nonatomic, strong) CallKitProviderDelegate * provider;
+@property (nonatomic, strong) PKPushRegistry * voipRegistry;
+
+@end
+
+```
 
 - Edit AppDelegate.m:
 
 ```
 #import <OmiKit/OmiKit.h>
-#import <omicall_flutter_plugin/omicall_flutter_plugin-Swift.h>
 
-[OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image"];
-provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
-voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
-pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:voipRegistry];
-if (@available(iOS 10.0, *)) {
-      [UNUserNotificationCenter currentNotificationCenter].delegate = (id<UNUserNotificationCenterDelegate>) self;
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+
+  //  ----- Start OmiKit Config ------ 
+  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image" typePushVoip:TYPE_PUSH_CALLKIT_DEFAULT];
+  _provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
+  _voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
+  _pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:_voipRegistry];
+  if (@available(iOS 10.0, *)) {
+        [UNUserNotificationCenter currentNotificationCenter].delegate = (id<UNUserNotificationCenterDelegate>) self;
+  }
+  //  ----- End OmiKit Config ------ 
+
+  return YES;
+  
 }
+
 
 //Called when a notification is delivered to a foreground app.
 -(void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
@@ -279,15 +306,17 @@ if (@available(iOS 10.0, *)) {
   completionHandler(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge);
 }
 
+// This function is used to send an event back into the app when the user presses on a missed call notification
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
     NSDictionary *userInfo  = response.notification.request.content.userInfo;
     if (userInfo && [userInfo valueForKey:@"omisdkCallerNumber"]) {
       NSLog(@"User Info : %@",userInfo);
-      [OmikitNotification didRecieve:userInfo];
+        [OmikitNotification didRecieve:userInfo];
     }
     completionHandler();
 }
 
+// This function will terminate all ongoing calls when the user kills the app
 - (void)applicationWillTerminate:(UIApplication *)application {
     @try {
         [OmiClient OMICloseCall];
@@ -343,8 +372,9 @@ if (@available(iOS 10.0, *)) {
 We support 2 environments. So you need set correct key in Appdelegate.
 - KEY_OMI_APP_ENVIROMENT_SANDBOX support on debug mode
 - KEY_OMI_APP_ENVIROMENT_PRODUCTION support on release mode
-- Visit on web admin to select correct enviroment.   
+- Visit on web admin to select correct enviroment.
 ```
+*Note: At Tab Build Setting off Target Project, you need set: ***Enable Modules (C and Objective C)*** : YES*
   
 #### iOS(Swift):
 - Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
