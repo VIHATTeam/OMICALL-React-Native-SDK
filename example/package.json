@@ -26,7 +26,6 @@
     "react": "^18.0.0",
     "react-native": "0.69.7",
     "react-native-device-info": "^10.11.0",
-    "react-native-fs": "^2.20.0",
     "react-native-mmkv": "2.4.4",
     "react-native-modal": "^13.0.1",
     "react-native-permissions": "3.0.6",

@@ -48,12 +48,12 @@ maven {
 ```
 
 ```
-//in dependencies
+// in dependencies
 classpath 'com.google.gms:google-services:4.3.13'
 ```
 
 ```
-//under buildscript
+// under buildscript
 allprojects {
       repositories {
         maven {
@@ -868,3 +868,8 @@ useEffect(() => {
       transferCall({
         phoneNumber: 102
       })
+
+# Issues
+
+  ## iOS
+  - Must use "Rosetta Destination" to run debug example app on macOS Apple chip
