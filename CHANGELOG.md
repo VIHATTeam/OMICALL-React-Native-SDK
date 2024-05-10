@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## 3.2.31
+- Update android maven config
+
+
 ## 3.2.30
 - Remove glide android 
 
