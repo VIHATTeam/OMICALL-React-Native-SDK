@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.30
+- Remove glide android 
+
+
 ## 3.2.29
 - Update OMI core android to version 2.2.41
 - Remove dependencies glide in Android
