@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.33
+- Update OMI core IOS to version 1.7.17
+- Fix call_id off func joinCall
+
 ## 3.2.32
 - Update OMI core android to version 2.2.42
 - Update BroadcastReceiver for Android 14+
