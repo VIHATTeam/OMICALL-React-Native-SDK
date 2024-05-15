@@ -1,49 +1,42 @@
-import { StyleSheet, View, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
+import {
+  checkMultiple,
+  PERMISSIONS,
+  requestMultiple,
+  RESULTS,
+} from 'react-native-permissions';
+
+import {
+  getInitialCall,
+  logout,
+  // getInitialCall,
+  OmiCallEvent,
+  OmiCallState,
+  omiEmitter,
+  startCall,
+} from 'omikit-plugin';
+
+import { LiveData } from './livedata';
+import { localStorage } from './local_storage';
+
 import {
   CustomButton,
   CustomCheckBox,
   CustomTextField,
   KeyboardAvoid,
 } from './components';
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  // getInitialCall,
-  OmiCallEvent,
-  omiEmitter,
-  startCall,
-  logout,
-  // startCallWithUuid,
-  systemAlertWindow,
-  openSystemAlertSetting,
-  OmiCallState,
-  getInitialCall,
-  OmiStartCallStatus,
-} from 'omikit-plugin';
-import { useNavigation } from '@react-navigation/native';
-import { prepareForUpdateToken } from './notification';
-import { LiveData } from './livedata';
-import { localStorage } from './local_storage';
-import RNPermissions, {
-  Permission,
-  PERMISSIONS,
-  check,
-  checkMultiple,
-  RESULTS,
-  requestMultiple
-} from 'react-native-permissions';
 
 export const HomeScreen = () => {
-  ///need add call phone
-  // var [phone, setPhone] = useState(
-  //   Platform.OS === 'android' ? '123aaa' : '124aaa'
-  // );
-  var [phone, setPhone] = useState(Platform.OS === 'android' ? '100' : '100');
   const navigation = useNavigation();
+
+  const [phone, setPhone] = useState('101');
   const [callVideo, setCallVideo] = useState(false);
 
   const checkInitCall = useCallback(async () => {
     const callingInfo = await getInitialCall();
-    console.log("callerNumber getInitialCall =>>>> ", callingInfo)
+    console.log('callerNumber getInitialCall =>>>> ', callingInfo);
     if (callingInfo !== null && callingInfo !== false) {
       const { callerNumber } = callingInfo;
       console.log(callerNumber);
@@ -52,72 +45,76 @@ export const HomeScreen = () => {
 
   useEffect(() => {
     checkInitCall();
-    checkSystemAlert();
-    checkPermission()
+    checkPermission();
   }, [checkInitCall]);
 
   const checkPermission = () => {
-    checkMultiple([PERMISSIONS.IOS.MICROPHONE, PERMISSIONS.ANDROID.RECORD_AUDIO, PERMISSIONS.ANDROID.CALL_PHONE])
-    .then((result) => {
-      switch (result) {
-        case RESULTS.UNAVAILABLE:
-          requestPermission()
-          console.log('This feature is not available (on this device / in this context)');
-          break;
-        case RESULTS.DENIED:
-          requestPermission()
-          console.log('The permission has not been requested / is denied but requestable');
-          break;
-        case RESULTS.LIMITED:
-          console.log('The permission is limited: some actions are possible');
-          break;
-        case RESULTS.GRANTED:
-          console.log('The permission is granted');
-          break;
-        case RESULTS.BLOCKED:
-          requestPermission()
-          console.log('The permission is denied and not requestable anymore');
-          break;
-      }
-    })
-    .catch((error) => {
-      // …
-    });
-  }
+    checkMultiple([
+      PERMISSIONS.IOS.MICROPHONE,
+      PERMISSIONS.ANDROID.RECORD_AUDIO,
+      PERMISSIONS.ANDROID.CALL_PHONE,
+    ])
+      .then((result) => {
+        switch (result) {
+          case RESULTS.UNAVAILABLE:
+            requestPermission();
+            console.log(
+              'This feature is not available (on this device / in this context)'
+            );
+            break;
+          case RESULTS.DENIED:
+            requestPermission();
+            console.log(
+              'The permission has not been requested / is denied but requestable'
+            );
+            break;
+          case RESULTS.LIMITED:
+            console.log('The permission is limited: some actions are possible');
+            break;
+          case RESULTS.GRANTED:
+            console.log('The permission is granted');
+            break;
+          case RESULTS.BLOCKED:
+            requestPermission();
+            console.log('The permission is denied and not requestable anymore');
+            break;
+        }
+      })
+      .catch((error) => {
+        // …
+      });
+  };
 
   const requestPermission = () => {
-    requestMultiple([PERMISSIONS.IOS.MICROPHONE, PERMISSIONS.ANDROID.RECORD_AUDIO, PERMISSIONS.ANDROID.CALL_PHONE])
-    .then((result) => {
-      switch (result) {
-        case RESULTS.UNAVAILABLE:
-          console.log('This feature is not available (on this device / in this context)');
-          break;
-        case RESULTS.DENIED:
-          console.log('The permission has not been requested / is denied but requestable');
-          break;
-        case RESULTS.LIMITED:
-          console.log('The permission is limited: some actions are possible');
-          break;
-        case RESULTS.GRANTED:
-          console.log('The permission is granted');
-          break;
-        case RESULTS.BLOCKED:
-          console.log('The permission is denied and not requestable anymore');
-          break;
-      }
-    })
-    .catch((error) => {
-      // …
-    });
-  }
-
-  const checkSystemAlert = async () => {
-    if (Platform.OS === 'android') {
-      const isAllow = await systemAlertWindow();
-      if (!isAllow) {
-        openSystemAlertSetting();
-      }
-    }
+    requestMultiple([
+      PERMISSIONS.IOS.MICROPHONE,
+      PERMISSIONS.ANDROID.RECORD_AUDIO,
+      PERMISSIONS.ANDROID.CALL_PHONE,
+    ])
+      .then((result) => {
+        switch (result) {
+          case RESULTS.UNAVAILABLE:
+            console.log(
+              'This feature is not available (on this device / in this context)'
+            );
+            break;
+          case RESULTS.DENIED:
+            console.log(
+              'The permission has not been requested / is denied but requestable'
+            );
+            break;
+          case RESULTS.LIMITED:
+            console.log('The permission is limited: some actions are possible');
+            break;
+          case RESULTS.GRANTED:
+            console.log('The permission is granted');
+            break;
+          case RESULTS.BLOCKED:
+            console.log('The permission is denied and not requestable anymore');
+            break;
+        }
+      })
+      .catch();
   };
 
   const _videoTrigger = useCallback(() => {
@@ -126,9 +123,9 @@ export const HomeScreen = () => {
 
   const onCallStateChanged = useCallback(
     (data: any) => {
-      console.log("data onCallStateChanged:  ", data)
-      const { status, transactionId, callerNumber, isVideo } = data;
-      console.log("status call: ", status);
+      console.log('data onCallStateChanged:  ', data);
+      const { status, callerNumber, isVideo } = data;
+      console.log('status call: ', status);
       if (status === OmiCallState.incoming) {
         const input = {
           callerNumber: callerNumber,
@@ -171,29 +168,17 @@ export const HomeScreen = () => {
         phoneNumber: callerNumber,
         isVideo: isVideo,
       });
-      console.log("result ", result)
-      // if (result === OmiStartCallStatus.startCallSuccess) {
-      //   const param = {
-      //     callerNumber: callerNumber,
-      //     status: OmiCallState.calling,
-      //     isOutGoingCall: true,
-      //   };
-      //   if (isVideo === true) {
-      //     navigation.navigate('VideoCall' as never, param as never);
-      //   } else {
-      //     navigation.navigate('DialCall' as never, param as never);
-      //   }
-      // }
+      console.log('result ', result);
     },
     [navigation]
   );
 
   const clickMissedCall = useCallback((data: any) => {
-      if (LiveData.isOpenedCall === true) {
-        return;
-      }
-      callWithParam(data);
-    },[]);
+    if (LiveData.isOpenedCall === true) {
+      return;
+    }
+    callWithParam(data);
+  }, []);
 
   useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
@@ -205,84 +190,35 @@ export const HomeScreen = () => {
   }, []);
 
   const call = async () => {
-    // navigation.navigate('Call' as never);
     if (phone.trim().length === 0) {
       return;
     }
     let result = await startCall({ phoneNumber: phone, isVideo: callVideo });
-    console.log(":result startCall: ==>>> ", result?.status,  result)
-    if(Platform.OS == "ios"){
-      result = JSON.parse(result)
+    console.log(':result startCall: ==>>> ', result?.status, result);
+    if (Platform.OS == 'ios') {
+      result = JSON.parse(result);
     }
-    console.log(":result startCall: ==>>> ", result?.status)
-    // if(Platform.OS == "ios" && result == 8){
-    //   const data = {  
-    //     callerNumber: phone,
-    //     status: OmiCallState.calling,
-    //     isOutGoingCall: true,
-    //   };
-    //   return navigation.navigate('DialCall' as never, data as never);
-    // }
-
-    if(result?.status == "4"){
-      requestPermission()
+    console.log(':result startCall: ==>>> ', result?.status);
+    if (result?.status == '4') {
+      requestPermission();
     }
 
-    if (result?.status == "8" || result?.status == 8) {
+    if (result?.status == '8' || result?.status == 8) {
       const data = {
         callerNumber: phone,
         status: OmiCallState.calling,
         isOutGoingCall: true,
       };
-      console.log("zô zzzzz: ==>>> ")
-
-      // if (callVideo === true) {
-      //   navigation.navigate('VideoCall' as never, data as never);
-      // } else {
-      //   navigation.navigate('DialCall' as never, data as never);
-      // }
-
+      console.log('zô zzzzz: ==>>> ');
       navigation.navigate('DialCall' as never, data as never);
     } else {
-      console.log("call error ==> ", result)
+      console.log('call error ==> ', result);
     }
   };
-
-  // const call = async () => {
-  //   // navigation.navigate('Call' as never);
-  //   if (phone.trim().length === 0) {
-  //     return;
-  //   }
-  //   const result = await startCallWithUuid({
-  //     usrUuid: phone,
-  //     isVideo: callVideo,
-  //   });
-  //   console.log(result);
-  //   if (result === OmiStartCallStatus.startCallSuccess) {
-  //     const data = {
-  //       callerNumber: phone,
-  //       status: CallStatus.calling,
-  //     };
-  //     if (callVideo === true) {
-  //       navigation.navigate('VideoCall' as never, data as never);
-  //     } else {
-  //       navigation.navigate('DialCall' as never, data as never);
-  //     }
-  //   } else {
-  //   }
-  // };
-
-  // const showAlert = (message: string) =>
-  //   Alert.alert('Notification', message, [
-  //     {
-  //       text: 'Cancel',
-  //     },
-  //   ]);
 
   const logoutCB = async () => {
     await logout();
     localStorage.clearAll();
-    // navigation.reset({ index: 0, routes: [{ name: 'LoginAPIKey' as never }] });
     navigation.reset({ index: 0, routes: [{ name: 'Login' as never }] });
   };
 
@@ -297,7 +233,7 @@ export const HomeScreen = () => {
           onChange={(text: string) => {
             setPhone(text);
           }}
-          keyboardType={"phone-pad"}
+          keyboardType={'phone-pad'}
         />
         <CustomCheckBox
           title="Video call"

@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import React, {
   MutableRefObject,
   useCallback,
@@ -6,34 +6,20 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { StyleSheet, TextInput, View } from 'react-native';
+
+import { initCallWithUserPassword } from 'omikit-plugin';
+
+import { localStorage } from './local_storage';
+import { requestNotification, token } from './notification';
+
 import {
   CustomButton,
   CustomCheckBox,
   CustomTextField,
   KeyboardAvoid,
 } from './components';
-import { initCallWithApiKey, initCallWithUserPassword } from 'omikit-plugin';
-// import { requestNotification } from './notification';
-import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
-import { requestNotification , fcm, token} from './notification';
-import { localStorage } from './local_storage';
-
-////QUI-DN - 100
-//NSString * REALM = @"quidn";
-//NSString * USER_NAME1 = @"100";
-//NSString * PASS_WORD1 = @"Duongngocqui@98";
-
-////QUI-DN - 100
-//NSString * REALM = @"quidn";
-//NSString * USER_NAME1 = @"100";
-//NSString * PASS_WORD1 = @"Duongngocqui@98";
-
-
-////HUNG-TH - 100
-//NSString * REALM = @"hungth12";
-//NSString * USER_NAME1 = @"100";
-//NSString * PASS_WORD1 = @"Duongngocqui@98";
 
 // HUNGTH
 const REALM = 'testtuanla2k1';
