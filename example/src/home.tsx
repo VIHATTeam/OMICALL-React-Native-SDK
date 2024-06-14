@@ -19,7 +19,7 @@ import {
 } from 'omikit-plugin';
 
 import { LiveData } from './livedata';
-import { localStorage } from './local_storage';
+import LocalStorage from './local_storage';
 
 import {
   CustomButton,
@@ -218,7 +218,7 @@ export const HomeScreen = () => {
 
   const logoutCB = async () => {
     await logout();
-    localStorage.clearAll();
+    LocalStorage.clearAll();
     navigation.reset({ index: 0, routes: [{ name: 'Login' as never }] });
   };
 

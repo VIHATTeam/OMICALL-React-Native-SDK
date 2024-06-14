@@ -10,7 +10,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import { initCallWithUserPassword } from 'omikit-plugin';
 
-import { localStorage } from './local_storage';
+import LocalStorage from './local_storage';
 import { requestNotification, token } from './notification';
 
 import {
@@ -22,9 +22,9 @@ import {
 import { CustomLoading } from './components/custom_view/custom_loading';
 
 // HUNGTH
-const REALM = 'testtuanla2k1';
-const USER_NAME = '100';
-const PASS_WORD = 'TestTuanLa2001';
+const REALM = 'quidn';
+const USER_NAME = '102';
+const PASS_WORD = 'Duongngocqui@98';
 
 export const LoginScreen = () => {
   const [isVideo, setIsVideo] = useState(false);
@@ -107,7 +107,7 @@ export const LoginScreen = () => {
     setLoading(false);
     if (result) {
       const loginInfoString = JSON.stringify(loginInfo);
-      localStorage.set('login_info', loginInfoString);
+      LocalStorage.set('login_info', loginInfoString);
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
     }

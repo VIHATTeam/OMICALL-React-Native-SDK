@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import React from 'react';
 import { UIColors } from './src/components';
-import { localStorage } from './src/local_storage';
+import LocalStorage from './src/local_storage';
 import { startServices, configPushNotification } from 'omikit-plugin';
 import { CustomLoading } from './src/components/custom_view/custom_loading';
 import { LogBox } from 'react-native';
@@ -35,8 +35,10 @@ export const Main = () => {
       audioNotificationDescription: 'Cuộc gọi audio nè',
       videoNotificationDescription: 'Cuộc gọi video nè',
     });
-    const data = localStorage.getString('login_info');
+    const data = await LocalStorage.getString('login_info');
+    console.log("data login_info ==>  ", data, data != undefined)
     const isLogin = data !== undefined;
+
     // if (haveLoginInfo) {
     // await initCall({
     //   isVideo: true,

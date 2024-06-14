@@ -17,7 +17,7 @@ import { initCallWithApiKey } from 'omikit-plugin';
 import { useNavigation } from '@react-navigation/native';
 import { CustomLoading } from './components/custom_view/custom_loading';
 import { requestNotification , fcm, token} from './notification';
-import { localStorage } from './local_storage';
+import LocalStorage from './local_storage';
 import { Alert } from 'react-native';
 
 export const LoginApiKeyScreen = () => {
@@ -61,7 +61,7 @@ export const LoginApiKeyScreen = () => {
     setLoading(false);
     if (result === true) {
       const loginInfoString = JSON.stringify(loginInfo);
-      localStorage.set('login_info', loginInfoString);
+      LocalStorage.set('login_info', loginInfoString);
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
     } else {

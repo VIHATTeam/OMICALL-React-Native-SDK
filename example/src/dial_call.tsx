@@ -29,11 +29,21 @@ import {
   getInitialCall,
   transferCall,
 } from 'omikit-plugin';
+
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
 import { CustomKeyboard } from './components/custom_view/custom_keyboard';
 import { LiveData } from './livedata';
 import { UserView } from './components/custom_view/user_view';
+
+
+const StatusDescriptions: { [key: number]: string } = {
+  [OmiCallState.calling]: 'Đang kết nối tới cuộc gọi',
+  [OmiCallState.connecting]: 'Đang kết nối',
+  [OmiCallState.early]: 'Cuộc gọi đang đổ chuông',
+  [OmiCallState.confirmed]: 'Cuộc gọi bắt đầu',
+  [OmiCallState.disconnected]: 'Cuộc gọi kết thúc'
+};
 
 export const DialCallScreen = ({ route }: any) => {
   // const callerNumber = route.params.callerNumber;
@@ -50,29 +60,19 @@ export const DialCallScreen = ({ route }: any) => {
   const [guestUser, setGuestUser] = useState<any>(null);
   const [transaction_id, setTransaction_id] = useState("");
 
+
+  
+  const getDescriptionFromStatus = (status: number): string => {
+    console.log("status getDescriptionFromStatus ==> ", status);
+    if (status == null) return ""
+  
+    return StatusDescriptions[status] || '';
+  }
+
   const currentStatusText = useMemo(
-    () => getDescriptionFromStatus(currentStatus),
+    () => getDescriptionFromStatus(currentStatus ?? 0),
     [currentStatus]
   );
-
-  function getDescriptionFromStatus(status: number) {
-    if (status === OmiCallState.calling) {
-      return 'Đang kết nối tới cuộc gọi';
-    }
-    if (status === OmiCallState.connecting) {
-      return 'Đang kết nối';
-    }
-    if (status === OmiCallState.early) {
-      return 'Cuộc gọi đang đổ chuông';
-    }
-    if (status === OmiCallState.confirmed) {
-      return 'Cuộc gọi bắt đầu';
-    }
-    if (status === OmiCallState.disconnected) {
-      return 'Cuộc gọi kết thúc';
-    }
-    return '';
-  }
 
   const callStateChanged =  async (data: any) => {  
       const { status , code_end_call } = data;
@@ -82,7 +82,9 @@ export const DialCallScreen = ({ route }: any) => {
       // }
       setCurrentStatus(status);
       if (status === OmiCallState.disconnected) {
-        // navigation.goBack();
+        const callInfo = await getInitialCall();
+        console.log("callInfo getInitialCall ==> ", callInfo)
+        navigation.goBack();
       }
       if (status === OmiCallState.confirmed) {
         const callInfo = await getInitialCall();
@@ -227,7 +229,7 @@ export const DialCallScreen = ({ route }: any) => {
 
   const onPressTransferCall = () => {
     try{
-      transferCall({phoneNumber: "102"}); // func from omikit-plugin
+      transferCall({phoneNumber: "101"}); // func from omikit-plugin
     } catch(e){
       console.log("e transferCall => ", e)
     }
