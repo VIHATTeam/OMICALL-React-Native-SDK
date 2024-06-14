@@ -1,40 +1,41 @@
 {
   "project_info": {
-    "project_number": "682956500665",
-    "project_id": "concung-5772a",
-    "storage_bucket": "concung-5772a.appspot.com"
+    "project_number": "616236858602",
+    "firebase_url": "https://omicrm-6558a.firebaseio.com",
+    "project_id": "omicrm-6558a",
+    "storage_bucket": "omicrm-6558a.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:682956500665:android:22362822274fff51d9f568",
+        "mobilesdk_app_id": "1:616236858602:android:5232b97d09175c129a6b93",
         "android_client_info": {
-          "package_name": "com.vihat.omicalltest"
+          "package_name": "com.omikitpluginexample"
         }
       },
       "oauth_client": [
         {
-          "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+          "client_id": "616236858602-bb415aogbb6dsurhm1uhcfis3htkn6gv.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyC22nNQ2MPkN7n_MVOUTHtNbzQhNZyrSME"
+          "current_key": "AIzaSyAmRIft6tcWH39eNJxSMhGpZ4D1MhJr_Pg"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+              "client_id": "616236858602-3tbr6gtenngc58s1fih7efcphdkeaops.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "682956500665-29l5ao20md15lci5banil2em7e4hj3ut.apps.googleusercontent.com",
+              "client_id": "616236858602-13b0oq3pnsmcc90mtrj0k2psj7fe5t26.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "dev.omicall.production"
+                "bundle_id": "vn.vihat.vhcc.msgNotificationContent"
               }
             }
           ]
@@ -43,34 +44,34 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:682956500665:android:d46b82b41354abb1d9f568",
+        "mobilesdk_app_id": "1:616236858602:android:4e9f03ff1513be5f9a6b93",
         "android_client_info": {
           "package_name": "com.vihat.omisdkandroid"
         }
       },
       "oauth_client": [
         {
-          "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+          "client_id": "616236858602-bb415aogbb6dsurhm1uhcfis3htkn6gv.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyC22nNQ2MPkN7n_MVOUTHtNbzQhNZyrSME"
+          "current_key": "AIzaSyAmRIft6tcWH39eNJxSMhGpZ4D1MhJr_Pg"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+              "client_id": "616236858602-3tbr6gtenngc58s1fih7efcphdkeaops.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "682956500665-29l5ao20md15lci5banil2em7e4hj3ut.apps.googleusercontent.com",
+              "client_id": "616236858602-13b0oq3pnsmcc90mtrj0k2psj7fe5t26.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "dev.omicall.production"
+                "bundle_id": "vn.vihat.vhcc.msgNotificationContent"
               }
             }
           ]
@@ -79,34 +80,142 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:682956500665:android:7847a05fd9acf8c5d9f568",
+        "mobilesdk_app_id": "1:616236858602:android:af3e73a9a89216719a6b93",
         "android_client_info": {
-          "package_name": "omicall.concung.dev"
+          "package_name": "vn.vihat.omicall"
         }
       },
       "oauth_client": [
         {
-          "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+          "client_id": "616236858602-bb415aogbb6dsurhm1uhcfis3htkn6gv.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyC22nNQ2MPkN7n_MVOUTHtNbzQhNZyrSME"
+          "current_key": "AIzaSyAmRIft6tcWH39eNJxSMhGpZ4D1MhJr_Pg"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "682956500665-cp8oogjnt0vkp4slp1ol943470un56fl.apps.googleusercontent.com",
+              "client_id": "616236858602-3tbr6gtenngc58s1fih7efcphdkeaops.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "682956500665-29l5ao20md15lci5banil2em7e4hj3ut.apps.googleusercontent.com",
+              "client_id": "616236858602-13b0oq3pnsmcc90mtrj0k2psj7fe5t26.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "dev.omicall.production"
+                "bundle_id": "vn.vihat.vhcc.msgNotificationContent"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616236858602:android:359ffac517457ec79a6b93",
+        "android_client_info": {
+          "package_name": "vn.vihat.omicall.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616236858602-bb415aogbb6dsurhm1uhcfis3htkn6gv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmRIft6tcWH39eNJxSMhGpZ4D1MhJr_Pg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616236858602-3tbr6gtenngc58s1fih7efcphdkeaops.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "616236858602-13b0oq3pnsmcc90mtrj0k2psj7fe5t26.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "vn.vihat.vhcc.msgNotificationContent"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616236858602:android:17ed56d59e8ddef7",
+        "android_client_info": {
+          "package_name": "vn.vihat.vhcc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616236858602-bb415aogbb6dsurhm1uhcfis3htkn6gv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmRIft6tcWH39eNJxSMhGpZ4D1MhJr_Pg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616236858602-3tbr6gtenngc58s1fih7efcphdkeaops.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "616236858602-13b0oq3pnsmcc90mtrj0k2psj7fe5t26.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "vn.vihat.vhcc.msgNotificationContent"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616236858602:android:8b409d4b7f23df92",
+        "android_client_info": {
+          "package_name": "vn.vihat.vhcc.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616236858602-bb415aogbb6dsurhm1uhcfis3htkn6gv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmRIft6tcWH39eNJxSMhGpZ4D1MhJr_Pg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616236858602-3tbr6gtenngc58s1fih7efcphdkeaops.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "616236858602-13b0oq3pnsmcc90mtrj0k2psj7fe5t26.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "vn.vihat.vhcc.msgNotificationContent"
               }
             }
           ]

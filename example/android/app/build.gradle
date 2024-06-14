@@ -132,16 +132,16 @@ def reactNativeArchitectures() {
 }
 
 android {
-  ndkVersion rootProject.ext.ndkVersion
-
+  ndkVersion rootProject.ext.ndkVersion 
   compileSdkVersion rootProject.ext.compileSdkVersion
 
   defaultConfig {
-    applicationId "com.vihat.omisdkandroid"
+    // applicationId "com.vihat.omisdkandroid"
+    applicationId "com.omikitpluginexample"
     minSdkVersion rootProject.ext.minSdkVersion
     targetSdkVersion rootProject.ext.targetSdkVersion
     versionCode 15
-    versionName "1.0.0"
+    versionName "1.0.1"
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
 
     if (isNewArchitectureEnabled()) {
