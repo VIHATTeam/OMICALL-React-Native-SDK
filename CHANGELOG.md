@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.34
+- Update OMI core IOS to version 1.7.23
+- Update OMI core Android to version 2.2.80
+- Fix accept call second for ios
+- Improve start call for ios
+- Improve FCM for android
+- Update new format FCM for android
+
 ## 3.2.33
 - Update OMI core IOS to version 1.7.17
 - Fix call_id off func joinCall

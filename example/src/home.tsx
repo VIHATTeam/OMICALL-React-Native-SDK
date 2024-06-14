@@ -126,7 +126,7 @@ export const HomeScreen = () => {
       console.log('data onCallStateChanged:  ', data);
       const { status, callerNumber, isVideo } = data;
       console.log('status call: ', status);
-      if (status === OmiCallState.incoming) {
+      if (status == OmiCallState.incoming) {
         const input = {
           callerNumber: callerNumber,
           status: status,
