@@ -560,7 +560,8 @@ We need you request permission about call before make call:
     userNameKey: 'uuid', //we have 3 values: uuid, full_name, extension.
     channelId: 'com.channel.sample', //your notification channel id
     audioNotificationDescription: '' //audio description
-    videoNotificationDescription: '' //video descriptipn
+    videoNotificationDescription: '' //video descriptipn,
+    representName: '' // Pass down the representative name if you want all incoming calls on the customer app to display only 1 unique name of your business
   });
   //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
   ```
