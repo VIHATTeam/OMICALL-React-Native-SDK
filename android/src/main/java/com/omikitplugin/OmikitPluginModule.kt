@@ -273,6 +273,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val audioNotificationDescription = data?.getString("audioNotificationDescription") ?: ""
       val videoNotificationDescription = data?.getString("videoNotificationDescription") ?: ""
       val displayNameType = data?.getString("displayNameType") ?: ""
+      val appRepresentName =  data?.getString("representName") ?: "" 
+
 
       OmiClient.getInstance(reactApplicationContext!!).configPushNotification(
         showMissedCall = true,
@@ -289,7 +291,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         missedChannelId = "${channelId}-missed",
         missedChannelName = "Cuộc gọi nhỡ",
         displayNameType = userNameKey ?: "full_name",
-        notificationMissedCallPrefix = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ"
+        notificationMissedCallPrefix = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
+        representName= appRepresentName ?: ""
       )
       promise.resolve(true)
     }
