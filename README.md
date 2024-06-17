@@ -853,14 +853,20 @@ useEffect(() => {
 
     + onSwitchboardAnswer have callback when employee answered script call.
 
-- List of notable call codes `code_end_call`:
-  + `600, 503, 480` : These are the codes of the network operator or the user who did not answer the call
-  + `408` : call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out)
-  + `403` : Your service plan only allows calls to dialed numbers. Please upgrade your service pack
-  + `404` : The current number is not allowed to make calls to the carrier
-  + `603` : The call was rejected. Please check your account limit or call barring configuration!
-  + `850` : Simultaneous call limit exceeded, please try again later
-  + `486` : The listener refuses the call and does not answer
+- Table describing code_end_call status
+
+
+| Code  | Description |
+|-------|-------------|
+| `600, 503, 480` | These are the codes of the network operator or the user who did not answer the call |
+| `408` | Call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out) |
+| `403` | Your service plan only allows calls to dialed numbers. Please upgrade your service pack |
+| `404` | The current number is not allowed to make calls to the carrier |
+| `603` | The call was rejected. Please check your account limit or call barring configuration! |
+| `850` | Simultaneous call limit exceeded, please try again later |
+| `486` | The listener refuses the call and does not answer |
+| `601` | Call ended by the customer |
+| `602` | Call ended by the other employee |
 
 
 - Action Name value:
