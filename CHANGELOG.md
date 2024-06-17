@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.35
+- Update OMI core Android to version 2.2.82
+- Fix the error of missing 0 at the beginning of the dialed number
+
 ## 3.2.34
 - Update OMI core IOS to version 1.7.23
 - Update OMI core Android to version 2.2.80
