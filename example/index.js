@@ -34,10 +34,11 @@ export const Main = () => {
       channelId: 'com.channel.sample',
       audioNotificationDescription: 'Cuộc gọi audio nè',
       videoNotificationDescription: 'Cuộc gọi video nè',
+      representName: "CTY H-SOLUTIONS"
     });
     const data = await LocalStorage.getString('login_info');
     console.log("data login_info ==>  ", data, data != undefined)
-    const isLogin = data !== undefined;
+    const isLogin = data != undefined;
 
     // if (haveLoginInfo) {
     // await initCall({
@@ -52,7 +53,7 @@ export const Main = () => {
   //turn off warning
   LogBox.ignoreAllLogs();
 
-  return loading === true ? (
+  return loading == true ? (
     <View styles={styles.loading}>
       <CustomLoading />
     </View>
