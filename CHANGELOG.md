@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.37
+- Update OMI core Android to version 2.2.83
+- Change permission at android 14
+
 ## 3.2.36
 - Add representName for android 
 
