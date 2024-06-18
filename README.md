@@ -109,9 +109,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
       <uses-permission android:name="android.permission.INTERNET" />
       <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
       <uses-permission android:name="android.permission.WAKE_LOCK" />
-      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
-      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
-      <uses-permission android:name="android.permission.CALL_PHONE"/>
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
       ..... // your config 
 
          <application
@@ -205,39 +203,6 @@ public class MainActivity extends ReactActivity {
      .....  // your config 
   }
 }
-```
-
-You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/app/src/main/AndroidManifest.xml">AndroidManifest</a> to know more informations.
-
-- We registered permissions into my plugin:
-
-```
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.telephony"
-        android:required="false" />
-
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.USE_SIP" />
-    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.SYSTEM_CAMERA" /> // add if use targetSDK 34 
-
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 ```
 
 - Setup remote push notification: Only support Firebase for remote push notification.
