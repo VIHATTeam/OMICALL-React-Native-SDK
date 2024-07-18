@@ -38,8 +38,8 @@ jcenter()
 maven {
     url "https://maven.pkg.github.com/omicall/OMICall-SDK"
     credentials {
-      username = "omicall"
-      password = "***REMOVED***"
+      username = project.findProperty("OMI_USER") ?: ""
+      password =  project.findProperty("OMI_TOKEN") ?: ""
     }
     authentication {
         basic(BasicAuthentication)
