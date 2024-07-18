@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.38
+- Update OMI core Android to version 2.2.85
+- Change repo maven
+- Update OMI core Android to version 1.7.25
+- Fix missed omi_call id off incoming call
+
 ## 3.2.37
 - Update OMI core Android to version 2.2.83
 - Change permission at android 14
