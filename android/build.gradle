@@ -5,13 +5,13 @@ buildscript {
   repositories {
     google()
     mavenCentral()
-    maven {
-      url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
-      credentials {
-        username = "downloader"
-        password = "Omi@2022"
-      }
-    }
+    // maven {
+    //   url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
+    //   credentials {
+    //     username = "downloader"
+    //     password = "Omi@2022"
+    //   }
+    // }
   }
 
   dependencies {
@@ -83,15 +83,15 @@ allprojects {
     mavenCentral()
     jcenter() // Warning: this repository is going to shut down soon
     maven {
-        url "https://gitlab.com/api/v4/projects/47675059/packages/maven"
-        credentials(HttpHeaderCredentials) {
-            name = "Private-Token"
-            value = "glpat-AzyyrvKz9_pjsgGW4xfp"
+            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+            credentials {
+                username = "omicall"
+                password = "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"
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
         }
-        authentication {
-            header(HttpHeaderAuthentication)
-        }
-    }
   }
 }
 
@@ -103,7 +103,7 @@ dependencies {
   // use for OMISDK
   implementation("androidx.work:work-runtime:2.8.1")
   implementation "androidx.security:security-crypto:1.1.0-alpha06"
-  api 'vn.vihat.omicall:omi-sdk:2.2.83'
+  api 'vn.vihat.omicall:omi-sdk:2.2.85'
 
   implementation "com.facebook.react:react-native:+" // From node_modules
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

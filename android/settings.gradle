@@ -14,13 +14,13 @@ dependencyResolutionManagement {
             url "https://jitpack.io"
         }
         maven {
-            url "https://gitlab.com/api/v4/projects/47675059/packages/maven"
-            credentials(HttpHeaderCredentials) {
-                name = "Private-Token"
-                value = "glpat-AzyyrvKz9_pjsgGW4xfp"
+            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+            credentials {
+                username = "omicall"
+                password = "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"
             }
             authentication {
-                header(HttpHeaderAuthentication)
+                basic(BasicAuthentication)
             }
         }
     }

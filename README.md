@@ -36,13 +36,13 @@ yarn add omikit-plugin --latest
 ```
 jcenter()
 maven {
-    url "https://gitlab.com/api/v4/projects/47675059/packages/maven"
-    credentials(HttpHeaderCredentials) {
-        name = "Private-Token"
-        value = "glpat-AzyyrvKz9_pjsgGW4xfp"
+    url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+    credentials {
+      username = "omicall"
+      password = "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"
     }
     authentication {
-        header(HttpHeaderAuthentication)
+        basic(BasicAuthentication)
     }
 }
 ```
@@ -74,13 +74,13 @@ allprojects {
         google()
         maven { url 'https://www.jitpack.io' }
         maven {
-            url "https://gitlab.com/api/v4/projects/47675059/packages/maven"
-            credentials(HttpHeaderCredentials) {
-                name = "Private-Token"
-                value = "glpat-AzyyrvKz9_pjsgGW4xfp"
+            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+            credentials {
+                username = "omicall"
+                password = "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"
             }
             authentication {
-                header(HttpHeaderAuthentication)
+                basic(BasicAuthentication)
             }
         }
       }
@@ -101,31 +101,31 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 - Update AndroidManifest.xml:
 
 ```
-<manifest 
-      ...... 
+<manifest
+      ......
       xmlns:tools="http://schemas.android.com/tools">
-      ..... // your config 
+      ..... // your config
       <uses-feature android:name="android.hardware.telephony" android:required="false" />
       <uses-permission android:name="android.permission.INTERNET" />
       <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
       <uses-permission android:name="android.permission.WAKE_LOCK" />
       <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-      ..... // your config 
+      ..... // your config
 
          <application
                 android:name=".MainApplication"
-                ...... // your config 
+                ...... // your config
                 android:alwaysRetainTaskState="true"
                 android:largeHeap="true"
                 android:exported="true"
                 android:supportsRtl="true"
                 android:allowBackup="false"
                 android:enableOnBackInvokedCallback="true"
-                .....  // your config 
+                .....  // your config
         >
                 <activity
                             android:name=".MainActivity"
-                        .....  // your config 
+                        .....  // your config
                             android:windowSoftInputMode="adjustResize"
                             android:showOnLockScreen="true"
                             android:launchMode="singleTask"
@@ -135,9 +135,9 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
                             android:showWhenLocked="true"
                             android:turnScreenOn="true"
                             android:exported="true"
-                        .....  // your config 
+                        .....  // your config
                             >
-                        .....  // your config 
+                        .....  // your config
                           <intent-filter>
                               <action android:name="android.intent.action.MAIN" />
                               <category android:name="android.intent.category.LAUNCHER" />
@@ -149,9 +149,9 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
                                   android:host="incoming_call"
                                   android:scheme="omisdk" />
                           </intent-filter>
-                        .....  // your config 
+                        .....  // your config
                      </activity>
-                 .....  // your config 
+                 .....  // your config
                 <receiver
                     android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
                     android:exported="true"
@@ -167,15 +167,16 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
                   android:enabled="true"
                   android:exported="false">
                 </service>
-                 .....  // your config 
+                 .....  // your config
            </application>
 </manifest>
 ```
 
 ##### In file MainActivity:
+
 ```
 public class MainActivity extends ReactActivity {
-   .....  // your config 
+   .....  // your config
 
 
   @Override
@@ -200,7 +201,7 @@ public class MainActivity extends ReactActivity {
     if (intent != null) {
       OmikitPluginModule.Companion.onGetIntentFromNotification(reactApplicationContext, intent, this);
     }
-     .....  // your config 
+     .....  // your config
   }
 }
 ```
@@ -211,7 +212,9 @@ public class MainActivity extends ReactActivity {
   - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> to setup notification for React native)
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/android-sdk/cau-hinh-push-notification">Config Push for Android</a>
-##  Config for IOS 
+
+## Config for IOS
+
 #### iOS(Object-C):
 
 - Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
@@ -233,6 +236,7 @@ public class MainActivity extends ReactActivity {
 
 @end
 ```
+
 - Add variables in **Appdelegate.h** for **New Architecture**:
 
 ```
@@ -260,7 +264,7 @@ public class MainActivity extends ReactActivity {
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
 
-  //  ----- Start OmiKit Config ------ 
+  //  ----- Start OmiKit Config ------
   [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image" typePushVoip:TYPE_PUSH_CALLKIT_DEFAULT];
   _provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
   _voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
@@ -268,10 +272,10 @@ public class MainActivity extends ReactActivity {
   if (@available(iOS 10.0, *)) {
         [UNUserNotificationCenter currentNotificationCenter].delegate = (id<UNUserNotificationCenterDelegate>) self;
   }
-  //  ----- End OmiKit Config ------ 
+  //  ----- End OmiKit Config ------
 
   return YES;
-  
+
 }
 
 
@@ -333,8 +337,7 @@ public class MainActivity extends ReactActivity {
 
 ```
 
-
-*** Only use under lines when added `Cloud Messaging` plugin in your project ***
+**_ Only use under lines when added `Cloud Messaging` plugin in your project _**
 
 - Setup push notification: We only support Firebase for push notification.
 
@@ -342,17 +345,20 @@ public class MainActivity extends ReactActivity {
   - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/ios-sdk/cau-hinh-push-notification">Config Push for iOS</a>
-  
-*** Important release note ***
+
+**_ Important release note _**
+
 ```
 We support 2 environments. So you need set correct key in Appdelegate.
 - KEY_OMI_APP_ENVIROMENT_SANDBOX support on debug mode
 - KEY_OMI_APP_ENVIROMENT_PRODUCTION support on release mode
 - Visit on web admin to select correct enviroment.
 ```
-*Note: At Tab Build Setting off Target Project, you need set: ***Enable Modules (C and Objective C)*** : YES*
-  
+
+\*Note: At Tab Build Setting off Target Project, you need set: **_Enable Modules (C and Objective C)_** : YES\*
+
 #### iOS(Swift):
+
 - Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
 
 - Add variables in Appdelegate.swift:
@@ -376,7 +382,7 @@ voipRegistry = PKPushRegistry.init(queue: .main)
 pushkitManager = PushKitManager.init(voipRegistry: voipRegistry)
 ```
 
--  Add these lines into `Info.plist`:
+- Add these lines into `Info.plist`:
 
 ```
 <key>NSCameraUsageDescription</key>
@@ -401,7 +407,7 @@ extension Data {
 }
 ```
 
-*** Only use under lines when added `Cloud Messaging` plugin in your project ***
+**_ Only use under lines when added `Cloud Messaging` plugin in your project _**
 
 - Setup push notification: We only support Firebase for push notification.
 
@@ -409,24 +415,25 @@ extension Data {
   - Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
 
   - For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/ios-sdk/cau-hinh-push-notification">Config Push for iOS</a>
-*** Important release note ***
+    **_ Important release note _**
+
 ```
 We support 2 environments. So you need set correct key in Appdelegate.
 - KEY_OMI_APP_ENVIROMENT_SANDBOX support on debug mode
 - KEY_OMI_APP_ENVIROMENT_PRODUCTION support on release mode
-- Visit on web admin to select correct enviroment.   
+- Visit on web admin to select correct enviroment.
 ```
-
 
 ## Implement
 
 ### Request permission
 
 We need you request permission about call before make call:
-- You can use <a href="https://github.com/zoontek/react-native-permissions">react-native-permissions</a>  to do this
+
+- You can use <a href="https://github.com/zoontek/react-native-permissions">react-native-permissions</a> to do this
 
 ```
--Android: 
+-Android:
 + PERMISSIONS.ANDROID.RECORD_AUDIO
 + PERMISSIONS.ANDROID.CALL_PHONE
 + PERMISSIONS.ANDROID.CAMERA; (if you want to make Video calls)
@@ -455,16 +462,18 @@ We need you request permission about call before make call:
 
     startServices();
     ```
+
   - OmiKit need FCM for Android and APNS to push notification on user devices. We use more packages: <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a>
 
   - Create OmiKit With ApiKey: OmiKit need apikey, username, user id to init environment(All information in innit is required). ViHAT Group will provide api key for you. This function is used when making calls from customers to switchboard numbers (not making internal calls).
     Please contact for my sale:
-    In This step, we need partner provide me  fcmToken of firebase Message. 
+    In This step, we need partner provide me fcmToken of firebase Message.
+
     ```
     import { initCallWithApiKey } from 'omikit-plugin';
     import messaging from '@react-native-firebase/messaging';
-    
-    let token: String 
+
+    let token: String
     if(Platform.OS == "ios"){
       token = await messaging.getAPNSToken()
     } else {
@@ -484,14 +493,14 @@ We need you request permission about call before make call:
     ```
 
   - Create OmiKit: OmiKit need userName, password, realm, fcmToken to init environment(All information in innit is required). ViHAT Group will provide information for you.
-    This function is used when you want to call any telecommunication number, calling back and forth between internal groups. 
+    This function is used when you want to call any telecommunication number, calling back and forth between internal groups.
     Please contact for my sale:
 
 ```
     import { initCallWithUserPassword } from 'omikit-plugin';
     import messaging from '@react-native-firebase/messaging';
-    
-    let token: String 
+
+    let token: String
     if(Platform.OS == "ios"){
       token = await messaging.getAPNSToken()
     } else {
@@ -533,8 +542,6 @@ We need you request permission about call before make call:
   //incomingAcceptButtonImage, incomingDeclineButtonImage, backImage, userImage: Add these into `android/app/src/main/res/drawble`
   ```
 
-
-
 - Get call when user open application at first time:
 
   ```
@@ -558,7 +565,9 @@ We need you request permission about call before make call:
       isVideo: false //allow video call: true/false
   });
   ```
-    - The result will be in the form of object:
+
+  - The result will be in the form of object:
+
   ```
   result = {
       "_id": String // This is call_id. it just have id for iOS,
@@ -690,6 +699,7 @@ We need you request permission about call before make call:
 
     logout();
     ```
+
   - Permission: Check system alert window permission (only Android).
 
     ```
@@ -701,6 +711,7 @@ We need you request permission about call before make call:
       //false => denied
     }
     ```
+
   - Setting: Open to enable system alert window (only Android).
 
     ```
@@ -792,49 +803,42 @@ useEffect(() => {
 }, []);
 ```
 
-  - Important event `onCallStateChanged`: We provide it to listen call state change.
- // OmiAction have 2 variables: actionName and data
+- Important event `onCallStateChanged`: We provide it to listen call state change.
+  // OmiAction have 2 variables: actionName and data
 
-    - Action Name value: 
-        - `onCallStateChanged`: Call state changed.
-        - `onSwitchboardAnswer`: Switchboard sip is listening. 
-        - List status call: 
-          + unknown(0),
-          + calling(1),
-          + incoming(2),
-          + early(3),
-          + connecting(4),
-          + confirmed(5),
-          + disconnected(6);
-    + onCallStateChanged is call state tracking event. We will return status of state. Please refer `OmiCallState`.
-          `onCallStateChanged value:`
-              + isVideo: value boolean (true is call Video)
-              + status: number (value matching with List status call )
-              + callerNumber: phone number 
-              + incoming: boolean - status call incoming or outgoing
-              + _id: option (id of every call)
-              + code_end_call: This is code when end call. 
+  - Action Name value:
+    - `onCallStateChanged`: Call state changed.
+    - `onSwitchboardAnswer`: Switchboard sip is listening.
+    - List status call:
+      - unknown(0),
+      - calling(1),
+      - incoming(2),
+      - early(3),
+      - connecting(4),
+      - confirmed(5),
+      - disconnected(6);
 
-    + `Incoming call` state lifecycle: incoming -> connecting -> confirmed -> disconnected
-    + `Outgoing call` state lifecycle: calling -> early -> connecting -> confirmed -> disconnected 
+  * onCallStateChanged is call state tracking event. We will return status of state. Please refer `OmiCallState`.
+    `onCallStateChanged value:` + isVideo: value boolean (true is call Video) + status: number (value matching with List status call ) + callerNumber: phone number + incoming: boolean - status call incoming or outgoing + \_id: option (id of every call) + code_end_call: This is code when end call.
 
-    + onSwitchboardAnswer have callback when employee answered script call.
+  * `Incoming call` state lifecycle: incoming -> connecting -> confirmed -> disconnected
+  * `Outgoing call` state lifecycle: calling -> early -> connecting -> confirmed -> disconnected
+
+  * onSwitchboardAnswer have callback when employee answered script call.
 
 - Table describing code_end_call status
 
-
-| Code  | Description |
-|-------|-------------|
-| `600, 503, 480` | These are the codes of the network operator or the user who did not answer the call |
-| `408` | Call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out) |
-| `403` | Your service plan only allows calls to dialed numbers. Please upgrade your service pack |
-| `404` | The current number is not allowed to make calls to the carrier |
-| `603` | The call was rejected. Please check your account limit or call barring configuration! |
-| `850` | Simultaneous call limit exceeded, please try again later |
-| `486` | The listener refuses the call and does not answer |
-| `601` | Call ended by the customer |
-| `602` | Call ended by the other employee |
-
+| Code            | Description                                                                                                           |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `600, 503, 480` | These are the codes of the network operator or the user who did not answer the call                                   |
+| `408`           | Call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out) |
+| `403`           | Your service plan only allows calls to dialed numbers. Please upgrade your service pack                               |
+| `404`           | The current number is not allowed to make calls to the carrier                                                        |
+| `603`           | The call was rejected. Please check your account limit or call barring configuration!                                 |
+| `850`           | Simultaneous call limit exceeded, please try again later                                                              |
+| `486`           | The listener refuses the call and does not answer                                                                     |
+| `601`           | Call ended by the customer                                                                                            |
+| `602`           | Call ended by the other employee                                                                                      |
 
 - Action Name value:
   - `OmiCallEvent.onMuted`: Audio changed.
@@ -844,15 +848,15 @@ useEffect(() => {
   - `OmiCallEvent.onCallQuality`: The calling quality.
 - Data value: We return `callerNumber`, `sip`, `isVideo: true/false` information
 
-
 - Forward calls to internal staff:
-  + You can use function `transferCall` for transfer to staff you want.
-    example: 
-      transferCall({
-        phoneNumber: 102
-      })
+  - You can use function `transferCall` for transfer to staff you want.
+    example:
+    transferCall({
+    phoneNumber: 102
+    })
 
 # Issues
 
-  ## iOS
-  - Must use "Rosetta Destination" to run debug example app on macOS Apple chip
+## iOS
+
+- Must use "Rosetta Destination" to run debug example app on macOS Apple chip
