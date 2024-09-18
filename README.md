@@ -49,7 +49,7 @@ maven {
 ```
 // gradle.properties
 OMI_USER=omicall
-OMI_TOKEN=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
+OMI_TOKEN=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
 ```
 
 ```
