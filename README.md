@@ -45,6 +45,10 @@ maven {
       basic(BasicAuthentication)
   }
 }
+
+dependencies {
+ api 'vn.vihat.omicall:omi-sdk:2.2.85'
+}
 ```
 ```
 // gradle.properties
