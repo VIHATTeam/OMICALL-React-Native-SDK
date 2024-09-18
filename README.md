@@ -36,15 +36,20 @@ yarn add omikit-plugin --latest
 ```
 jcenter()
 maven {
-    url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-    credentials {
+  url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+  credentials {
       username = project.findProperty("OMI_USER") ?: ""
-      password =  project.findProperty("OMI_TOKEN") ?: ""
-    }
-    authentication {
-        basic(BasicAuthentication)
-    }
+      password = project.findProperty("OMI_TOKEN") ?: ""
+  }
+  authentication {
+      basic(BasicAuthentication)
+  }
 }
+```
+```
+// gradle.properties
+OMI_USER=omicall
+OMI_TOKEN=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
 ```
 
 ```
@@ -73,15 +78,15 @@ allprojects {
         }
         google()
         maven { url 'https://www.jitpack.io' }
-        maven {
-            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-            credentials {
-                username = "omicall"
-                password = "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"
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
+       maven {
+          url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+          credentials {
+              username = project.findProperty("OMI_USER") ?: ""
+              password = project.findProperty("OMI_TOKEN") ?: ""
+          }
+          authentication {
+              basic(BasicAuthentication)
+          }
         }
       }
 }
