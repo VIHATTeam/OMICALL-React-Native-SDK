@@ -47,7 +47,7 @@ maven {
 }
 
 dependencies {
- api 'vn.vihat.omicall:omi-sdk:2.2.85'
+ api 'vn.vihat.omicall:omi-sdk:2.3.12'
 }
 ```
 ```kotlin
