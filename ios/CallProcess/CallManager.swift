@@ -132,6 +132,9 @@ class CallManager {
         //request permission
         var result = false
         if let usrUuid = params["usrUuid"] as? String, let fullName = params["fullName"] as? String, let apiKey = params["apiKey"] as? String, let token = params["fcmToken"] as? String {
+            if let projectID =  params["projectId"] as? String, !projectID.isEmpty {
+                OmiClient.setFcmProjectId(projectID)
+            }
             result = OmiClient.initWithUUID(usrUuid, fullName: fullName, apiKey: apiKey)
             OmiClient.setUserPushNotificationToken(token)
         }
@@ -146,6 +149,9 @@ class CallManager {
     func initWithUserPasswordEndpoint(params: [String: Any]) -> Bool {
         var result = false
         if let userName = params["userName"] as? String, let password = params["password"] as? String, let realm = params["realm"] as? String, let token = params["fcmToken"] as? String {
+            if let projectID =  params["projectId"] as? String, !projectID.isEmpty {
+                OmiClient.setFcmProjectId(projectID)
+            }
             OmiClient.initWithUsername(userName, password: password, realm: realm, proxy: "")
             OmiClient.setUserPushNotificationToken(token)
             result = true

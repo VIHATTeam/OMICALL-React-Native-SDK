@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.39
+- Update OMI core Android to version 2.3.12
+- Update OMI core Android to version 1.8.1
+- Update message Error off end call 
+  
+
 ## 3.2.38
 - Update OMI core Android to version 2.2.85
 - Change repo maven

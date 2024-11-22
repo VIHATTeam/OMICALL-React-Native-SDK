@@ -303,24 +303,18 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     mainScope.launch {
       var loginResult = false
       val userName = data.getString("userName")
-      Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $data ")
-      Log.d("dataOmi", "INIT_CALL_USER_PASSWORD  ==>> $userName ")
       val password = data.getString("password")
       val realm = data.getString("realm")
       val host = data.getString("host") ?: "vh.omicrm.com"
       val isVideo = data.getBoolean("isVideo")
-      val firebaseToken = data.getString("fcmToken")
-
-      Log.d(
-        "dataOmi",
-        "INIT_CALL_USER_PASSWORD $userName -- $password --$realm --$isVideo -- $host"
-      )
+      val firebaseToken = data.getString("fcmToken")  
+      val projectId = data.getString("projectId") ?: ""
 
       withContext(Dispatchers.Default) {
         try {
           if (userName != null && password != null && realm != null && firebaseToken != null) {
             loginResult =
-              OmiClient.register(userName, password, realm, isVideo ?: true, firebaseToken, host)
+              OmiClient.register(userName, password, realm, isVideo ?: true, firebaseToken, host, projectId)
             promise.resolve(loginResult)
           }
         } catch (_: Throwable) {
@@ -341,6 +335,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val isVideo = data.getBoolean("isVideo") ?: false
       val phone = data.getString("phone")
       val firebaseToken = data.getString("fcmToken") as String
+      val projectId = data.getString("projectId") ?: ""
+
       requestPermission(isVideo)
       withContext(Dispatchers.Default) {
         try {
@@ -351,7 +347,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
               uuid = usrUuid,
               phone = phone ?: "",
               isVideo = isVideo,
-              firebaseToken
+              firebaseToken,
+              projectId
             )
             promise.resolve(true)
           }
@@ -359,7 +356,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           promise.resolve(loginResult)
         }
       }
-
     }
   }
 
