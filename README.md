@@ -17,13 +17,13 @@ Currently active maintenance and improve performance
 
 Install via npm:
 
-```sh
+```ruby
 npm install omikit-plugin@latest
 ```
 
 Install via yarn:
 
-```sh
+```ruby
 yarn add omikit-plugin --latest
 ```
 
@@ -33,7 +33,7 @@ yarn add omikit-plugin --latest
 
 - Add these settings in `build.gradle`:
 
-```
+```kotlin
 jcenter()
 maven {
   url "https://maven.pkg.github.com/omicall/OMICall-SDK"
@@ -50,18 +50,18 @@ dependencies {
  api 'vn.vihat.omicall:omi-sdk:2.2.85'
 }
 ```
-```
+```kotlin
 // gradle.properties
 OMI_USER=omicall
-OMI_TOKEN=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
+OMI_TOKEN=${OMI_TOKEN} // connect with dev off OMI for get token 
 ```
 
-```
+```kotlin
 // in dependencies
 classpath 'com.google.gms:google-services:4.3.13'
 ```
 
-```
+```kotlin
 // under buildscript
 allprojects {
       repositories {
@@ -100,7 +100,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 
 - Add these settings in `app/build.gradle`:
 
-```
+```kotlin
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 ```
@@ -109,7 +109,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 
 - Update AndroidManifest.xml:
 
-```
+```kotlin
 <manifest
       ......
       xmlns:tools="http://schemas.android.com/tools">
@@ -183,7 +183,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 
 ##### In file MainActivity:
 
-```
+```java
 public class MainActivity extends ReactActivity {
    .....  // your config
 
@@ -230,7 +230,7 @@ public class MainActivity extends ReactActivity {
 
 - Add variables in **Appdelegate.h** for **Old Architecture**:
 
-```
+```objective-c
 #import <UIKit/UIKit.h>
 #import <UserNotifications/UserNotifications.h>
 #import <OmiKit/OmiKit-umbrella.h>
@@ -248,7 +248,7 @@ public class MainActivity extends ReactActivity {
 
 - Add variables in **Appdelegate.h** for **New Architecture**:
 
-```
+```objective-c
 #import <UIKit/UIKit.h>
 #import <UserNotifications/UserNotifications.h>
 #import <OmiKit/OmiKit-umbrella.h>
@@ -267,7 +267,7 @@ public class MainActivity extends ReactActivity {
 
 - Edit AppDelegate.m:
 
-```
+```objective-c
 #import <OmiKit/OmiKit.h>
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -318,7 +318,7 @@ public class MainActivity extends ReactActivity {
 
 - Add these lines into `Info.plist`:
 
-```
+```swift
 <key>NSMicrophoneUsageDescription</key>
 <string>Need microphone access for make Call</string>
 //If you implement video call
@@ -328,7 +328,7 @@ public class MainActivity extends ReactActivity {
 
 - Save token for `OmiClient`: if You added `Cloud Messaging` in your project so you don't need add these lines.
 
-```
+```swift
 - (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)devToken
 {
     // parse token bytes to string
@@ -372,7 +372,7 @@ We support 2 environments. So you need set correct key in Appdelegate.
 
 - Add variables in Appdelegate.swift:
 
-```
+```swift
 import OmiKit
 import PushKit
 import NotificationCenter
@@ -384,7 +384,7 @@ var voipRegistry: PKPushRegistry?
 
 - Add these lines into `didFinishLaunchingWithOptions`:
 
-```
+```swift
 OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_SANDBOX, userNameKey: "extension", maxCall: 1, callKitImage: "call_image")
 provider = CallKitProviderDelegate.init(callManager: OMISIPLib.sharedInstance().callManager)
 voipRegistry = PKPushRegistry.init(queue: .main)
@@ -393,7 +393,7 @@ pushkitManager = PushKitManager.init(voipRegistry: voipRegistry)
 
 - Add these lines into `Info.plist`:
 
-```
+```swift
 <key>NSCameraUsageDescription</key>
 <string>Need camera access for video call functions</string>
 <key>NSMicrophoneUsageDescription</key>
@@ -402,7 +402,7 @@ pushkitManager = PushKitManager.init(voipRegistry: voipRegistry)
 
 - Save token for `OmiClient`: if you added `firebase_messaging` in your project so you don't need add these lines.
 
-```
+```swift
 func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     let deviceTokenString = deviceToken.hexString
     OmiClient.setUserPushNotificationToken(deviceTokenString)
@@ -465,7 +465,7 @@ We need you request permission about call before make call:
 
   - Start Serivce: OmiKit need start services and register some events.
 
-    ```
+    ```javascript
     //Call in the root widget
     import { startServices } from 'omikit-plugin';
 
@@ -478,7 +478,7 @@ We need you request permission about call before make call:
     Please contact for my sale:
     In This step, we need partner provide me fcmToken of firebase Message.
 
-    ```
+    ```javascript
     import { initCallWithApiKey } from 'omikit-plugin';
     import messaging from '@react-native-firebase/messaging';
 
@@ -496,6 +496,7 @@ We need you request permission about call before make call:
       phone: phone,
       fcmToken: token,  //with android is fcm_token and ios is APNS token
       isVideo: isVideo,
+      projectId: projectId //  firebase project id off your
     };
     const result = await initCallWithApiKey(loginInfo);
     //result is true then user login successfully.
@@ -505,7 +506,7 @@ We need you request permission about call before make call:
     This function is used when you want to call any telecommunication number, calling back and forth between internal groups.
     Please contact for my sale:
 
-```
+```javascript
     import { initCallWithUserPassword } from 'omikit-plugin';
     import messaging from '@react-native-firebase/messaging';
 
@@ -521,7 +522,8 @@ We need you request permission about call before make call:
       password: password, //string
       realm: realm, //string
       isVideo: isVideo, //boolean: true/false
-      fcmToken: token, //with android is fcm_token and ios is APNS token
+      fcmToken: token, //with android is fcm_token and ios is APNS token,
+      projectId: projectId //  firebase project id off your
     };
     const result = await initCallWithUserPassword(loginInfo);
     //result is true then user login successfully.
@@ -529,7 +531,7 @@ We need you request permission about call before make call:
 
 - Config push notification:
 
-  ```
+  ```javascript
   import { configPushNotification } from 'omikit-plugin';
 
   configPushNotification({
@@ -567,7 +569,7 @@ We need you request permission about call before make call:
 
   - Call with phone number (mobile phone or internal number):
 
-  ```
+  ```javascript
   import {startCall} from 'omikit-plugin';
   const result = await startCall({
       phoneNumber: phone, //phone number
@@ -577,7 +579,7 @@ We need you request permission about call before make call:
 
   - The result will be in the form of object:
 
-  ```
+  ```javascript
   result = {
       "_id": String // This is call_id. it just have id for iOS,
       "status": Number // This is result code when make,
@@ -587,7 +589,7 @@ We need you request permission about call before make call:
 
   - Describe in detail the results when startCall returns:
 
-  ```
+  ```javascript
     + message="INVALID_UUID" (status = 0) : uid is invalid (we can not find on my page).
     + message="INVALID_PHONE_NUMBER" (status = 1) : sip user is invalid.
     + message="SAME_PHONE_NUMBER_WITH_PHONE_REGISTER" (status = 2) :  Can not call same phone number.
@@ -603,7 +605,7 @@ We need you request permission about call before make call:
 
   - Call with UUID (only support with Api key):
 
-  ```
+  ```javascript
   import {startCallWithUuid} from 'omikit-plugin';
   const result = await startCallWithUuid({
       usrUuid: uuid, //phone number
@@ -614,7 +616,7 @@ We need you request permission about call before make call:
 
   - Accept a call:
 
-    ```
+    ```javascript
     import {joinCall} from 'omikit-plugin';
 
     await joinCall();
@@ -622,7 +624,7 @@ We need you request permission about call before make call:
 
   - End a call: We will push a event `endCall` for you.
 
-    ```
+    ```javascript
     import {endCall} from 'omikit-plugin';
 
     const value = await endCall();
@@ -642,7 +644,7 @@ We need you request permission about call before make call:
 
   - Toggle the audio: On/off audio a call
 
-    ```
+    ```javascript
     import {toggleMute} from 'omikit-plugin';
 
     toggleMute();
@@ -650,7 +652,7 @@ We need you request permission about call before make call:
 
   - Toggle the speaker: On/off the phone speaker
 
-    ```
+    ```javascript
     import {toggleSpeaker} from 'omikit-plugin';
 
     toggleSpeaker();
@@ -658,7 +660,7 @@ We need you request permission about call before make call:
 
   - Send character: We only support `1 to 9` and `* #`.
 
-    ```
+    ```javascript
     import {sendDTMF} from 'omikit-plugin';
 
     sendDTMF({
@@ -667,7 +669,7 @@ We need you request permission about call before make call:
     ```
 
   - Get current user information:
-    ```
+    ```javascript
     final user = await getCurrentUser();
     Output Sample:
     {
@@ -678,7 +680,7 @@ We need you request permission about call before make call:
     }
     ```
   - Get guest user information:
-    ```
+    ```javascript
     final user = await getGuestUser();
     Output Sample:
     {
@@ -690,7 +692,7 @@ We need you request permission about call before make call:
     ```
   - Get user information from sip:
 
-    ```
+    ```javascript
     final user = await getUserInfo("111");
     Output Sample:
     {
@@ -703,7 +705,7 @@ We need you request permission about call before make call:
 
   - Logout: logout and remove all information.
 
-    ```
+    ```javascript
     import {logout} from 'omikit-plugin';
 
     logout();
@@ -711,7 +713,7 @@ We need you request permission about call before make call:
 
   - Permission: Check system alert window permission (only Android).
 
-    ```
+    ```javascript
     import {systemAlertWindow} from 'omikit-plugin';
 
     if (Platform.OS === 'android') {
@@ -723,7 +725,7 @@ We need you request permission about call before make call:
 
   - Setting: Open to enable system alert window (only Android).
 
-    ```
+    ```javascript
     import {openSystemAlertSetting} from 'omikit-plugin';
 
     if (Platform.OS === 'android') {
@@ -735,56 +737,56 @@ We need you request permission about call before make call:
 
   - Switch front/back camera: We use the front camera for first time.
 
-  ```
+  ```javascript
   import {switchOmiCamera} from 'omikit-plugin';
   switchOmiCamera();
   ```
 
   - Toggle a video in video call: On/off video in video call
 
-  ```
+  ```javascript
   import {toggleOmiVideo} from 'omikit-plugin';
   toggleOmiVideo();
   ```
 
   - Local Camera Widget: Your camera view in a call
 
-  ```
+  ```javascript
   import { OmiLocalCameraView } from 'omikit-plugin';
   <OmiLocalCameraView style={styles.localCamera} />
   ```
 
   - Remote Camera Widget: Remote camera view in a call
 
-  ```
+  ```javascript
   import { OmiRemoteCameraView } from 'omikit-plugin';
   <OmiRemoteCameraView style={styles.remoteCamera} />
   ```
 
   - More function: Refresh local camera
 
-  ```
+  ```javascript
   import {refreshLocalCamera} from 'omikit-plugin';
   refreshLocalCamera();
   ```
 
   - More function: Refresh remote camera
 
-  ```
+  ```javascript
   import {refreshRemoteCamera} from 'omikit-plugin';
   refreshRemoteCamera();
   ```
 
   - Register event: Register remote video ready: only visible on iOS
 
-  ```
+  ```javascript
   import {registerVideoEvent} from 'omikit-plugin';
   registerVideoEvent();
   ```
 
 - Event listener:
 
-```
+```javascript
 useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
@@ -839,15 +841,32 @@ useEffect(() => {
 
 | Code            | Description                                                                                                           |
 | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `600, 503, 480` | These are the codes of the network operator or the user who did not answer the call                                   |
-| `408`           | Call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out) |
-| `403`           | Your service plan only allows calls to dialed numbers. Please upgrade your service pack                               |
-| `404`           | The current number is not allowed to make calls to the carrier                                                        |
-| `603`           | The call was rejected. Please check your account limit or call barring configuration!                                 |
-| `850`           | Simultaneous call limit exceeded, please try again later                                                              |
-| `486`           | The listener refuses the call and does not answer                                                                     |
-| `601`           | Call ended by the customer                                                                                            |
-| `602`           | Call ended by the other employee                                                                                      |
+| `600, 503, 480`  | These are the codes of the network operator or the user who did not answer the call  |
+| `408`   | Call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out) |
+| `403`           | Your service plan only allows calls to dialed numbers. Please upgrade your service pack|
+| `404`           | The current number is not allowed to make calls to the carrier|
+| `603`           | The call was rejected. Please check your account limit or call barring configuration! |
+| `850`           | Simultaneous call limit exceeded, please try again later |
+| `486`           | The listener refuses the call and does not answer |
+| `601`           | Call ended by the customer |
+| `602`           | Call ended by the other employee |
+| `603`           | The call was rejected. Please check your account limit or call barring configuration |
+| `850`           | Simultaneous call limit exceeded, please try again later |
+| `851`           | Call duration limit exceeded, please try again later |
+| `852`           | Service package not assigned, please contact the provider |
+| `853`           | Internal number has been disabled |
+| `854`           | Subscriber is in the DNC list |
+| `855`           | Exceeded the allowed number of calls for the trial package |
+| `856`           | Exceeded the allowed minutes for the trial package |
+| `857`           | Subscriber has been blocked in the configuration |
+| `858`           | Unidentified or unconfigured number |
+| `859`           | No available numbers for Viettel direction, please contact the provider |
+| `860`           | No available numbers for VinaPhone direction, please contact the provider |
+| `861`           | No available numbers for Mobifone direction, please contact the provider |
+| `862`           | Temporary block on Viettel direction, please try again |
+| `863`           | Temporary block on VinaPhone direction, please try again |
+| `864`           | Temporary block on Mobifone direction, please try again |
+| `865`           | he advertising number is currently outside the permitted calling hours, please try again later |
 
 - Action Name value:
   - `OmiCallEvent.onMuted`: Audio changed.
