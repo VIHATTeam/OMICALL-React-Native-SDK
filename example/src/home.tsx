@@ -203,7 +203,7 @@ export const HomeScreen = () => {
       requestPermission();
     }
 
-    if (result?.status == '8' || result?.status == 8) {
+    if (result?.status == '8' || result?.status == 8 || result?.status == 407) {
       const data = {
         callerNumber: phone,
         status: OmiCallState.calling,

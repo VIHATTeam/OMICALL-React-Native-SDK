@@ -1,0 +1,269 @@
+diff --git a/node_modules/react-native-gradle-plugin/.gradle/buildOutputCleanup/buildOutputCleanup.lock b/node_modules/react-native-gradle-plugin/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+new file mode 100644
+index 0000000..1ea1e05
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/.gradle/buildOutputCleanup/buildOutputCleanup.lock differ
+diff --git a/node_modules/react-native-gradle-plugin/.gradle/buildOutputCleanup/cache.properties b/node_modules/react-native-gradle-plugin/.gradle/buildOutputCleanup/cache.properties
+new file mode 100644
+index 0000000..bfc922d
+--- /dev/null
++++ b/node_modules/react-native-gradle-plugin/.gradle/buildOutputCleanup/cache.properties
+@@ -0,0 +1,2 @@
++#Mon Nov 25 09:02:34 ICT 2024
++gradle.version=8.9
+diff --git a/node_modules/react-native-gradle-plugin/.project b/node_modules/react-native-gradle-plugin/.project
+new file mode 100644
+index 0000000..62efeac
+--- /dev/null
++++ b/node_modules/react-native-gradle-plugin/.project
+@@ -0,0 +1,34 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<projectDescription>
++	<name>react-native-gradle-plugin</name>
++	<comment>Project react-native-gradle-plugin created by Buildship.</comment>
++	<projects>
++	</projects>
++	<buildSpec>
++		<buildCommand>
++			<name>org.eclipse.jdt.core.javabuilder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++		<buildCommand>
++			<name>org.eclipse.buildship.core.gradleprojectbuilder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++	</buildSpec>
++	<natures>
++		<nature>org.eclipse.jdt.core.javanature</nature>
++		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
++	</natures>
++	<filteredResources>
++		<filter>
++			<id>1732497706576</id>
++			<name></name>
++			<type>30</type>
++			<matcher>
++				<id>org.eclipse.core.resources.regexFilterMatcher</id>
++				<arguments>node_modules|\.git|__CREATED_BY_JAVA_LANGUAGE_SERVER__</arguments>
++			</matcher>
++		</filter>
++	</filteredResources>
++</projectDescription>
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/JavaGenerator.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/JavaGenerator.class
+new file mode 100644
+index 0000000..82a4541
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/JavaGenerator.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/SchemaJsonParser.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/SchemaJsonParser.class
+new file mode 100644
+index 0000000..26f28f9
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/SchemaJsonParser.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/AliasType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/AliasType.class
+new file mode 100644
+index 0000000..13ba8c1
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/AliasType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/AnyType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/AnyType.class
+new file mode 100644
+index 0000000..e3dc581
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/AnyType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ArrayType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ArrayType.class
+new file mode 100644
+index 0000000..fbfcc45
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ArrayType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/BooleanType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/BooleanType.class
+new file mode 100644
+index 0000000..80fd961
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/BooleanType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/CodegenException.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/CodegenException.class
+new file mode 100644
+index 0000000..e12ec6b
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/CodegenException.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/DoubleType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/DoubleType.class
+new file mode 100644
+index 0000000..806b7e5
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/DoubleType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FloatType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FloatType.class
+new file mode 100644
+index 0000000..8451a9f
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FloatType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FunctionType$ArgumentType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FunctionType$ArgumentType.class
+new file mode 100644
+index 0000000..26bc6c8
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FunctionType$ArgumentType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FunctionType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FunctionType.class
+new file mode 100644
+index 0000000..9ce2c1e
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/FunctionType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/GenericObjectType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/GenericObjectType.class
+new file mode 100644
+index 0000000..99f6741
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/GenericObjectType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/Int32Type.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/Int32Type.class
+new file mode 100644
+index 0000000..d269561
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/Int32Type.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NativeModuleType$Property.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NativeModuleType$Property.class
+new file mode 100644
+index 0000000..dcf61ab
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NativeModuleType$Property.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NativeModuleType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NativeModuleType.class
+new file mode 100644
+index 0000000..0687427
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NativeModuleType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NullableType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NullableType.class
+new file mode 100644
+index 0000000..b49ffe0
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NullableType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NumberType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NumberType.class
+new file mode 100644
+index 0000000..a0e03ac
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/NumberType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ObjectType$Property.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ObjectType$Property.class
+new file mode 100644
+index 0000000..f29ade3
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ObjectType$Property.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ObjectType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ObjectType.class
+new file mode 100644
+index 0000000..5588736
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ObjectType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/PromiseType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/PromiseType.class
+new file mode 100644
+index 0000000..d0cb10a
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/PromiseType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ReservedFunctionValueType$ReservedName.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ReservedFunctionValueType$ReservedName.class
+new file mode 100644
+index 0000000..575181d
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ReservedFunctionValueType$ReservedName.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ReservedFunctionValueType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ReservedFunctionValueType.class
+new file mode 100644
+index 0000000..6248719
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/ReservedFunctionValueType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/StringType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/StringType.class
+new file mode 100644
+index 0000000..8513b1d
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/StringType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/Type.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/Type.class
+new file mode 100644
+index 0000000..fb17995
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/Type.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/TypeData.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/TypeData.class
+new file mode 100644
+index 0000000..0d7fbea
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/TypeData.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/TypeId.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/TypeId.class
+new file mode 100644
+index 0000000..00d39e9
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/TypeId.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/VoidType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/VoidType.class
+new file mode 100644
+index 0000000..f6d3269
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/model/VoidType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/AliasResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/AliasResolvedType.class
+new file mode 100644
+index 0000000..3b6a6d6
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/AliasResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/Annotations.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/Annotations.class
+new file mode 100644
+index 0000000..af68b1e
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/Annotations.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/AnyResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/AnyResolvedType.class
+new file mode 100644
+index 0000000..3b99792
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/AnyResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ArrayResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ArrayResolvedType.class
+new file mode 100644
+index 0000000..b1a8cd2
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ArrayResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/BooleanResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/BooleanResolvedType.class
+new file mode 100644
+index 0000000..0caae2d
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/BooleanResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ClassNames.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ClassNames.class
+new file mode 100644
+index 0000000..1e04642
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ClassNames.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/FunctionResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/FunctionResolvedType.class
+new file mode 100644
+index 0000000..0a75b49
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/FunctionResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/GenericObjectResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/GenericObjectResolvedType.class
+new file mode 100644
+index 0000000..42ccb7a
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/GenericObjectResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NativeModuleResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NativeModuleResolvedType.class
+new file mode 100644
+index 0000000..c8eae96
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NativeModuleResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NullableResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NullableResolvedType.class
+new file mode 100644
+index 0000000..7697f37
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NullableResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NumberResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NumberResolvedType.class
+new file mode 100644
+index 0000000..cb447d3
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/NumberResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ObjectResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ObjectResolvedType.class
+new file mode 100644
+index 0000000..f522e74
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ObjectResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/PromiseResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/PromiseResolvedType.class
+new file mode 100644
+index 0000000..fd512bd
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/PromiseResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ReactClassNames.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ReactClassNames.class
+new file mode 100644
+index 0000000..4697d37
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ReactClassNames.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ReservedFunctionValueResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ReservedFunctionValueResolvedType.class
+new file mode 100644
+index 0000000..7f19c40
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ReservedFunctionValueResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ResolvedType$NativeTypeContext.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ResolvedType$NativeTypeContext.class
+new file mode 100644
+index 0000000..6baa2f5
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ResolvedType$NativeTypeContext.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ResolvedType.class
+new file mode 100644
+index 0000000..f647660
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/ResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/StringResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/StringResolvedType.class
+new file mode 100644
+index 0000000..69115b5
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/StringResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/TypeResolver.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/TypeResolver.class
+new file mode 100644
+index 0000000..67280b6
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/TypeResolver.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/TypeUtils.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/TypeUtils.class
+new file mode 100644
+index 0000000..f9d91da
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/TypeUtils.class differ
+diff --git a/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/VoidResolvedType.class b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/VoidResolvedType.class
+new file mode 100644
+index 0000000..abd821b
+Binary files /dev/null and b/node_modules/react-native-gradle-plugin/bin/src/main/java/com/facebook/react/codegen/generator/resolver/VoidResolvedType.class differ
+diff --git a/node_modules/react-native-gradle-plugin/build.gradle.kts b/node_modules/react-native-gradle-plugin/build.gradle.kts
+index c457a57..a5d8911 100644
+--- a/node_modules/react-native-gradle-plugin/build.gradle.kts
++++ b/node_modules/react-native-gradle-plugin/build.gradle.kts
+@@ -6,7 +6,6 @@
+  */
+ 
+ import org.gradle.api.internal.classpath.ModuleRegistry
+-import org.gradle.configurationcache.extensions.serviceOf
+ 
+ plugins {
+   kotlin("jvm") version "1.6.10"
+@@ -37,12 +36,6 @@ dependencies {
+   implementation("com.squareup:javapoet:1.13.0")
+ 
+   testImplementation("junit:junit:4.13.2")
+-
+-  testRuntimeOnly(
+-    files(
+-      serviceOf<ModuleRegistry>().getModule("gradle-tooling-api-builders").classpath.asFiles.first()
+-    )
+-  )
+ }
+ 
+ java {
