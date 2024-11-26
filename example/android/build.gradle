@@ -63,8 +63,8 @@ allprojects {
     maven {
         url "https://maven.pkg.github.com/omicall/OMICall-SDK"
         credentials {
-            username = "omicall"
-            password = "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"
+            username = project.findProperty("OMI_USER") ?: ""
+            password = project.findProperty("OMI_TOKEN") ?: ""
         }
         authentication {
             basic(BasicAuthentication)

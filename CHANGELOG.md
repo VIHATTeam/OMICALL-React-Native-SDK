@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.40
+- Update code end call android 
+
+
 ## 3.2.39
 - Update OMI core Android to version 2.3.12
 - Update OMI core Android to version 1.8.1

@@ -182,8 +182,20 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onRegisterCompleted(statusCode: Int) {
-    Log.d("OMISDK", "=>> ON REGISTER COMPLETED => status code $statusCode")
-  }
+    Log.d("OMISDK", "=> ON REGISTER COMPLETED => status code: $statusCode")
+    
+    if (statusCode != 200) {
+        val mapObject = WritableNativeMap().apply {
+            putBoolean("isVideo", false)
+            putBoolean("incoming", true)
+            putString("callerNumber", "")
+            putString("_id", "")
+            putInt("status", 6)
+            putInt("code_end_call", if (statusCode == 403) 853 else statusCode)
+        }
+        sendEvent(CALL_STATE_CHANGED, mapObject)
+    }
+}
 
 
   override fun onVideoSize(width: Int, height: Int) {
@@ -424,7 +436,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           OmiClient.getInstance(reactApplicationContext!!).startCall(phoneNumber, isVideo)
         Log.d("OMISDK", "=>> startCallResult START CALL  =>  $startCallResult")
         var statusCalltemp = startCallResult.value as Int;
-        if (startCallResult.value == 200) {
+        if (startCallResult.value == 200 || startCallResult.value == 407) {
           statusCalltemp = 8
         }
         map.putInt("status", statusCalltemp)
