@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## 3.2.40
-- Update code end call android 
+- Update message Error off end call 
 
 
 ## 3.2.39
