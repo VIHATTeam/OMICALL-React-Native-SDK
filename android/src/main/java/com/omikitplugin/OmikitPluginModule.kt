@@ -753,11 +753,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   fun sendEvent(eventName: String?, params: Any?) {
+    if (eventName == null) {
+        Log.e("OmikitPlugin", "eventName is null. Event cannot be emitted.")
+        return
+    }
     if (currentActivity != null) {
-      currentActivity!!.runOnUiThread {
-        reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
-          .emit(eventName, params)
-      }
+        currentActivity!!.runOnUiThread {
+            reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
+                .emit(eventName, params)
+        }
     }
   }
 
