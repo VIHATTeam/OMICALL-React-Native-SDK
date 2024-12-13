@@ -29,6 +29,19 @@ declare module 'omikit-plugin' {
     export function transferCall(data: any): Promise<boolean>;
   
     export const omiEmitter: NativeEventEmitter;
+    
+    export enum OmiCallState {
+      unknown,
+      calling,
+      incoming,
+      early,
+      connecting,
+      confirmed,
+      disconnected,
+    }
+
+
+      
   
     export const OmiCallEvent: {
       onCallStateChanged: string;
