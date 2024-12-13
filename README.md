@@ -179,6 +179,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 ```
 
 ##### In file MainActivity:
+# For React Native < 0.74
 
 ```java
 public class MainActivity extends ReactActivity {
@@ -211,6 +212,59 @@ public class MainActivity extends ReactActivity {
   }
 }
 ```
+
+# For React Native > 0.74
+
+```kotlin
+class MainActivity : ReactActivity() {
+     .....  // your config
+    private var reactApplicationContext: ReactApplicationContext? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val reactInstanceManager: ReactInstanceManager = reactNativeHost.reactInstanceManager
+        val currentContext = reactInstanceManager.currentReactContext
+        if (currentContext != null && currentContext is ReactApplicationContext) {
+            reactApplicationContext = currentContext
+            Log.d("MainActivity", "ReactApplicationContext is available.")
+        } else {
+            Log.d("MainActivity", "ReactApplicationContext Not ready yet, will listen to the event.")
+        }
+
+        reactInstanceManager.addReactInstanceEventListener(object : ReactInstanceManager.ReactInstanceEventListener {
+            override fun onReactContextInitialized(reactContext: com.facebook.react.bridge.ReactContext) {
+                if (reactContext is ReactApplicationContext) {
+                    reactApplicationContext = reactContext
+                    Log.d("MainActivity", "ReactApplicationContext đã được khởi tạo.")
+                }
+            }
+        })
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null) {
+            reactApplicationContext?.let {
+                OmikitPluginModule.Companion.onGetIntentFromNotification(it, intent, this)
+            } ?: Log.e("MainActivity", "ReactApplicationContext has not been initialized in onNewIntent.")
+        } else {
+            Log.e("MainActivity", "Intent in onNewIntent is null.")
+        }
+    }
+    override fun onResume() {
+        super.onResume()
+        reactApplicationContext?.let {
+            OmikitPluginModule.Companion.onResume(this)
+            intent?.let { intent ->
+                OmikitPluginModule.Companion.onGetIntentFromNotification(it, intent, this)
+            }
+        } ?: Log.e("MainActivity", "ReactApplicationContext has not been initialized in onResume.")
+    }
+
+      .....  // your config
+}
+```
+
 
 - Setup remote push notification: Only support Firebase for remote push notification.
 
