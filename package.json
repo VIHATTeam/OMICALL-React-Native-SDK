@@ -1,10 +1,10 @@
 {
   "name": "omikit-plugin",
-  "version": "3.2.42",
+  "version": "3.2.44",
   "description": "Omikit Plugin by ViHAT",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
-  "types": "lib/typescript/index.d.ts",
+  "types": "src/types/index.d.ts",
   "react-native": "src/index",
   "source": "src/index",
   "files": [

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.44
+- Add config for Typescript 
+
+## 3.2.43
+- Add config for Typescript 
+
 ## 3.2.42
 - Add config for Typescript 
 

@@ -257,3 +257,4 @@ export const OmiCallEvent = {
   onCallQuality: 'CALL_QUALITY',
   onAudioChange: 'AUDIO_CHANGE',
 };
+
