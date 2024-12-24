@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.45
+- Fix error off func getUserInfo for Typescript
+
+
 ## 3.2.44
 - Add config for Typescript 
 
