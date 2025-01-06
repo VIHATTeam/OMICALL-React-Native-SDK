@@ -391,8 +391,9 @@ class MainActivity : ReactActivity() {
 ```swift
 - (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)devToken
 {
-    // parse token bytes to string
-    const char *data = [devToken bytes];
+      // parse token bytes to string
+     // const char *data = [devToken bytes];
+     const unsigned char *data = (const unsigned char *)[devToken bytes];
     NSMutableString *token = [NSMutableString string];
     for (NSUInteger i = 0; i < [devToken length]; i++)
     {
