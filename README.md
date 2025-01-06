@@ -366,7 +366,16 @@ class MainActivity : ReactActivity() {
     }
 }
 ```
+- Tips: Error Use of undeclared identifier 'OmikitNotification' at file `AppDelegate.m`, please import this line below
 
+```swift
+#if __has_include("OmikitNotification.h")
+#import "OmikitNotification.h"
+#else
+#import <omikit_plugin/OmikitNotification.h>
+#endif
+
+```
 - Add these lines into `Info.plist`:
 
 ```swift
