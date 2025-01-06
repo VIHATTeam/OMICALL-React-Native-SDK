@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.47
+- Support static library 
+
 ## 3.2.46
 - Change direction import for ios
 
