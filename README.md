@@ -427,6 +427,23 @@ We support 2 environments. So you need set correct key in Appdelegate.
 
 \*Note: At Tab Build Setting off Target Project, you need set: **_Enable Modules (C and Objective C)_** : YES\*
 
+#### Currently, OMICALL does not support React Native new architect.
+Config turn Off for new architect
+For iOS
+```Ruby
+use_react_native!(
+    :path => config[:reactNativePath],
+    :new_arch_enabled => false,  // <=== add this line 
+   ... your config
+  )
+```
+
+For Android
+Open file android/gradle.properties and add line below:
+```kotlin
+# Tắt New Architecture
+newArchEnabled=false
+```
 #### iOS(Swift):
 
 - Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
