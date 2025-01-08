@@ -625,28 +625,28 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   @ReactMethod
-  fun getUserInfo(phone: Any, promise: Promise) {
+fun getUserInfo(phone: String, promise: Promise) {
     mainScope.launch {
-      var callResult: Any? = null
-      withContext(Dispatchers.Default) {
-        try {
-          callResult = OmiClient.getInstance(reactApplicationContext!!).getUserInfo(phone as String)
-        } catch (_: Throwable) {
+        var callResult: Any? = null
+        withContext(Dispatchers.Default) {
+            try {
+                callResult = OmiClient.getInstance(reactApplicationContext!!).getUserInfo(phone)
+            } catch (_: Throwable) {
+            }
         }
-      }
-      if (callResult != null && callResult is Map<*, *>) {
-        val call = callResult as Map<*, *>
-        val map: WritableMap = WritableNativeMap()
-        map.putString("extension", call["extension"] as String?)
-        map.putString("uuid", call["uuid"] as String?)
-        map.putString("full_name", call["full_name"] as String?)
-        map.putString("avatar_url", call["avatar_url"] as String?)
-        promise.resolve(map)
-      } else {
-        promise.resolve(null);
-      }
+        if (callResult != null && callResult is Map<*, *>) {
+            val call = callResult as Map<*, *>
+            val map: WritableMap = WritableNativeMap()
+            map.putString("extension", call["extension"] as String?)
+            map.putString("uuid", call["uuid"] as String?)
+            map.putString("full_name", call["full_name"] as String?)
+            map.putString("avatar_url", call["avatar_url"] as String?)
+            promise.resolve(map)
+        } else {
+            promise.resolve(null)
+        }
     }
-  }
+}
 
   @ReactMethod
   fun getAudio(promise: Promise) {
@@ -753,11 +753,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   fun sendEvent(eventName: String?, params: Any?) {
+    if (eventName == null) {
+        Log.e("OmikitPlugin", "eventName is null. Event cannot be emitted.")
+        return
+    }
     if (currentActivity != null) {
-      currentActivity!!.runOnUiThread {
-        reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
-          .emit(eventName, params)
-      }
+        currentActivity!!.runOnUiThread {
+            reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
+                .emit(eventName, params)
+        }
     }
   }
 
