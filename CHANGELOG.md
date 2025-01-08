@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.46
+- Change direction import for ios
+
+## 3.2.45
+- Fix error off func getUserInfo for Typescript
+
+## 3.2.44
+- Add config for Typescript 
+
+## 3.2.43
+- Add config for Typescript 
+
+## 3.2.42
+- Add config for Typescript 
+
+
+## 3.2.41
+- fix sendEvent null error on react native 0.76
+
+
 ## 3.2.40
 - Update message Error off end call 
 

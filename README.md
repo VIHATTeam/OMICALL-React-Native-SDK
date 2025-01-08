@@ -179,6 +179,7 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
 ```
 
 ##### In file MainActivity:
+# For React Native < 0.74
 
 ```java
 public class MainActivity extends ReactActivity {
@@ -211,6 +212,59 @@ public class MainActivity extends ReactActivity {
   }
 }
 ```
+
+# For React Native > 0.74
+
+```kotlin
+class MainActivity : ReactActivity() {
+     .....  // your config
+    private var reactApplicationContext: ReactApplicationContext? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val reactInstanceManager: ReactInstanceManager = reactNativeHost.reactInstanceManager
+        val currentContext = reactInstanceManager.currentReactContext
+        if (currentContext != null && currentContext is ReactApplicationContext) {
+            reactApplicationContext = currentContext
+            Log.d("MainActivity", "ReactApplicationContext is available.")
+        } else {
+            Log.d("MainActivity", "ReactApplicationContext Not ready yet, will listen to the event.")
+        }
+
+        reactInstanceManager.addReactInstanceEventListener(object : ReactInstanceManager.ReactInstanceEventListener {
+            override fun onReactContextInitialized(reactContext: com.facebook.react.bridge.ReactContext) {
+                if (reactContext is ReactApplicationContext) {
+                    reactApplicationContext = reactContext
+                    Log.d("MainActivity", "ReactApplicationContext đã được khởi tạo.")
+                }
+            }
+        })
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null) {
+            reactApplicationContext?.let {
+                OmikitPluginModule.Companion.onGetIntentFromNotification(it, intent, this)
+            } ?: Log.e("MainActivity", "ReactApplicationContext has not been initialized in onNewIntent.")
+        } else {
+            Log.e("MainActivity", "Intent in onNewIntent is null.")
+        }
+    }
+    override fun onResume() {
+        super.onResume()
+        reactApplicationContext?.let {
+            OmikitPluginModule.Companion.onResume(this)
+            intent?.let { intent ->
+                OmikitPluginModule.Companion.onGetIntentFromNotification(it, intent, this)
+            }
+        } ?: Log.e("MainActivity", "ReactApplicationContext has not been initialized in onResume.")
+    }
+
+      .....  // your config
+}
+```
+
 
 - Setup remote push notification: Only support Firebase for remote push notification.
 
@@ -312,7 +366,16 @@ public class MainActivity extends ReactActivity {
     }
 }
 ```
+- Tips: Error Use of undeclared identifier 'OmikitNotification' at file `AppDelegate.m`, please import this line below
 
+```swift
+#if __has_include("OmikitNotification.h")
+#import "OmikitNotification.h"
+#else
+#import <omikit_plugin/OmikitNotification.h>
+#endif
+
+```
 - Add these lines into `Info.plist`:
 
 ```swift
@@ -328,8 +391,9 @@ public class MainActivity extends ReactActivity {
 ```swift
 - (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)devToken
 {
-    // parse token bytes to string
-    const char *data = [devToken bytes];
+      // parse token bytes to string
+     // const char *data = [devToken bytes];
+     const unsigned char *data = (const unsigned char *)[devToken bytes];
     NSMutableString *token = [NSMutableString string];
     for (NSUInteger i = 0; i < [devToken length]; i++)
     {
@@ -363,6 +427,23 @@ We support 2 environments. So you need set correct key in Appdelegate.
 
 \*Note: At Tab Build Setting off Target Project, you need set: **_Enable Modules (C and Objective C)_** : YES\*
 
+#### Currently, OMICALL does not support React Native new architect.
+Config turn Off for new architect
+For iOS
+```Ruby
+use_react_native!(
+    :path => config[:reactNativePath],
+    :new_arch_enabled => false,  // <=== add this line 
+   ... your config
+  )
+```
+
+For Android
+Open file android/gradle.properties and add line below:
+```kotlin
+# Tắt New Architecture
+newArchEnabled=false
+```
 #### iOS(Swift):
 
 - Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
