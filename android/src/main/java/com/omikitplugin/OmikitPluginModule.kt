@@ -817,12 +817,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onNewIntent(p0: Intent?) {
-    if (p0 != null && p0.hasExtra(SipServiceConstants.PARAM_NUMBER)) {
+    if (p0 != null && p0.hasExtra(SipServiceConstants.PARAM_IS_MISSED_CALL)) {
       //do your Stuff
-      val map: WritableMap = WritableNativeMap()
-      map.putString("callerNumber", p0.getStringExtra(SipServiceConstants.PARAM_NUMBER) ?: "")
-      map.putBoolean("isVideo", p0.getBooleanExtra(SipServiceConstants.PARAM_IS_VIDEO, false))
-      sendEvent(CLICK_MISSED_CALL, map)
+
+      if(p0.getBooleanExtra(SipServiceConstants.PARAM_IS_MISSED_CALL, false)){
+        val map: WritableMap = WritableNativeMap()
+        map.putString("callerNumber", p0.getStringExtra(SipServiceConstants.PARAM_NUMBER) ?: "")
+        map.putBoolean("isVideo", p0.getBooleanExtra(SipServiceConstants.PARAM_IS_VIDEO, false))
+        sendEvent(CLICK_MISSED_CALL, map)
+      }
     }
   }
 }
