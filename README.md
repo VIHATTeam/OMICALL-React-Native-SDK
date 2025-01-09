@@ -700,7 +700,7 @@ We need you request permission about call before make call:
     await joinCall();
     ```
 
-    Note: When calling `joinCall`, sdk will check permission of microphone and camera. If have any permission denied, sdk will send a event `onRequestPermission` with list permission you need to request. You need to request permission before calling `joinCall` again.
+    Note: When calling `joinCall`, sdk will check permission of microphone and camera. If have any permission denied, sdk will send a event `onRequestPermissionAndroid` with list permission you need to request. You need to request permission before calling `joinCall` again.
 
   - End a call: We will push a event `endCall` for you.
 
@@ -882,7 +882,7 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, onSwitchboardAnswer);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
-    omiEmitter.addListener(OmiCallEvent.onRequestPermission, onRequestPermission);
+    omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onRequestPermission);
     if (Platform.OS === 'ios') {
       registerVideoEvent();
       omiEmitter.addListener(
@@ -896,7 +896,7 @@ useEffect(() => {
         omiEmitter.removeAllListeners(OmiCallEvent.onHold);
         omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
         omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
-        omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermission);
+        omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
         if (Platform.OS === 'ios') {
            removeVideoEvent();
            omiEmitter.removeAllListeners(OmiCallEvent.onRemoteVideoReady);
