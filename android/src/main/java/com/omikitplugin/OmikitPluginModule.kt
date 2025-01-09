@@ -517,6 +517,28 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
+
+
+  @ReactMethod
+  fun toggleHold(promise: Promise) {
+      mainScope.launch {
+          try {
+              val newStatus = withContext(Dispatchers.IO) {
+                  OmiClient.getInstance(reactApplicationContext).toggleHold()
+              }
+
+              if (newStatus != null) {
+                  promise.resolve(newStatus)
+                  sendEvent(HOLD, newStatus)
+              } else {
+                  promise.reject("TOGGLE_HOLD_ERROR", "Failed to toggle hold status.")
+              }
+          } catch (e: Exception) {
+              promise.reject("TOGGLE_HOLD_EXCEPTION", "Exception occurred: ${e.message}", e)
+          }
+      }
+  }
+
   @ReactMethod
   fun toggleSpeaker(promise: Promise) {
     currentActivity?.runOnUiThread {

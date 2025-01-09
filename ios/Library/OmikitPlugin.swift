@@ -128,11 +128,10 @@ public class OmikitPlugin: RCTEventEmitter {
   @objc(toggleHold:rejecter:)
   func toggleHold(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     let result = CallManager.shareInstance().toggleHold()
-    if result {
-      resolve(true) // Thành công
-    } else {
-      reject("TOGGLE_HOLD_ERROR", "Failed to toggle hold on the call", nil) // Thất bại
+    if let call = CallManager.shareInstance().getAvailableCall() {
+      resolve(call.onHold)
     }
+    sendHoldStatus()
   }
   
   @objc(sendDTMF:resolver:rejecter:)
@@ -241,6 +240,12 @@ public class OmikitPlugin: RCTEventEmitter {
       sendEvent(withName: MUTED, body: call.muted)
     }
   }
+
+  func sendHoldStatus() {
+    if let call = CallManager.shareInstance().getAvailableCall() {
+      sendEvent(withName: HOLD, body: call.onHold)
+    }
+  }
   
   func sendSpeakerStatus() {
     sendEvent(withName: SPEAKER, body: CallManager.shareInstance().isSpeaker)
@@ -273,6 +278,7 @@ public class OmikitPlugin: RCTEventEmitter {
     return [
       CALL_STATE_CHANGED,
       MUTED,
+      HOLD,
       SPEAKER,
       REMOTE_VIDEO_READY,
       CLICK_MISSED_CALL,
