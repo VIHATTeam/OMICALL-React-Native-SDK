@@ -48,6 +48,7 @@ declare module 'omikit-plugin' {
       onCallStateChanged: string;
       onSpeaker: string;
       onMuted: string;
+      onHold: string;
       onRemoteVideoReady: string;
       onClickMissedCall: string;
       onSwitchboardAnswer: string;

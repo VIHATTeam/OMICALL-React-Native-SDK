@@ -120,7 +120,7 @@ export function toggleSpeaker(): Promise<boolean> {
 
 /**
  * Toggles the hold call.
- * @returns {Promise<boolean>} A promise that resolves to `true` if the hold is enabled, `false` otherwise.
+ * @returns {Promise<boolean>} A promise that resolves to `true` if when hold call success, `false` otherwise.
  */
 export function toggleHold(): Promise<boolean> {
   return OmikitPlugin.toggleHold();
@@ -260,6 +260,7 @@ export const OmiCallEvent = {
   onCallStateChanged: 'CALL_STATE_CHANGED',
   onSpeaker: 'SPEAKER',
   onMuted: 'MUTED',
+  onHold: "HOLD",
   onRemoteVideoReady: 'REMOTE_VIDEO_READY',
   onClickMissedCall: 'CLICK_MISSED_CALL',
   onSwitchboardAnswer: 'SWITCHBOARD_ANSWER',
