@@ -119,6 +119,15 @@ export function toggleSpeaker(): Promise<boolean> {
 }
 
 /**
+ * Toggles the hold call.
+ * @returns {Promise<boolean>} A promise that resolves to `true` if the hold is enabled, `false` otherwise.
+ */
+export function toggleHold(): Promise<boolean> {
+  return OmikitPlugin.toggleHold();
+}
+
+
+/**
  * Places the call on hold or resumes it.
  * @param {any} data - Data related to the hold action.
  * @returns {Promise<boolean>} A promise that resolves to `true` if the action succeeds.

@@ -11,6 +11,7 @@ declare module 'omikit-plugin' {
     export function joinCall(): Promise<any>;
     export function endCall(): Promise<any>;
     export function toggleMute(): Promise<boolean>;
+    export function toggleHold(): Promise<boolean>;
     export function toggleSpeaker(): Promise<boolean>;
     export function onHold(data: any): Promise<boolean>;
     export function sendDTMF(data: any): Promise<boolean>;
