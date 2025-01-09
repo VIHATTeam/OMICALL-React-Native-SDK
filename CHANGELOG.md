@@ -3,6 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 ## 3.2.52
+- Add event 'onRequestPermissionAndroid' for android
+
+## 3.2.52
 - Add func toggle Hold call for ios and android 
 
 ## 3.2.51
