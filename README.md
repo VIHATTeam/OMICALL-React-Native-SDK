@@ -737,6 +737,13 @@ We need you request permission about call before make call:
 
     toggleSpeaker();
     ```
+  - Toggle the hold: hold current call 
+
+    ```javascript
+    import {toggleHold} from 'omikit-plugin';
+
+    toggleHold();
+    ```
 
   - Send character: We only support `1 to 9` and `* #`.
 
@@ -871,6 +878,7 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
     omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
+    omiEmitter.addListener(OmiCallEvent.onHold, onHold);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, onSwitchboardAnswer);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
@@ -885,6 +893,7 @@ useEffect(() => {
     return () => {
         omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
         omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
+        omiEmitter.removeAllListeners(OmiCallEvent.onHold);
         omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
         omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
         omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermission);
@@ -910,6 +919,7 @@ useEffect(() => {
       - connecting(4),
       - confirmed(5),
       - disconnected(6);
+      - hold(7);
 
   * onCallStateChanged is call state tracking event. We will return status of state. Please refer `OmiCallState`.
     `onCallStateChanged value:` + isVideo: value boolean (true is call Video) + status: number (value matching with List status call ) + callerNumber: phone number + incoming: boolean - status call incoming or outgoing + \_id: option (id of every call) + code_end_call: This is code when end call.
@@ -957,6 +967,7 @@ useEffect(() => {
   - `OmiCallEvent.onSwitchboardAnswer`: Switchboard sip is listening.
   - `OmiCallEvent.onCallQuality`: The calling quality.
   - `OmiCallEvent.onRequestPermission`: Show a list permission you need to request before calling `joinCall` again.
+  - `OmiCallEvent.onHold`: hold current call 
 - Data value: We return `callerNumber`, `sip`, `isVideo: true/false` information
 
 - Forward calls to internal staff:

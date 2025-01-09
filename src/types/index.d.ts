@@ -39,6 +39,7 @@ declare module 'omikit-plugin' {
       connecting,
       confirmed,
       disconnected,
+      hold
     }
 
 
