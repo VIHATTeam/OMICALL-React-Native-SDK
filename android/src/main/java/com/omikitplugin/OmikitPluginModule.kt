@@ -158,9 +158,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
 
   override fun onHold(isHold: Boolean) {
+    sendEvent(HOLD, isHold)
   }
 
   override fun onMuted(isMuted: Boolean) {
+     sendEvent(MUTED, isMuted)
   }
 
   override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
@@ -541,20 +543,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun toggleHold(promise: Promise) {
-    mainScope.launch {
-      try {
-        val newStatus = withContext(Dispatchers.IO) {
-          OmiClient.getInstance(reactApplicationContext).toggleHold()
-        }
+      mainScope.launch {
+          try {
+              // Gọi hàm toggleHold() và kiểm tra kết quả
+              val result = withContext(Dispatchers.IO) {
+                  OmiClient.getInstance(reactApplicationContext!!).toggleHold()
+              }
 
-        if (newStatus != null) {
-          promise.resolve(newStatus)
-          sendEvent(HOLD, newStatus)
-        } else {
-          promise.reject("TOGGLE_HOLD_ERROR", "Failed to toggle hold status.")
-        }
-      } catch (e: Exception) {
-        promise.reject("TOGGLE_HOLD_EXCEPTION", "Exception occurred: ${e.message}", e)
+              // Kiểm tra nếu toggleHold trả về Unit
+              if (result == Unit) {
+                  promise.resolve(null) // Trả về null nếu kết quả là Unit
+              } else {
+                  promise.resolve(result)
+              }
+          } catch (e: Exception) {
+              promise.reject("TOGGLE_HOLD_EXCEPTION", "Exception occurred: ${e.message}", e)
+          }
       }
     }
   }

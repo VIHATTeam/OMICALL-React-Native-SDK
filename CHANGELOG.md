@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.52
+- Add func toggle Hold call for ios and android 
+
+## 3.2.51
+- Config typescript for ios
+  
+## 3.2.50
+- Try config for static library 
+
+## 3.2.48
+- Try config for static library 
+
 ## 3.2.47
 - Support static library 
 
