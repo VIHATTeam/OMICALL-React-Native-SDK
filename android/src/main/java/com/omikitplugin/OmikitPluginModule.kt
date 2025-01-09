@@ -48,13 +48,13 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
     isIncomming = true;
     Log.d("OMISDK", "=>> START INCOMING CALL REVICED => ")
-      val map: WritableMap = WritableNativeMap()
-      map.putBoolean("isVideo", isVideo ?: true)
-      map.putBoolean("incoming", isIncomming)
-      map.putString("callerNumber", phoneNumber)
-      map.putString("_id", "")
-      map.putInt("status", CallState.incoming.value)
-      sendEvent(CALL_STATE_CHANGED, map)
+    val map: WritableMap = WritableNativeMap()
+    map.putBoolean("isVideo", isVideo ?: true)
+    map.putBoolean("incoming", isIncomming)
+    map.putString("callerNumber", phoneNumber)
+    map.putString("_id", "")
+    map.putInt("status", CallState.incoming.value)
+    sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onCallEstablished(
@@ -183,20 +183,33 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun onRegisterCompleted(statusCode: Int) {
     Log.d("OMISDK", "=> ON REGISTER COMPLETED => status code: $statusCode")
-    
-    if (statusCode != 200) {
-        val mapObject = WritableNativeMap().apply {
-            putBoolean("isVideo", false)
-            putBoolean("incoming", true)
-            putString("callerNumber", "")
-            putString("_id", "")
-            putInt("status", 6)
-            putInt("code_end_call", if (statusCode == 403) 853 else statusCode)
-        }
-        sendEvent(CALL_STATE_CHANGED, mapObject)
-    }
-}
 
+    if (statusCode != 200) {
+      val mapObject = WritableNativeMap().apply {
+        putBoolean("isVideo", false)
+        putBoolean("incoming", true)
+        putString("callerNumber", "")
+        putString("_id", "")
+        putInt("status", 6)
+        putInt("code_end_call", if (statusCode == 403) 853 else statusCode)
+      }
+      sendEvent(CALL_STATE_CHANGED, mapObject)
+    }
+  }
+
+  override fun onRequestPermission(permissions: Array<String>) {
+
+    val map = WritableNativeMap().apply {
+      putArray("permissions", WritableNativeArray().apply {
+        permissions.forEach {
+          pushString(it)
+        }
+      })
+    }
+    Log.d("OMISDK", "=>> onRequestPermission => $map")
+    sendEvent(REQUEST_PERMISSION, map)
+
+  }
 
   override fun onVideoSize(width: Int, height: Int) {
 
@@ -285,7 +298,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val audioNotificationDescription = data?.getString("audioNotificationDescription") ?: ""
       val videoNotificationDescription = data?.getString("videoNotificationDescription") ?: ""
       val displayNameType = data?.getString("displayNameType") ?: ""
-      val appRepresentName =  data?.getString("representName") ?: "" 
+      val appRepresentName = data?.getString("representName") ?: ""
 
 
       OmiClient.getInstance(reactApplicationContext!!).configPushNotification(
@@ -304,7 +317,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         missedChannelName = "Cuộc gọi nhỡ",
         displayNameType = userNameKey ?: "full_name",
         notificationMissedCallPrefix = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
-        representName= appRepresentName ?: ""
+        representName = appRepresentName ?: ""
       )
       promise.resolve(true)
     }
@@ -319,14 +332,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val realm = data.getString("realm")
       val host = data.getString("host") ?: "vh.omicrm.com"
       val isVideo = data.getBoolean("isVideo")
-      val firebaseToken = data.getString("fcmToken")  
+      val firebaseToken = data.getString("fcmToken")
       val projectId = data.getString("projectId") ?: ""
 
       withContext(Dispatchers.Default) {
         try {
           if (userName != null && password != null && realm != null && firebaseToken != null) {
             loginResult =
-              OmiClient.register(userName, password, realm, isVideo ?: true, firebaseToken, host, projectId)
+              OmiClient.register(
+                userName,
+                password,
+                realm,
+                isVideo ?: true,
+                firebaseToken,
+                host,
+                projectId
+              )
             promise.resolve(loginResult)
           }
         } catch (_: Throwable) {
@@ -394,20 +415,20 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             val statusPendingCall = OmiKitUtils().getStatusPendingCall(reactApplicationContext)
             if (call.state == 3) {
               if (statusPendingCall != 0) {
-               call.state = statusPendingCall
+                call.state = statusPendingCall
               }
             }
             map.putBoolean("incoming", call.direction == "inbound")
             map.putInt("_id", call.id)
-            map.putInt("status", call.state )
+            map.putInt("status", call.state)
             map.putBoolean("muted", false)
             map.putBoolean("isVideo", call.isVideo ?: false)
             promise.resolve(map)
-            if( statusPendingCall == 2 && call.state !=5){
+            if (statusPendingCall == 2 && call.state != 5) {
               Log.d("getInitialCall RN", "incomingReceive $statusPendingCall")
               val map2: WritableMap = WritableNativeMap()
               map2.putBoolean("isVideo", call.isVideo ?: false)
-              map2.putBoolean("incoming",true)
+              map2.putBoolean("incoming", true)
               map2.putString("callerNumber", phoneNumberTemp)
               map2.putString("_id", "")
               map2.putInt("status", 2)
@@ -518,25 +539,24 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
 
-
   @ReactMethod
   fun toggleHold(promise: Promise) {
-      mainScope.launch {
-          try {
-              val newStatus = withContext(Dispatchers.IO) {
-                  OmiClient.getInstance(reactApplicationContext).toggleHold()
-              }
+    mainScope.launch {
+      try {
+        val newStatus = withContext(Dispatchers.IO) {
+          OmiClient.getInstance(reactApplicationContext).toggleHold()
+        }
 
-              if (newStatus != null) {
-                  promise.resolve(newStatus)
-                  sendEvent(HOLD, newStatus)
-              } else {
-                  promise.reject("TOGGLE_HOLD_ERROR", "Failed to toggle hold status.")
-              }
-          } catch (e: Exception) {
-              promise.reject("TOGGLE_HOLD_EXCEPTION", "Exception occurred: ${e.message}", e)
-          }
+        if (newStatus != null) {
+          promise.resolve(newStatus)
+          sendEvent(HOLD, newStatus)
+        } else {
+          promise.reject("TOGGLE_HOLD_ERROR", "Failed to toggle hold status.")
+        }
+      } catch (e: Exception) {
+        promise.reject("TOGGLE_HOLD_EXCEPTION", "Exception occurred: ${e.message}", e)
       }
+    }
   }
 
   @ReactMethod
@@ -647,28 +667,28 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   @ReactMethod
-fun getUserInfo(phone: String, promise: Promise) {
+  fun getUserInfo(phone: String, promise: Promise) {
     mainScope.launch {
-        var callResult: Any? = null
-        withContext(Dispatchers.Default) {
-            try {
-                callResult = OmiClient.getInstance(reactApplicationContext!!).getUserInfo(phone)
-            } catch (_: Throwable) {
-            }
+      var callResult: Any? = null
+      withContext(Dispatchers.Default) {
+        try {
+          callResult = OmiClient.getInstance(reactApplicationContext!!).getUserInfo(phone)
+        } catch (_: Throwable) {
         }
-        if (callResult != null && callResult is Map<*, *>) {
-            val call = callResult as Map<*, *>
-            val map: WritableMap = WritableNativeMap()
-            map.putString("extension", call["extension"] as String?)
-            map.putString("uuid", call["uuid"] as String?)
-            map.putString("full_name", call["full_name"] as String?)
-            map.putString("avatar_url", call["avatar_url"] as String?)
-            promise.resolve(map)
-        } else {
-            promise.resolve(null)
-        }
+      }
+      if (callResult != null && callResult is Map<*, *>) {
+        val call = callResult as Map<*, *>
+        val map: WritableMap = WritableNativeMap()
+        map.putString("extension", call["extension"] as String?)
+        map.putString("uuid", call["uuid"] as String?)
+        map.putString("full_name", call["full_name"] as String?)
+        map.putString("avatar_url", call["avatar_url"] as String?)
+        promise.resolve(map)
+      } else {
+        promise.resolve(null)
+      }
     }
-}
+  }
 
   @ReactMethod
   fun getAudio(promise: Promise) {
@@ -754,7 +774,7 @@ fun getUserInfo(phone: String, promise: Promise) {
         val isAcceptedCall = intent.getBooleanExtra(
           SipServiceConstants.ACTION_ACCEPT_INCOMING_CALL, false
         )
-        if(isReopenCall){
+        if (isReopenCall) {
           val activeCall = Utils.getActiveCall(context)
           OmikitPluginModule(context).onCallEstablished(
             activeCall?.id ?: 0,
@@ -776,14 +796,14 @@ fun getUserInfo(phone: String, promise: Promise) {
 
   fun sendEvent(eventName: String?, params: Any?) {
     if (eventName == null) {
-        Log.e("OmikitPlugin", "eventName is null. Event cannot be emitted.")
-        return
+      Log.e("OmikitPlugin", "eventName is null. Event cannot be emitted.")
+      return
     }
     if (currentActivity != null) {
-        currentActivity!!.runOnUiThread {
-            reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
-                .emit(eventName, params)
-        }
+      currentActivity!!.runOnUiThread {
+        reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
+          .emit(eventName, params)
+      }
     }
   }
 
@@ -846,7 +866,7 @@ fun getUserInfo(phone: String, promise: Promise) {
     if (p0 != null && p0.hasExtra(SipServiceConstants.PARAM_IS_MISSED_CALL)) {
       //do your Stuff
 
-      if(p0.getBooleanExtra(SipServiceConstants.PARAM_IS_MISSED_CALL, false)){
+      if (p0.getBooleanExtra(SipServiceConstants.PARAM_IS_MISSED_CALL, false)) {
         val map: WritableMap = WritableNativeMap()
         map.putString("callerNumber", p0.getStringExtra(SipServiceConstants.PARAM_NUMBER) ?: "")
         map.putBoolean("isVideo", p0.getBooleanExtra(SipServiceConstants.PARAM_IS_VIDEO, false))
