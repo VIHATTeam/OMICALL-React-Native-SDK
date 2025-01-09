@@ -366,7 +366,16 @@ class MainActivity : ReactActivity() {
     }
 }
 ```
+- Tips: Error Use of undeclared identifier 'OmikitNotification' at file `AppDelegate.m`, please import this line below
 
+```swift
+#if __has_include("OmikitNotification.h")
+#import "OmikitNotification.h"
+#else
+#import <omikit_plugin/OmikitNotification.h>
+#endif
+
+```
 - Add these lines into `Info.plist`:
 
 ```swift
@@ -382,8 +391,9 @@ class MainActivity : ReactActivity() {
 ```swift
 - (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)devToken
 {
-    // parse token bytes to string
-    const char *data = [devToken bytes];
+      // parse token bytes to string
+     // const char *data = [devToken bytes];
+     const unsigned char *data = (const unsigned char *)[devToken bytes];
     NSMutableString *token = [NSMutableString string];
     for (NSUInteger i = 0; i < [devToken length]; i++)
     {
@@ -417,6 +427,23 @@ We support 2 environments. So you need set correct key in Appdelegate.
 
 \*Note: At Tab Build Setting off Target Project, you need set: **_Enable Modules (C and Objective C)_** : YES\*
 
+#### Currently, OMICALL does not support React Native new architect.
+Config turn Off for new architect
+For iOS
+```Ruby
+use_react_native!(
+    :path => config[:reactNativePath],
+    :new_arch_enabled => false,  // <=== add this line 
+   ... your config
+  )
+```
+
+For Android
+Open file android/gradle.properties and add line below:
+```kotlin
+# Tắt New Architecture
+newArchEnabled=false
+```
 #### iOS(Swift):
 
 - Assets: Add `call_image` into assets folder to update callkit image. We only support png style.
