@@ -28,6 +28,7 @@ import {
   setAudio,
   getInitialCall,
   transferCall,
+  toggleHold,
 } from 'omikit-plugin';
 
 import { UIImages } from '../assets';
@@ -36,13 +37,12 @@ import { CustomKeyboard } from './components/custom_view/custom_keyboard';
 import { LiveData } from './livedata';
 import { UserView } from './components/custom_view/user_view';
 
-
 const StatusDescriptions: { [key: number]: string } = {
   [OmiCallState.calling]: 'Đang kết nối tới cuộc gọi',
   [OmiCallState.connecting]: 'Đang kết nối',
   [OmiCallState.early]: 'Cuộc gọi đang đổ chuông',
   [OmiCallState.confirmed]: 'Cuộc gọi bắt đầu',
-  [OmiCallState.disconnected]: 'Cuộc gọi kết thúc'
+  [OmiCallState.disconnected]: 'Cuộc gọi kết thúc',
 };
 
 export const DialCallScreen = ({ route }: any) => {
@@ -58,39 +58,37 @@ export const DialCallScreen = ({ route }: any) => {
   const [title, setTitle] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [guestUser, setGuestUser] = useState<any>(null);
-  const [transaction_id, setTransaction_id] = useState("");
+  const [transaction_id, setTransaction_id] = useState('');
 
-
-  
   const getDescriptionFromStatus = (status: number): string => {
-    console.log("status getDescriptionFromStatus ==> ", status);
-    if (status == null) return ""
-  
+    console.log('status getDescriptionFromStatus ==> ', status);
+    if (status == null) return '';
+
     return StatusDescriptions[status] || '';
-  }
+  };
 
   const currentStatusText = useMemo(
     () => getDescriptionFromStatus(currentStatus ?? 0),
     [currentStatus]
   );
 
-  const callStateChanged =  async (data: any) => {  
-      const { status , code_end_call } = data;
-      console.log("Status CallStateChanged =>>>  ", status, code_end_call)
-      // if(currentStatus != status && (currentStatus == OmiCallState.confirmed )){ // chặn update status cuộc gọi, khi đang trong cuộc gọi hiện tại 
-      //   return 
-      // }
-      setCurrentStatus(status);
-      if (status === OmiCallState.disconnected) {
-        const callInfo = await getInitialCall();
-        console.log("callInfo getInitialCall ==> ", callInfo)
-        navigation.goBack();
-      }
-      if (status === OmiCallState.confirmed) {
-        const callInfo = await getInitialCall();
-        console.log(callInfo);
-      }
+  const callStateChanged = async (data: any) => {
+    const { status, code_end_call } = data;
+    console.log('Status CallStateChanged =>>>  ', status, code_end_call);
+    // if(currentStatus != status && (currentStatus == OmiCallState.confirmed )){ // chặn update status cuộc gọi, khi đang trong cuộc gọi hiện tại
+    //   return
+    // }
+    setCurrentStatus(status);
+    if (status === OmiCallState.disconnected) {
+      const callInfo = await getInitialCall();
+      console.log('callInfo getInitialCall ==> ', callInfo);
+      navigation.goBack();
     }
+    if (status === OmiCallState.confirmed) {
+      const callInfo = await getInitialCall();
+      console.log(callInfo);
+    }
+  };
 
   const onMuted = useCallback((data: any) => {
     console.log('onMuted');
@@ -119,6 +117,11 @@ export const DialCallScreen = ({ route }: any) => {
   const triggerMute = useCallback(() => {
     // setMicOn((prev) => !prev);
     toggleMute();
+  }, []);
+
+  const triggerHold = useCallback(() => {
+    // setMicOn((prev) => !prev);
+    toggleHold();
   }, []);
 
   const onSwitchboardAnswer = useCallback(async (data: any) => {
@@ -166,15 +169,26 @@ export const DialCallScreen = ({ route }: any) => {
     }
   }, [currentAudio]);
 
+  const onReqPermission = useCallback((data: any) => {
+    console.log('onReqPermission => ', data);
+  }, []);
+
   useEffect(() => {
-    const onCallStateChanged = omiEmitter.addListener(OmiCallEvent.onCallStateChanged, callStateChanged);
+    const onCallStateChanged = omiEmitter.addListener(
+      OmiCallEvent.onCallStateChanged,
+      callStateChanged
+    );
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
+    omiEmitter.addListener(OmiCallEvent.onHold, onMuted);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
     omiEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
     omiEmitter.addListener(
       OmiCallEvent.onSwitchboardAnswer,
       onSwitchboardAnswer
     );
+
+    omiEmitter.addListener(OmiCallEvent.onRequestPermission, onReqPermission);
+
     LiveData.isOpenedCall = true;
     return () => {
       onCallStateChanged.remove();
@@ -183,6 +197,7 @@ export const DialCallScreen = ({ route }: any) => {
       omiEmitter.removeAllListeners(OmiCallEvent.onCallQuality);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
+      omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermission);
       LiveData.isOpenedCall = false;
     };
   }, []);
@@ -228,13 +243,12 @@ export const DialCallScreen = ({ route }: any) => {
   };
 
   const onPressTransferCall = () => {
-    try{
-      transferCall({phoneNumber: "101"}); // func from omikit-plugin
-    } catch(e){
-      console.log("e transferCall => ", e)
+    try {
+      transferCall({ phoneNumber: '101' }); // func from omikit-plugin
+    } catch (e) {
+      console.log('e transferCall => ', e);
     }
-  }
-
+  };
 
   return (
     <KeyboardAvoid>
@@ -276,7 +290,7 @@ export const DialCallScreen = ({ route }: any) => {
               />
             ) : (
               <View style={styles.feature}>
-                <TouchableOpacity onPress={triggerMute}>
+                <TouchableOpacity onPress={triggerHold}>
                   <Image
                     source={!muted ? UIImages.micOn : UIImages.micOff}
                     style={styles.featureImage}
@@ -311,7 +325,7 @@ export const DialCallScreen = ({ route }: any) => {
         <View style={styles.call}>
           <TouchableOpacity
             onPress={async () => {
-              console.log("=>>>>>>>> end call =>>>>>>>>")
+              console.log('=>>>>>>>> end call =>>>>>>>>');
               endCall();
               // navigation.goBack();
             }}
