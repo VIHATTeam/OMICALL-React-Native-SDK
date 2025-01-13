@@ -55,5 +55,6 @@ declare module 'omikit-plugin' {
       onSwitchboardAnswer: string;
       onCallQuality: string;
       onAudioChange: string;
+      onRequestPermissionAndroid: string;
     };
   }
