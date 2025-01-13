@@ -260,11 +260,12 @@ export const OmiCallEvent = {
   onCallStateChanged: 'CALL_STATE_CHANGED',
   onSpeaker: 'SPEAKER',
   onMuted: 'MUTED',
-  onHold: "HOLD",
+  onHold: 'HOLD',
   onRemoteVideoReady: 'REMOTE_VIDEO_READY',
   onClickMissedCall: 'CLICK_MISSED_CALL',
   onSwitchboardAnswer: 'SWITCHBOARD_ANSWER',
   onCallQuality: 'CALL_QUALITY',
   onAudioChange: 'AUDIO_CHANGE',
+  onRequestPermissionAndroid: 'REQUEST_PERMISSION',
 };
 

@@ -700,6 +700,8 @@ We need you request permission about call before make call:
     await joinCall();
     ```
 
+    Note: When calling `joinCall`, sdk will check permission of microphone and camera. If have any permission denied, sdk will send a event `onRequestPermissionAndroid` with list permission you need to request. You need to request permission before calling `joinCall` again.
+
   - End a call: We will push a event `endCall` for you.
 
     ```javascript
@@ -880,6 +882,7 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, onSwitchboardAnswer);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
+    omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onRequestPermission);
     if (Platform.OS === 'ios') {
       registerVideoEvent();
       omiEmitter.addListener(
@@ -893,6 +896,7 @@ useEffect(() => {
         omiEmitter.removeAllListeners(OmiCallEvent.onHold);
         omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
         omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
+        omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
         if (Platform.OS === 'ios') {
            removeVideoEvent();
            omiEmitter.removeAllListeners(OmiCallEvent.onRemoteVideoReady);
@@ -962,6 +966,7 @@ useEffect(() => {
   - `OmiCallEvent.onClickMissedCall`: Click missed call notification.
   - `OmiCallEvent.onSwitchboardAnswer`: Switchboard sip is listening.
   - `OmiCallEvent.onCallQuality`: The calling quality.
+  - `OmiCallEvent.onRequestPermission`: Show a list permission you need to request before calling `joinCall` again.
   - `OmiCallEvent.onHold`: hold current call 
 - Data value: We return `callerNumber`, `sip`, `isVideo: true/false` information
 
