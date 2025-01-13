@@ -28,6 +28,7 @@ import {
   setAudio,
   getInitialCall,
   transferCall,
+  toggleHold
 } from 'omikit-plugin';
 
 import { UIImages } from '../assets';
@@ -42,7 +43,8 @@ const StatusDescriptions: { [key: number]: string } = {
   [OmiCallState.connecting]: 'Đang kết nối',
   [OmiCallState.early]: 'Cuộc gọi đang đổ chuông',
   [OmiCallState.confirmed]: 'Cuộc gọi bắt đầu',
-  [OmiCallState.disconnected]: 'Cuộc gọi kết thúc'
+  [OmiCallState.disconnected]: 'Cuộc gọi kết thúc',
+  [OmiCallState.hold]: 'Đang giữ cuộc gọi'
 };
 
 export const DialCallScreen = ({ route }: any) => {
@@ -99,6 +101,13 @@ export const DialCallScreen = ({ route }: any) => {
     setMuted(data);
   }, []);
 
+  const onHold = useCallback((data: any) => {
+    console.log('onHold');
+    // const isMuted = data.isMuted;
+    console.log('is onHold ' + data);
+    // setMuted(data);
+  }, []);
+
   const pressKeyCap = useCallback(
     (text: string) => {
       setTitle(title + text);
@@ -116,9 +125,15 @@ export const DialCallScreen = ({ route }: any) => {
     });
   }, []);
 
-  const triggerMute = useCallback(() => {
+  const triggerMute = useCallback(async() => {
     // setMicOn((prev) => !prev);
-    toggleMute();
+    // toggleMute();
+    try {
+      const result = await toggleHold();
+      console.log("result toggle hold -->", result);
+    } catch (error) {
+      console.log("error toggle hold -->", error);
+    }
   }, []);
 
   const onSwitchboardAnswer = useCallback(async (data: any) => {
@@ -169,6 +184,7 @@ export const DialCallScreen = ({ route }: any) => {
   useEffect(() => {
     const onCallStateChanged = omiEmitter.addListener(OmiCallEvent.onCallStateChanged, callStateChanged);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
+    omiEmitter.addListener(OmiCallEvent.onHold, onHold);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
     omiEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
     omiEmitter.addListener(
@@ -180,6 +196,7 @@ export const DialCallScreen = ({ route }: any) => {
       onCallStateChanged.remove();
       omiEmitter.removeAllListeners(OmiCallEvent.onAudioChange);
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
+      omiEmitter.removeAllListeners(OmiCallEvent.onHold);
       omiEmitter.removeAllListeners(OmiCallEvent.onCallQuality);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
@@ -251,10 +268,10 @@ export const DialCallScreen = ({ route }: any) => {
         </View>
         <Text style={styles.status}>{currentStatusText}</Text>
         <View style={styles.title}>
-          {currentStatus == OmiCallState.confirmed ? <CustomTimer /> : null}
+          {currentStatus == OmiCallState.confirmed || currentStatus == OmiCallState.hold ? <CustomTimer /> : null}
         </View>
         <View style={styles.feature}>
-          {currentStatus == OmiCallState.confirmed ? (
+          {currentStatus == OmiCallState.confirmed  || currentStatus == OmiCallState.hold ? (
             keyboardOn ? (
               <View style={styles.keyboard}>
                 <CustomKeyboard
