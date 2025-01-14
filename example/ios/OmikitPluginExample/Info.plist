@@ -26,35 +26,20 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
 		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSCameraUsageDescription</key>
-	<string>Need camera access for video call functions</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Need location</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Need microphone access for make Call</string>
-	<key>NSUserActivityTypes</key>
-	<array>
-		<string>INStartCallIntent</string>
-	</array>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>audio</string>
-		<string>fetch</string>
-		<string>processing</string>
-		<string>remote-notification</string>
-		<string>voip</string>
-	</array>
+	<string></string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
-	<key>UIRequiresPersistentWiFi</key>
-	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

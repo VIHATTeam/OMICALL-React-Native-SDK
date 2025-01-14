@@ -168,7 +168,7 @@ export const HomeScreen = () => {
         phoneNumber: callerNumber,
         isVideo: isVideo,
       });
-      console.log('result ', result);
+      console.log('result callWithParam', result);
     },
     [navigation]
   );

@@ -1,75 +1,45 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-
 buildscript {
     ext {
-        buildToolsVersion = "33.0.0"
+        buildToolsVersion = "35.0.0"
         minSdkVersion = 24
-        compileSdkVersion = 33
-        targetSdkVersion = 33
-        kotlin_version = '1.7.10'
-
-        if (System.properties['os.arch'] == "aarch64") {
-            // For M1 Users we need to use the NDK 24 which added support for aarch64
-            ndkVersion = "24.0.8215888"
-        } else {
-            // Otherwise we default to the side-by-side NDK version from AGP.
-            ndkVersion = "21.4.7075529"
-        }
+        compileSdkVersion = 35
+        targetSdkVersion = 34
+        ndkVersion = "26.1.10909125"
+        kotlinVersion = "1.9.10"
     }
     repositories {
         google()
         mavenCentral()
-        jcenter() // Warning: this repository is going to shut down soon
-        maven {
-            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-            credentials {
-                username = project.findProperty("OMI_USER") ?: ""
-                password = project.findProperty("OMI_TOKEN") ?: ""
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1")
+        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
         classpath("com.facebook.react:react-native-gradle-plugin")
-        classpath("de.undercouch:gradle-download-task:5.0.1")
-        classpath 'com.google.gms:google-services:4.3.13'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.4.2'
     }
 }
-
 
 allprojects {
-  repositories {
-    maven {
-        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url("$rootDir/../node_modules/react-native/android")
-    }
-    maven {
-        // Android JSC is installed from npm
-        url("$rootDir/../node_modules/jsc-android/dist")
-    }
-    mavenCentral {
-        // We don't want to fetch react-native from Maven Central as there are
-        // older versions over there.
-        content {
-            excludeGroup "com.facebook.react"
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'https://jitpack.io'
+        }
+        maven {
+            url 'https://repo.omicall.com/maven'
+        }
+        maven {
+          url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+          credentials {
+              username = project.findProperty("OMI_USER") ?: ""
+              password = project.findProperty("OMI_TOKEN") ?: ""
+          }
+          authentication {
+              basic(BasicAuthentication)
+          }
         }
     }
-    google()
-    maven { url 'https://www.jitpack.io' }
-    maven {
-        url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-        credentials {
-            username = project.findProperty("OMI_USER") ?: ""
-            password = project.findProperty("OMI_TOKEN") ?: ""
-        }
-        authentication {
-            basic(BasicAuthentication)
-        }
-    }
-  }
 }
 
+apply plugin: "com.facebook.react.rootproject"

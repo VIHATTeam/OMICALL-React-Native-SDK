@@ -6,9 +6,9 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View, Linking } from 'react-native';
 
-import { initCallWithUserPassword } from 'omikit-plugin';
+import { initCallWithUserPassword, getCurrentUser} from 'omikit-plugin';
 
 import LocalStorage from './local_storage';
 import { requestNotification, token } from './notification';
@@ -22,9 +22,9 @@ import {
 import { CustomLoading } from './components/custom_view/custom_loading';
 
 // HUNGTH
-const REALM = 'quidn';
-const USER_NAME = '102';
-const PASS_WORD = 'Duongngocqui@98';
+const REALM = 'dathq';
+const USER_NAME = '121';
+const PASS_WORD = '1jJKD4Ps6X';
 
 export const LoginScreen = () => {
   const [isVideo, setIsVideo] = useState(false);
@@ -51,31 +51,37 @@ export const LoginScreen = () => {
     const fcmToken = await token;
     console.log(fcmToken);
 
+    // const loginInfo = {
+    //   userName: userName,
+    //   password: password,
+    //   realm: realm,
+    //   isVideo: isVideo,
+    //   fcmToken: fcmToken,
+    //   host: host,
+    //   projectId: ""
+    // };
+
     const loginInfo = {
-      userName: userName,
-      password: password,
-      realm: realm,
+      userName: "100",
+      password: "Duongngocqui@98",
+      realm: "quidn",
       isVideo: isVideo,
       fcmToken: fcmToken,
       host: host,
     };
+    const result11 = await getCurrentUser()
 
-    // const loginInfo = {
-    //   userName: "102",
-    //   password: "OzF2aaCEqk",
-    //   realm: "dathq",
-    //   isVideo: isVideo,
-    //   fcmToken: fcmToken,
-    //   host: host,
-    // };
+    console.log('result initCallWithUserPassword: ', result11);
+
 
     // const loginInfo = {
     //     userName: "100",
-    //     password: "Duongngocqui@98",
-    //     realm: "quidn",
+    //     password: "Z5N6IGNa8s",
+    //     realm: "truongphannguyenan",
     //     isVideo: isVideo,
     //     fcmToken: fcmToken,
     //     host: host,
+    //     projectId: "omicrm-6558a"
     // };
 
     //  const loginInfoApiKey = {
@@ -106,6 +112,8 @@ export const LoginScreen = () => {
 
     setLoading(false);
     if (result) {
+      const result2 = await getCurrentUser()
+      console.log("result2 22 --> ", result2)
       const loginInfoString = JSON.stringify(loginInfo);
       LocalStorage.set('login_info', loginInfoString);
       // navigation to home
@@ -116,6 +124,51 @@ export const LoginScreen = () => {
   const _videoTrigger = useCallback(() => {
     setIsVideo(!isVideo);
   }, [isVideo]);
+
+
+  useEffect(() => {
+    // Hàm xử lý khi nhận deeplink
+    const handleDeepLink = (event) => {
+      const url = event.url;
+      // Xử lý URL ở đây
+      console.log('Received deep link: ', url);
+      // Ví dụ: Điều hướng đến một màn hình cụ thể
+    };
+
+    // Lấy URL nếu ứng dụng được mở từ trạng thái bị tắt hoàn toàn
+    Linking.getInitialURL()
+      .then((url) => {
+        if (url) {
+          // Xử lý URL ở đây
+          console.log('App opened with URL: ', url);
+        }
+      })
+      .catch((err) => console.error('An error occurred', err));
+
+    // Lắng nghe sự kiện URL
+    Linking.addEventListener('url', handleDeepLink);
+
+    // Hủy đăng ký sự kiện khi component bị unmount
+    return () => {
+      Linking.removeEventListener('url', handleDeepLink);
+    };
+  }, []);
+
+
+  const openCallWithOMI = async () => {
+    try {
+      // let omiLink = "omicall-call:0346066476&param1=123456789"
+      let omiLink = "omicall-call:0346066476&deeplink=tasetco-delivery&param1=MKP-KH19-000028&param2=ITVINATESTTONGDAI1"
+      const canOpen = await Linking.canOpenURL(omiLink);
+      if (canOpen) {
+        await Linking.openURL(omiLink);
+      } else {
+        console.log("Cannot open URL: $omiLink");
+      }
+    } catch (error) {
+      console.error("An error occurred while trying to open the URL:", error);
+    }
+  };
 
   return (
     <>
@@ -178,6 +231,15 @@ export const LoginScreen = () => {
             title="LOGIN"
             callback={() => {
               loginUser();
+            }}
+            style={styles.button}
+          />
+
+
+          <CustomButton
+            title="Test Universal"
+            callback={() => {
+              openCallWithOMI();
             }}
             style={styles.button}
           />

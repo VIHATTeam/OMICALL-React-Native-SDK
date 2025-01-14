@@ -5,11 +5,12 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { UIColors } from './components';
 import { LoginScreen } from './login';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HomeScreen } from './home';
 import { DialCallScreen } from './dial_call';
 import { VideoCallScreen } from './video_call';
 import { LoginApiKeyScreen } from './login_with_apikey';
+import { Linking } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
