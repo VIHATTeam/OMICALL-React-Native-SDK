@@ -14,11 +14,31 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+use_frameworks! :linkage => :static
+$RNFirebaseAsStaticFramework = true
+$RN_NEW_ARCH_ENABLED = false
 target 'OmikitPluginExample' do
   config = use_native_modules!
 
+  flags = get_default_flags()
+
+  pod 'Firebase', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'FirebaseAnalytics', :modular_headers => true
+
+  pod 'omikit-plugin', :path => '../../'
+
+  permissions_path = '../node_modules/react-native-permissions/ios'
+  pod 'Permission-Calendars', :path => "#{permissions_path}/Calendars"
+  pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
+  pod 'Permission-Microphone', :path => "#{permissions_path}/Microphone"
+
   use_react_native!(
     :path => config[:reactNativePath],
+    :hermes_enabled => true,
+    :fabric_enabled => true,
+    :new_arch_enabled => $RN_NEW_ARCH_ENABLED,
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )

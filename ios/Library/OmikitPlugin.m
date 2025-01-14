@@ -111,6 +111,9 @@ RCT_EXTERN_METHOD(transferCall:(id)data
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(rejectCall:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 // Required to run on the main thread
 + (BOOL)requiresMainQueueSetup
 {

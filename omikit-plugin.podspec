@@ -16,14 +16,14 @@ Pod::Spec.new do |s|
   # Chỉ định source files
   s.source_files = "ios/**/*.{h,m,mm,swift}"
 
+
   # Đảm bảo hỗ trợ Swift
   s.swift_versions = ["5.0"]
 
   # Định nghĩa module để tránh lỗi Swift bridging header
   s.static_framework = true
   s.pod_target_xcconfig = {
-    "DEFINES_MODULE" => "YES",
-    "SWIFT_VERSION" => "5.0"
+    "DEFINES_MODULE" => "YES"
   }
 
   # Xác định module name
@@ -34,13 +34,17 @@ Pod::Spec.new do |s|
   s.dependency "OmiKit", "1.8.1"
 
   # Đảm bảo Swift bridging header được tự động tạo
-  s.requires_arc = true
+  # s.requires_arc = true
 
   # Xử lý riêng cho kiến trúc mới (New Architecture)
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1'
-    folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
     s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
     s.xcconfig = {
+      "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\"",
+      "OTHER_CPLUSPLUSFLAGS" => folly_compiler_flags,
+      "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+    }
+    s.pod_target_xcconfig = {
       "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\"",
       "OTHER_CPLUSPLUSFLAGS" => folly_compiler_flags,
       "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
