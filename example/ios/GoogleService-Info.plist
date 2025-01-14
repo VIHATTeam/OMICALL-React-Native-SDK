@@ -2,22 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CLIENT_ID</key>
-	<string>682956500665-29l5ao20md15lci5banil2em7e4hj3ut.apps.googleusercontent.com</string>
-	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.682956500665-29l5ao20md15lci5banil2em7e4hj3ut</string>
 	<key>API_KEY</key>
-	<string>AIzaSyB4HEo5e1IPdYmvBOwMyKvvbe1NweVHk2A</string>
+	<string>AIzaSyD0TdaZHQupuSRibLV_CVvmfj93zcwg18g</string>
 	<key>GCM_SENDER_ID</key>
-	<string>682956500665</string>
+	<string>989782139117</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>dev.omicall.production</string>
+	<string>vn.omicall.sdk.test</string>
 	<key>PROJECT_ID</key>
-	<string>concung-5772a</string>
+	<string>omi-test-39522</string>
 	<key>STORAGE_BUCKET</key>
-	<string>concung-5772a.appspot.com</string>
+	<string>omi-test-39522.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:682956500665:ios:8c7760258736d3d8d9f568</string>
+	<string>1:989782139117:ios:a416d47b662e4b4a95ace4</string>
 </dict>
 </plist>

@@ -1,42 +1,52 @@
 {
   "name": "OmikitPluginExample",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "lint": "eslint .",
     "start": "react-native start",
-    "pods": "pod-install --quiet",
-    "build:ios": "react-native bundle --entry-file ./index.js --platform ios --bundle-output ios/main.jsbundle --assets-dest ios",
-    "clean": "react-native bundle --platform android --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --dev false --reset-cache --assets-dest android/app/src/main/res/",
-    "build:apk": "cd android && ./gradlew assembleRelease",
-    "clean_build": "rm -rf android/app/src/main/assets/index.android.bundle && react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/build/intermediates/res/merged/release/"
+    "test": "jest"
   },
-  "reactNativePermissionsIOS": [
-    "Camera",
-    "Microphone",
-    "Notifications"
-  ],
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^1.23.1",
-    "@react-native-firebase/app": "^17.3.1",
-    "@react-native-firebase/messaging": "^17.3.1",
-    "@react-navigation/native": "^6.1.4",
-    "@react-navigation/native-stack": "^6.9.10",
-    "@types/react-native-sqlite-storage": "^6.0.0",
-    "react": "^18.0.0",
-    "react-native": "0.69.7",
+    "react": "18.3.1",
+    "react-native": "0.76.2",
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "@react-native-firebase/app": "^21.6.1",
+    "@react-native-firebase/messaging": "^21.6.1",
+    "@react-navigation/native": "^7.0.14",
+    "@react-navigation/native-stack": "^7.2.0",
+    "omikit-plugin": "3.2.53",
     "react-native-device-info": "^10.11.0",
+    "react-native-gesture-handler": "^2.21.2",
     "react-native-modal": "^13.0.1",
     "react-native-permissions": "3.0.6",
+    "react-native-reanimated": "^3.16.6",
     "react-native-safe-area-context": "^4.5.0",
-    "react-native-screens": "^3.20.0"
+    "react-native-screens": "^4.4.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@babel/preset-env": "^7.20.0",
-    "@babel/runtime": "^7.20.0",
-    "babel-plugin-module-resolver": "^4.1.0",
-    "metro-react-native-babel-preset": "0.73.7"
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "15.0.1",
+    "@react-native-community/cli-platform-android": "15.0.1",
+    "@react-native-community/cli-platform-ios": "15.0.1",
+    "@react-native/babel-preset": "0.76.6",
+    "@react-native/eslint-config": "0.76.6",
+    "@react-native/metro-config": "0.76.6",
+    "@react-native/typescript-config": "0.76.6",
+    "@types/react": "^18.2.6",
+    "@types/react-test-renderer": "^18.0.0",
+    "babel-jest": "^29.6.3",
+    "eslint": "^8.19.0",
+    "jest": "^29.6.3",
+    "prettier": "2.8.8",
+    "react-test-renderer": "18.3.1",
+    "typescript": "5.0.4"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
