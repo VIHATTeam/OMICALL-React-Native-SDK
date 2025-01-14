@@ -2267,6 +2267,11 @@
   resolved "https://registry.yarnpkg.com/@react-native/gradle-plugin/-/gradle-plugin-0.76.2.tgz#a06be606fadf9896f4302684aa5c1f2ae95f912b"
   integrity sha512-KC5/uAeLoeD1dOjymx6gnNFHGGLB22xNYjrjrJNK5r0bw2O2KXp4rpB5VCT/2H5B48cVC0xPB7RIKOFrDHr5bQ==
 
+"@react-native/gradle-plugin@^0.76.6":
+  version "0.76.6"
+  resolved "https://registry.yarnpkg.com/@react-native/gradle-plugin/-/gradle-plugin-0.76.6.tgz#50786e65da9baa6b78b504602bf8481be173e3fc"
+  integrity sha512-sDzpf4eiynryoS6bpYCweGoxSmWgCSx9lzBoxIIW+S6siyGiTaffzZHWCm8mIn9UZsSPlEO37q62ggnR9Zu/OA==
+
 "@react-native/js-polyfills@0.76.2":
   version "0.76.2"
   resolved "https://registry.yarnpkg.com/@react-native/js-polyfills/-/js-polyfills-0.76.2.tgz#2ae509d2cafba8291baf3f8b54a761e08d6fa97d"
@@ -5983,11 +5988,6 @@ object.values@^1.1.6, object.values@^1.2.1:
     call-bound "^1.0.3"
     define-properties "^1.2.1"
     es-object-atoms "^1.0.0"
-
-omikit-plugin@3.2.53:
-  version "3.2.53"
-  resolved "https://registry.yarnpkg.com/omikit-plugin/-/omikit-plugin-3.2.53.tgz#24d1b922b9a79d290a074bc6d4233175d65f41f6"
-  integrity sha512-mTjvLQ5FZd8ws1NkFbc7Nm+twANFOBLLYE0Q5+2UibrCDeeMuRRnJDvS6b8SAyrProL8QOqoIhkTaQKEw+k5SQ==
 
 on-finished@2.4.1:
   version "2.4.1"

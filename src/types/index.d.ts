@@ -28,6 +28,7 @@ declare module 'omikit-plugin' {
     export function setAudio(data: any): Promise<void>;
     export function getCurrentAudio(): Promise<any>;
     export function transferCall(data: any): Promise<boolean>;
+    export function rejectCall(): Promise<boolean>;
   
     export const omiEmitter: NativeEventEmitter;
     

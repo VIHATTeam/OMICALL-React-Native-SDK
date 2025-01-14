@@ -274,6 +274,17 @@ public class OmikitPlugin: RCTEventEmitter {
   }
   
   
+  @objc(rejectCall:rejecter:)
+  func rejectCall(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+      do {
+          let result = try CallManager.shareInstance().rejectCall()
+          resolve(result) // Trả về kết quả thành công cho React Native
+      } catch let error as NSError {
+          reject("REJECT_CALL_ERROR", "Failed to reject call", error) // Trả về lỗi nếu xảy ra
+      }
+  }
+  
+  
   public override func supportedEvents() -> [String]! {
     return [
       CALL_STATE_CHANGED,

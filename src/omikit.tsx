@@ -254,6 +254,25 @@ export function transferCall(data: any): Promise<boolean> {
   return OmikitPlugin.transferCall(data);
 }
 
+/**
+ * Rejects an incoming call.
+ * This function is used to decline an active or incoming call.
+ * 
+ * @returns {Promise<boolean>} A promise that resolves to `true` if the call was successfully rejected, or `false` if an error occurred.
+ */
+export function rejectCall(): Promise<boolean> {
+  return OmikitPlugin.rejectCall()
+    .then((result: boolean) => {
+      console.log('Call rejected successfully:', result);
+      return result;
+    })
+    .catch((error: any) => {
+      console.error('Error rejecting call:', error);
+      return false;
+    });
+}
+
+
 export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 
 export const OmiCallEvent = {

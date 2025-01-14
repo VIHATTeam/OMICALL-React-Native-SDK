@@ -71,6 +71,21 @@ class CallManager {
     }
   }
   
+  func rejectCall() -> Bool {
+      do {
+          if let callInfo = omiLib.getCurrentCall(), callInfo.callState != .disconnected {
+              if callInfo.callState == .confirmed {
+                try callInfo.hangup()
+              } else {
+                try callInfo.decline()
+              }
+              return true
+          }
+      } catch {
+          print("ERROR_WHEN_TRANSFER_CALL_IOS:", error)
+      }
+      return false
+  }
   
   func configNotification(data: [String: Any]) {
     let user = UserDefaults.standard
