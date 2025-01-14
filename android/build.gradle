@@ -1,27 +1,43 @@
+// buildscript {
+//   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
+//   def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["OmikitPlugin_kotlinVersion"]
+
+//   repositories {
+//     google()
+//     mavenCentral()
+//     // maven {
+//     //   url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
+//     //   credentials {
+//     //     username = "downloader"
+//     //     password = "Omi@2022"
+//     //   }
+//     // }
+//   }
+
+//   dependencies {
+//     classpath 'com.android.tools.build:gradle-api:7.1.2'
+//     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+//     classpath 'com.google.dagger:hilt-android-gradle-plugin:2.39.1'
+//     classpath 'com.github.kezong:fat-aar:1.3.8'
+//     classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.29.3"
+//     classpath 'com.android.tools.build:gradle:4.0.0'
+//   }
+// }
+
 buildscript {
-  // Buildscript is evaluated before everything else so we can't use getExtOrDefault
-  def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["OmikitPlugin_kotlinVersion"]
-
-  repositories {
-    google()
-    mavenCentral()
-    // maven {
-    //   url("https://vihatgroup.jfrog.io/artifactory/omi-voice/")
-    //   credentials {
-    //     username = "downloader"
-    //     password = "Omi@2022"
-    //   }
-    // }
-  }
-
-  dependencies {
-    classpath 'com.android.tools.build:gradle-api:7.1.2'
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    classpath 'com.google.dagger:hilt-android-gradle-plugin:2.39.1'
-    classpath 'com.github.kezong:fat-aar:1.3.8'
-    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.29.3"
-    classpath 'com.android.tools.build:gradle:4.0.0'
-  }
+    ext {
+        kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["OmikitPlugin_kotlinVersion"]
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.1.2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.39.1'
+        classpath 'com.github.kezong:fat-aar:1.3.8'
+    }
 }
 
 def isNewArchitectureEnabled() {
@@ -53,6 +69,11 @@ android {
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
   }
+   buildFeatures {
+        buildConfig = true
+    }
+
+
   buildTypes {
     release {
       minifyEnabled false
@@ -68,32 +89,31 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
-  // kotlinOptions {
-  //     jvmTarget = '1.8'
-  // }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+       languageVersion = "1.6" // Minimum supported language version for compatibility
+        apiVersion = "1.6"
+        freeCompilerArgs += ["-Xskip-prerelease-check"]
+    }
+
 
   dataBinding {
     enabled = true
   }
 }
 
-allprojects {
-  repositories {
-    google()
-    mavenCentral()
-    jcenter() // Warning: this repository is going to shut down soon
-    maven {
-            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-            credentials {
-                username = project.findProperty("OMI_USER") ?: ""
-                password = project.findProperty("OMI_TOKEN") ?: ""
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-  }
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
+}
+
 
 
 def kotlin_version = getExtOrDefault("kotlinVersion")
