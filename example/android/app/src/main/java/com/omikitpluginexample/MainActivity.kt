@@ -4,10 +4,12 @@ import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
-import com.facebook.react.ReactRootView;
-import com.omikitplugin.OmikitPluginModule;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log
+import com.facebook.react.ReactInstanceManager
+import com.facebook.react.bridge.ReactApplicationContext
+import com.omikitplugin.OmikitPluginModule
 
 class MainActivity : ReactActivity() {
 
