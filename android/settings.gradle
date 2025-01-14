@@ -3,21 +3,31 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven { url "https://jitpack.io" }
+        maven {
+            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+             credentials {
+                username = System.getenv("OMI_USER") ?: ""
+                password = System.getenv("OMI_TOKEN") ?: ""
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
     }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS) // Cho phép settings.gradle ưu tiên repositories
     repositories {
         google()
         mavenCentral()
-        maven {
-            url "https://jitpack.io"
-        }
+        maven { url "https://jitpack.io" }
         maven {
             url "https://maven.pkg.github.com/omicall/OMICall-SDK"
             credentials {
-                username = project.findProperty("OMI_USER") ?: ""
-                password = project.findProperty("OMI_TOKEN") ?: ""
+                 username = System.getenv("OMI_USER") ?: ""
+                password = System.getenv("OMI_TOKEN") ?: ""
             }
             authentication {
                 basic(BasicAuthentication)
