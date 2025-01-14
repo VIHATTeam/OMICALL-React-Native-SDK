@@ -162,7 +162,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onMuted(isMuted: Boolean) {
-     sendEvent(MUTED, isMuted)
+    sendEvent(MUTED, isMuted)
   }
 
   override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
@@ -515,13 +515,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun endCall(promise: Promise) {
-    if (isIncomming && !isAnserCall) {
-      OmiClient.getInstance(reactApplicationContext!!).decline()
-    } else {
-      OmiClient.getInstance(reactApplicationContext!!).hangUp()
-    }
+    OmiClient.getInstance(reactApplicationContext!!).hangUp()
     promise.resolve(true)
 
+  }
+
+  @ReactMethod
+  fun rejectCall(promise: Promise) {
+    OmiClient.getInstance(reactApplicationContext!!).decline()
+    promise.resolve(true)
   }
 
   @ReactMethod
@@ -543,25 +545,25 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun toggleHold(promise: Promise) {
-      mainScope.launch {
-          try {
-              // Gọi hàm toggleHold() và kiểm tra kết quả
-              val result = withContext(Dispatchers.IO) {
-                  OmiClient.getInstance(reactApplicationContext!!).toggleHold()
-              }
+    mainScope.launch {
+      try {
+        // Gọi hàm toggleHold() và kiểm tra kết quả
+        val result = withContext(Dispatchers.IO) {
+          OmiClient.getInstance(reactApplicationContext!!).toggleHold()
+        }
 
-              // Kiểm tra nếu toggleHold trả về Unit
-              if (result == Unit) {
-                  promise.resolve(null) // Trả về null nếu kết quả là Unit
-              } else {
-                  promise.resolve(result)
-              }
-          } catch (e: Exception) {
-              promise.reject("TOGGLE_HOLD_EXCEPTION", "Exception occurred: ${e.message}", e)
-          }
+        // Kiểm tra nếu toggleHold trả về Unit
+        if (result == Unit) {
+          promise.resolve(null) // Trả về null nếu kết quả là Unit
+        } else {
+          promise.resolve(result)
+        }
+      } catch (e: Exception) {
+        promise.reject("TOGGLE_HOLD_EXCEPTION", "Exception occurred: ${e.message}", e)
       }
     }
   }
+
 
   @ReactMethod
   fun toggleSpeaker(promise: Promise) {
