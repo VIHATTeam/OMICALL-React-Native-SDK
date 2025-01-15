@@ -5989,6 +5989,11 @@ object.values@^1.1.6, object.values@^1.2.1:
     define-properties "^1.2.1"
     es-object-atoms "^1.0.0"
 
+omikit-plugin@3.2.61:
+  version "3.2.61"
+  resolved "https://registry.yarnpkg.com/omikit-plugin/-/omikit-plugin-3.2.61.tgz#7a40e3520b958a4837246c81315250a1833536ba"
+  integrity sha512-mFSU6bO0LuilIU1DtDd5NlT0z0v1Pi3sBaOCHdt13R/HPM5T1+fRjPXPVsM8yNkAxKpV15hDgvS1DmSirWt9Jg==
+
 on-finished@2.4.1:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/on-finished/-/on-finished-2.4.1.tgz#58c8c44116e54845ad57f14ab10b03533184ac3f"
@@ -6409,7 +6414,7 @@ react-native-safe-area-context@^4.5.0:
   resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-4.14.1.tgz#980c3c9db02a2314fa8ceb07f614728802320367"
   integrity sha512-+tUhT5WBl8nh5+P+chYhAjR470iCByf9z5EYdCEbPaAK3Yfzw+o8VRPnUgmPAKlSccOgQBxx3NOl/Wzckn9ujg==
 
-react-native-screens@^4.4.0:
+react-native-screens@^4.5.0:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/react-native-screens/-/react-native-screens-4.5.0.tgz#748d47ed68763ea28822a5ecf304dbef38a15652"
   integrity sha512-yBWeN5EHNeew9f0ia9VE7JSlUQzCZEwkb87r7A7/Sg41OJHuRKHNRhmdCOiMBUqwwQi3F+b4NZGywjeM/gWMyg==

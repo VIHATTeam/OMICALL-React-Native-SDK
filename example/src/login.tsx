@@ -62,12 +62,13 @@ export const LoginScreen = () => {
     // };
 
     const loginInfo = {
-      userName: "100",
+      userName: "101",
       password: "Duongngocqui@98",
       realm: "quidn",
       isVideo: isVideo,
       fcmToken: fcmToken,
       host: host,
+        projectId: "omicrm-6558a"
     };
     const result11 = await getCurrentUser()
 
@@ -148,10 +149,7 @@ export const LoginScreen = () => {
     // Lắng nghe sự kiện URL
     Linking.addEventListener('url', handleDeepLink);
 
-    // Hủy đăng ký sự kiện khi component bị unmount
-    return () => {
-      Linking.removeEventListener('url', handleDeepLink);
-    };
+  
   }, []);
 
 
