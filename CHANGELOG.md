@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.62
+- Add func rejectCall for incoming call
+
 ## 3.2.52
 - Add event 'onRequestPermissionAndroid' for android
 
