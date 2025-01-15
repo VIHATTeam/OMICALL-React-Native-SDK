@@ -27,7 +27,7 @@ target 'OmikitPluginExample' do
   pod 'GoogleUtilities', :modular_headers => true
   pod 'FirebaseAnalytics', :modular_headers => true
 
-  pod 'omikit-plugin', :path => '../../'
+  # pod 'omikit-plugin', :path => '../../'
 
   permissions_path = '../node_modules/react-native-permissions/ios'
   pod 'Permission-Calendars', :path => "#{permissions_path}/Calendars"

@@ -39,7 +39,9 @@ export const Main = () => {
         }
         const data = await LocalStorage.getString("login_info");
         console.log('data login_info ==> ', data, data != undefined);
-        setIsLogin(data !== undefined);
+        if (data != undefined){
+          setIsLogin(true);
+        }
       } catch (error) {
         console.error('Error during initialization:', error);
       } finally {
@@ -58,7 +60,7 @@ export const Main = () => {
       <CustomLoading />
     </View>
   ) : (
-    <App isLogin={loading} />
+    <App isLogin={isLogin} />
   );
   
 };

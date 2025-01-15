@@ -24,7 +24,8 @@
     "react-native-permissions": "3.0.6",
     "react-native-reanimated": "^3.16.6",
     "react-native-safe-area-context": "^4.5.0",
-    "react-native-screens": "^4.4.0"
+    "react-native-screens": "^4.5.0",
+    "omikit-plugin": "3.2.61"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -10,6 +10,7 @@ import android.util.Log
 import com.facebook.react.ReactInstanceManager
 import com.facebook.react.bridge.ReactApplicationContext
 import com.omikitplugin.OmikitPluginModule
+import com.google.firebase.FirebaseApp;
 
 class MainActivity : ReactActivity() {
 
@@ -30,7 +31,7 @@ class MainActivity : ReactActivity() {
 
          override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+            FirebaseApp.initializeApp(this);
         val reactInstanceManager: ReactInstanceManager = reactNativeHost.reactInstanceManager
         val currentContext = reactInstanceManager.currentReactContext
         if (currentContext != null && currentContext is ReactApplicationContext) {

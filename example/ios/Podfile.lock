@@ -125,9 +125,9 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - OmiKit (1.8.1)
-  - omikit-plugin (3.2.58):
-    - OmiKit (= 1.8.1)
+  - OmiKit (1.8.2)
+  - omikit-plugin (3.2.61):
+    - OmiKit (= 1.8.2)
     - React-Core
   - Permission-Calendars (3.0.6):
     - RNPermissions
@@ -1798,7 +1798,7 @@ DEPENDENCIES:
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - GoogleUtilities
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
-  - omikit-plugin (from `../../`)
+  - omikit-plugin (from `../node_modules/omikit-plugin`)
   - Permission-Calendars (from `../node_modules/react-native-permissions/ios/Calendars`)
   - Permission-Camera (from `../node_modules/react-native-permissions/ios/Camera`)
   - Permission-Microphone (from `../node_modules/react-native-permissions/ios/Microphone`)
@@ -1903,7 +1903,7 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2024-11-12-RNv0.76.2-5b4aa20c719830dcf5684832b89a6edb95ac3d64
   omikit-plugin:
-    :path: "../../"
+    :path: "../node_modules/omikit-plugin"
   Permission-Calendars:
     :path: "../node_modules/react-native-permissions/ios/Calendars"
   Permission-Camera:
@@ -2061,8 +2061,8 @@ SPEC CHECKSUMS:
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
   hermes-engine: 3852e37f6158a2fcfad23e31215ed495da3a6a40
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  OmiKit: 27f8b3e292d4091df95528c26da6cd2b15991d1b
-  omikit-plugin: 637e3324372dac9b197ede49cadb31cf5d205b76
+  OmiKit: eeb8a3d7469af064303752a7a31366d513e8ffc4
+  omikit-plugin: b70ff24845d3c3b69f79401905926d235962978f
   Permission-Calendars: a1cfb95796d44627044810dfd0c83120de7d6cb3
   Permission-Camera: b9e622ea4c6d8e88d19e0906a615ee033e897fc5
   Permission-Microphone: 577aa341ec0667dbdaad91d319867c89a1fb775a
@@ -2135,6 +2135,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: b31c16dc8150acf90019a65ce2da4b47fab913cb
 
-PODFILE CHECKSUM: eab07f6a76b9821b82269dbf36ae3e215c55620a
+PODFILE CHECKSUM: 92f6d9a7cebb3eb67dab912f71ecd7f38612cc70
 
 COCOAPODS: 1.15.2

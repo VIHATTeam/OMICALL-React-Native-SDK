@@ -28,7 +28,8 @@ import {
   setAudio,
   getInitialCall,
   transferCall,
-  toggleHold
+  toggleHold,
+  rejectCall
 } from 'omikit-plugin';
 
 import { UIImages } from '../assets';
@@ -152,9 +153,11 @@ export const DialCallScreen = ({ route }: any) => {
 
   const onAudioChange = useCallback((audioData: any) => {
     const { data } = audioData;
-    console.log(data);
-    const { name } = data[0];
-    setCurrentAudio(name);
+    console.log("data with data --> ", data);
+    if(data.length > 0) {
+      const { name } = data[0];
+      setCurrentAudio(name);
+    }
   }, []);
 
   const toggleAndCheckDevice = useCallback(async () => {
@@ -201,7 +204,7 @@ export const DialCallScreen = ({ route }: any) => {
       onSwitchboardAnswer
     );
 
-    omiEmitter.addListener(OmiCallEvent.onRequestPermission, onReqPermission);
+    omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onReqPermission);
 
     LiveData.isOpenedCall = true;
     return () => {
@@ -212,7 +215,7 @@ export const DialCallScreen = ({ route }: any) => {
       omiEmitter.removeAllListeners(OmiCallEvent.onCallQuality);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
-      omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermission);
+      omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
       LiveData.isOpenedCall = false;
     };
   }, []);
@@ -340,9 +343,10 @@ export const DialCallScreen = ({ route }: any) => {
         <View style={styles.call}>
           <TouchableOpacity
             onPress={async () => {
-              console.log('=>>>>>>>> end call =>>>>>>>>');
-              endCall();
+              console.log('=>>>>>>>> end call  rejectCall =>>>>>>>>');
+              // endCall();
               // navigation.goBack();
+              rejectCall()
             }}
           >
             <Image source={UIImages.hangup} style={styles.hangup} />
