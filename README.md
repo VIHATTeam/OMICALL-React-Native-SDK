@@ -371,6 +371,8 @@ class MainActivity : ReactActivity() {
 ```swift
 #if __has_include("OmikitNotification.h")
 #import "OmikitNotification.h"
+#elif __has_include(<OmikitPlugin/OmikitPlugin-Swift.h>)
+#import <OmikitPlugin/OmikitPlugin-Swift.h>
 #else
 #import <omikit_plugin/OmikitNotification.h>
 #endif
