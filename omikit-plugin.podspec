@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
 
   # Thêm dependency bắt buộc
   s.dependency "React-Core"
-  s.dependency "OmiKit", "1.8.1"
+  s.dependency "OmiKit", "1.8.2"
 
   # Đảm bảo Swift bridging header được tự động tạo
   # s.requires_arc = true

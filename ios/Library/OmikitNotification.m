@@ -6,7 +6,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <OmikitPlugin-Swift.h>
+#import <OmikitPlugin/OmikitPlugin-Swift.h>
+
 
 @implementation OmikitNotification : NSObject 
 + (void)didRecieve:(NSDictionary*) userInfo{

@@ -526,7 +526,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun rejectCall(promise: Promise) {
-    OmiClient.getInstance(reactApplicationContext!!).decline()
+    if (isIncomming && !isAnserCall) {
+      OmiClient.getInstance(reactApplicationContext!!).decline()
+    }
     promise.resolve(true)
   }
 

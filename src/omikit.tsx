@@ -262,14 +262,6 @@ export function transferCall(data: any): Promise<boolean> {
  */
 export function rejectCall(): Promise<boolean> {
   return OmikitPlugin.rejectCall()
-    .then((result: boolean) => {
-      console.log('Call rejected successfully:', result);
-      return result;
-    })
-    .catch((error: any) => {
-      console.error('Error rejecting call:', error);
-      return false;
-    });
 }
 
 

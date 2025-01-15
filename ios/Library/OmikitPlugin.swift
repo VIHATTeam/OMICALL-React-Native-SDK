@@ -285,6 +285,7 @@ public class OmikitPlugin: RCTEventEmitter {
   }
   
   
+  
   public override func supportedEvents() -> [String]! {
     return [
       CALL_STATE_CHANGED,
