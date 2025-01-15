@@ -791,7 +791,21 @@ We need you request permission about call before make call:
         "uuid": "122aaa"
     }
     ```
+  - endCall: End a completed call (including rejecting a call).
 
+    ```javascript
+    import {endCall} from 'omikit-plugin';
+
+    endCall();
+    ```
+  - rejectCall: Used to reject an incoming call when the user has not accepted it yet.
+    Note: Do not use this function to end an ongoing call.
+
+    ```javascript
+    import {rejectCall} from 'omikit-plugin';
+
+    rejectCall();
+    ```
   - Logout: logout and remove all information.
 
     ```javascript
