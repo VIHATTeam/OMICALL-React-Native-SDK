@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.64
+- Hot fix change import file Objective C
+
 ## 3.2.63 
 - add format import file OmiKitNotification.m 
 
