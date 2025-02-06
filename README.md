@@ -694,18 +694,27 @@ We need you request permission about call before make call:
   // Result is the same with startCall
   ```
 
-  - Accept a call:
+  - __Accept a call__:
 
     ```javascript
     import {joinCall} from 'omikit-plugin';
 
     await joinCall();
     ```
+    __Note__: When calling `joinCall`, sdk will check permission of microphone and camera. If have any permission denied, sdk will send a event `onRequestPermissionAndroid` with list permission you need to request. You need to request permission before calling `joinCall` again.
 
-    Note: When calling `joinCall`, sdk will check permission of microphone and camera. If have any permission denied, sdk will send a event `onRequestPermissionAndroid` with list permission you need to request. You need to request permission before calling `joinCall` again.
 
-  - End a call: We will push a event `endCall` for you.
+ - __Call forwarding__: used to transfer the current call to any employee's sip number
+     ```javascript
+      import {transferCall} from 'omikit-plugin';
 
+      transferCall({
+      phoneNumber: 102 // employee's internal number
+      })
+    ```
+
+
+  - __End a call__ : We will push a event `endCall` for you.
     ```javascript
     import {endCall} from 'omikit-plugin';
 
@@ -750,6 +759,7 @@ We need you request permission about call before make call:
   - Send character: We only support `1 to 9` and `* #`.
 
     ```javascript
+    // FUNC IS USED when the user wants key interaction during a call. For example, press key 1, 2, 3.. to move to group
     import {sendDTMF} from 'omikit-plugin';
 
     sendDTMF({
@@ -791,14 +801,14 @@ We need you request permission about call before make call:
         "uuid": "122aaa"
     }
     ```
-  - endCall: End a completed call (including rejecting a call).
+  - __endCall__: End a completed call (including rejecting a call).
 
     ```javascript
     import {endCall} from 'omikit-plugin';
 
     endCall();
     ```
-  - rejectCall: Used to reject an incoming call when the user has not accepted it yet.
+  - __rejectCall__: Used to reject an incoming call when the user has not accepted it yet.
     Note: Do not use this function to end an ongoing call.
 
     ```javascript
@@ -806,7 +816,7 @@ We need you request permission about call before make call:
 
     rejectCall();
     ```
-  - Logout: logout and remove all information.
+  - __Logout__: logout and remove all information.
 
     ```javascript
     import {logout} from 'omikit-plugin';
@@ -814,7 +824,7 @@ We need you request permission about call before make call:
     logout();
     ```
 
-  - Permission: Check system alert window permission (only Android).
+  - __Permission__: Check system alert window permission (only Android).
 
     ```javascript
     import {systemAlertWindow} from 'omikit-plugin';
@@ -826,7 +836,7 @@ We need you request permission about call before make call:
     }
     ```
 
-  - Setting: Open to enable system alert window (only Android).
+  - __Setting__: Open to enable system alert window (only Android).
 
     ```javascript
     import {openSystemAlertSetting} from 'omikit-plugin';
@@ -834,6 +844,33 @@ We need you request permission about call before make call:
     if (Platform.OS === 'android') {
       openSystemAlertSetting();
     }
+    ```
+  - __Audio__: 
+    - func *getCurrentAudio*: Get current information of audio devices
+    ```javascript
+    import {getCurrentAudio} from 'omikit-plugin';
+
+    getCurrentAudio().then((data: any) => {
+      console.log(data); // [{"name": "Speaker", "type": "Speaker"}]
+          // Note: Data is an array containing information about audio devices, with parameters:
+          // - name: Name of the audio device
+          // - type: Audio device type (e.g. "Speaker", "Receiver", etc.)
+    });
+    ```
+    - func setAudio: set Audio calls the current device
+     ```javascript
+    import {  getAudio, setAudio} from 'omikit-plugin';
+
+    const audioList = await getAudio(); // Get a list of supported audio device types 
+    console.log("audioList --> ", audioList) // audioList -->  [{"name": "Receiver", "type": "Receiver"}, {"name": "Speaker", "type": "Speaker"}]
+    
+    const receiver = audioList.find((element: any) => {
+          return element.type === 'Receiver'; // type: "Speaker" is the external speaker, Receiver is the internal speaker
+    });
+    
+    setAudio({
+      portType: receiver.type,
+    });
     ```
 
 - Video Call functions: Support only video call, You need enable video in `init functions` and `start call` to implements under functions.
@@ -887,7 +924,7 @@ We need you request permission about call before make call:
   registerVideoEvent();
   ```
 
-- Event listener:
+- *Event listener*:
 
 ```javascript
 useEffect(() => {
@@ -898,7 +935,11 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, onSwitchboardAnswer);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
-    omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onRequestPermission);
+    
+    if(Platform.OS == "android") {
+      omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onRequestPermission);
+    }
+
     if (Platform.OS === 'ios') {
       registerVideoEvent();
       omiEmitter.addListener(
@@ -906,13 +947,18 @@ useEffect(() => {
         refreshRemoteCameraEvent
       );
     }
+
     return () => {
         omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
         omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
         omiEmitter.removeAllListeners(OmiCallEvent.onHold);
         omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
         omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
-        omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
+        
+        if(Platform.OS == "android") {
+          omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
+        }
+
         if (Platform.OS === 'ios') {
            removeVideoEvent();
            omiEmitter.removeAllListeners(OmiCallEvent.onRemoteVideoReady);
@@ -938,21 +984,75 @@ useEffect(() => {
       - hold(7);
 
   * onCallStateChanged is call state tracking event. We will return status of state. Please refer `OmiCallState`.
-    `onCallStateChanged value:` + isVideo: value boolean (true is call Video) + status: number (value matching with List status call ) + callerNumber: phone number + incoming: boolean - status call incoming or outgoing + \_id: option (id of every call) + code_end_call: This is code when end call.
+  
+```javascript
+// The event is updated every time the call status changes
+const onCallStateChanged = (data: any) => {
+  /*
+    Call state change event data (Object) includes:
+    
+    - _id: string (UUID of the call)
+    - callInfo: object (Detailed call information)
+    - callerNumber: string (Phone number of the caller)
+    - code_end_call: number (Status code when the call ends)
+    - destination_number?: string (Destination phone number, optional)
+    - direction: string ("inbound" or "outbound", call direction)
+    - disposition: string (Call answer status)
+    - incoming: boolean (true if it is an incoming call)
+    - isVideo: boolean (true if it is a video call)
+    - sip_user: string (Current SIP user)
+    - source_number: string (SIP number of the user)
+    - status: string (value matching with List status call)
+    - time_end: number (Timestamp when the call ended)
+    - time_start_to_answer: number (Time taken to answer the call)
+    - transaction_id: string (OMI Call unique ID)
+  */
+};
 
-  * `Incoming call` state lifecycle: incoming -> connecting -> confirmed -> disconnected
-  * `Outgoing call` state lifecycle: calling -> early -> connecting -> confirmed -> disconnected
+// Event returned when the user mutes the call
+const onMuted = (isMuted: boolean) => {
+// isMuted: true when muted call 
+}
 
-  * onSwitchboardAnswer have callback when employee answered script call.
+// Event returns value when user holds call
+const onHold = (isHold: boolean) => {
+// isHold: true when hold call 
+}
+
+//  The event updates the quality of an ongoing call
+const onCallQuality = (data: any) => {
+    const { quality } = data;
+    // quality: int is mean quality off calling 
+    // 1 is good, 2 is medium, 3 is low 
+}
+
+// Even when user turn on speakerphone  
+const onSpeaker = (isSpeaker: boolean) => {
+  // isSpeaker: true, false  
+  // True mean speaker devices is open 
+}
+
+// * onSwitchboardAnswer have callback when employee answered script call.
+const onSwitchboardAnswer = (data: any) => {
+  const { sip } = data
+  // sip: String 
+}
+```
+
+### 📞 Call State Lifecycle
+* **`Incoming call` state lifecycle**: incoming -> connecting -> confirmed -> disconnected
+* **`Outgoing call` state lifecycle**: calling -> early -> connecting -> confirmed -> disconnected
+
 
 - Table describing code_end_call status
 
 | Code            | Description                                                                                                           |
 | --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `600, 503, 480`  | These are the codes of the network operator or the user who did not answer the call  |
+| `600, 503`  | These are the codes of the network operator or the user who did not answer the call  |
 | `408`   | Call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out) |
 | `403`           | Your service plan only allows calls to dialed numbers. Please upgrade your service pack|
 | `404`           | The current number is not allowed to make calls to the carrier|
+| `480`           | The number has an error, please contact support to check the details |
 | `603`           | The call was rejected. Please check your account limit or call barring configuration! |
 | `850`           | Simultaneous call limit exceeded, please try again later |
 | `486`           | The listener refuses the call and does not answer |
@@ -986,12 +1086,6 @@ useEffect(() => {
   - `OmiCallEvent.onHold`: hold current call 
 - Data value: We return `callerNumber`, `sip`, `isVideo: true/false` information
 
-- Forward calls to internal staff:
-  - You can use function `transferCall` for transfer to staff you want.
-    example:
-    transferCall({
-    phoneNumber: 102
-    })
 
 # Issues
 
