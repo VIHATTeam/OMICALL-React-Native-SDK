@@ -314,7 +314,7 @@ class CallManager {
       "transactionId": "",
       "_id": ""
     ]
-    
+
     if(call != nil){
       if(call.isIncoming && callState == OMICallState.early.rawValue){
         dataToSend["status"] = OMICallState.incoming.rawValue
@@ -335,7 +335,7 @@ class CallManager {
       if (videoManager == nil && call.isVideo) {
         videoManager = OMIVideoViewManager.init()
       }
-      isSpeaker = call.isVideo
+      isSpeaker = call.speaker
       lastStatusCall = "answered"
       OmikitPlugin.instance.sendMuteStatus()
       break
@@ -517,7 +517,7 @@ class CallManager {
   func getCurrentAudio() -> [[String: String]] {
     return OmiClient.getCurrentAudio()
   }
-  
+
   //video call
   func toggleCamera() {
     if let videoManager = videoManager {

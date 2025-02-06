@@ -1,6 +1,6 @@
 {
   "name": "omikit-plugin",
-  "version": "3.2.64",
+  "version": "3.2.65",
   "description": "Omikit Plugin by ViHAT",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -44,7 +44,7 @@
     "type": "git",
     "url": "git+https://github.com/VIHATTeam/OMICALL-React-Native-SDK"
   },
-  "author": "ViHAT Group <chaunguyen4297@gmail.com> (https://github.com/chauminhienglish)",
+  "author": "ViHAT Group <tranhoaihung05@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/VIHATTeam/OMICALL-React-Native-SDK/issues"
