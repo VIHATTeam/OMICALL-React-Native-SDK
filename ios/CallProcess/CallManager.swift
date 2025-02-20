@@ -42,7 +42,6 @@ class CallManager {
     var result = false;
     do {
       if let callInfo = self.omiLib.getCurrentConfirmCall() {
-        dump(callInfo)
         if callInfo.callState != .disconnected {
           callInfo.blindTransferCall(withNumber: phoneNumber);
           result = true
@@ -51,7 +50,6 @@ class CallManager {
     } catch let error {
       print("ERROR_WHEN_TRANSFER_CALL_IOS: ", error)
     }
-    print("calllZiii 2 ==> \(result)")
     return result
   }
   

@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.66
+- Update Codec property 
+
 ## 3.2.65
 - Update Codec property 
 
