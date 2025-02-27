@@ -495,12 +495,8 @@ class CallManager {
   
   /// Toogle speaker
   func toogleSpeaker() {
-    if !isSpeaker {
-      try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
-    } else {
-      try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
-    }
-    isSpeaker = !isSpeaker
+    let result = self.omiLib.callManager.audioController.toggleSpeaker();
+    self.isSpeaker = result
     OmikitPlugin.instance.sendSpeakerStatus()
   }
   
