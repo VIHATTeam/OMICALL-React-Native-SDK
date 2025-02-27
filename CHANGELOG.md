@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.70
+- Update OMIKIT to version 1.8.8
+- Add func toggle speaker
+
+## 3.2.69
+- Update OMIKIT to version 1.8.8
+- Add func toggle speaker
+
+## 3.2.68
+- Update OMIKIT to version 1.8.6
+- Fix audio when change options
+
 ## 3.2.67
 - Update OMIKIT to version 1.8.5
 - Update OMIKIT android to version 2.3.19
