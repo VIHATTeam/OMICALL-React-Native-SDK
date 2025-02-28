@@ -377,7 +377,15 @@ class CallManager {
       "time_end" : timeEnd,
       "sip_user": user,
       "disposition" : lastStatusCall == nil ? "no_answered" : "answered",
-      "code_end_call" : call.lastStatus
+      "code_end_call" : call.lastStatus,
+
+      "transactionId" : call.omiId,
+      "sourceNumber" : user,
+      "destinationNumber" : guestPhone,
+      "timeStartToAnswer" : call.createDate,
+      "timeEnd" : timeEnd,
+      "sipUser": user,
+      "codeEndCall" : call.lastStatus
     ]
   }
   

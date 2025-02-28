@@ -84,16 +84,25 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     val map: WritableMap = WritableNativeMap()
     val timeStartToAnswer = call["time_start_to_answer"] as Long?
     val timeEnd = call["time_end"] as Long
-    map.putString("transaction_id", call["transaction_id"] as String?)
     map.putString("direction", call["direction"] as String)
+    map.putString("transaction_id", call["transaction_id"] as String?)
     map.putString("source_number", call["source_number"] as String)
     map.putString("destination_number", call["destination_number"] as String)
     map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
     map.putDouble("time_end", timeEnd.toDouble())
     map.putString("sip_user", call["sip_user"] as String)
+    map.putInt("code_end_call", statusCode as Int)
     map.putString("disposition", call["disposition"] as String)
     map.putInt("status", CallState.disconnected.value)
-    map.putInt("code_end_call", statusCode as Int)
+
+    map.putString("transactionId", call["transaction_id"] as String?)
+    map.putString("sourceNumber", call["source_number"] as String)
+    map.putString("destinationNumber", call["destination_number"] as String)
+    map.putDouble("timeStartToAnswer", (timeStartToAnswer ?: 0).toDouble())
+    map.putDouble("timeEnd", timeEnd.toDouble())
+    map.putString("sipUser", call["sip_user"] as String)
+    map.putInt("codeEndCall", statusCode as Int)
+
     Log.d("OMISDK RN", "=>> onCallEnd  => $map")
     sendEvent(CALL_STATE_CHANGED, map)
   }
@@ -194,6 +203,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         putString("_id", "")
         putInt("status", 6)
         putInt("code_end_call", if (statusCode == 403) 853 else statusCode)
+        putInt("codeEndCall", if (statusCode == 403) 853 else statusCode)
       }
       sendEvent(CALL_STATE_CHANGED, mapObject)
     }
@@ -505,12 +515,27 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun joinCall(promise: Promise) {
-    currentActivity?.runOnUiThread {
-      if (reactApplicationContext != null) {
-        OmiClient.getInstance(reactApplicationContext!!).pickUp()
-        promise.resolve(true)
+      val appContext = reactApplicationContext.applicationContext
+      val activity = currentActivity
+
+      if (appContext == null) {
+          promise.reject("E_NULL_CONTEXT", "Application context is null")
+          return
       }
-    }
+
+      if (activity == null) {
+          promise.reject("E_NULL_ACTIVITY", "Current activity is null")
+          return
+      }
+
+      activity.runOnUiThread {
+          try {
+              OmiClient.getInstance(appContext).pickUp()
+              promise.resolve(true)
+          } catch (e: Exception) {
+              promise.reject("E_JOIN_CALL_FAILED", "Failed to join call", e)
+          }
+      }
   }
 
   @ReactMethod
@@ -646,6 +671,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         map.putString("uuid", call["uuid"] as String?)
         map.putString("full_name", call["full_name"] as String?)
         map.putString("avatar_url", call["avatar_url"] as String?)
+
+        map.putString("fullName", call["full_name"] as String?)
+        map.putString("avatarUrl", call["avatar_url"] as String?)
+
         promise.resolve(map)
       } else {
         promise.resolve(null);
@@ -671,6 +700,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         map.putString("uuid", call["uuid"] as String?)
         map.putString("full_name", call["full_name"] as String?)
         map.putString("avatar_url", call["avatar_url"] as String?)
+
+        map.putString("fullName", call["full_name"] as String?)
+        map.putString("avatarUrl", call["avatar_url"] as String?)
+
         promise.resolve(map)
       } else {
         promise.resolve(null);
@@ -695,6 +728,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         map.putString("uuid", call["uuid"] as String?)
         map.putString("full_name", call["full_name"] as String?)
         map.putString("avatar_url", call["avatar_url"] as String?)
+
+        map.putString("fullName", call["full_name"] as String?)
+        map.putString("avatarUrl", call["avatar_url"] as String?)
         promise.resolve(map)
       } else {
         promise.resolve(null)

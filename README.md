@@ -909,7 +909,9 @@ const result = await startCallWithUuid({
 {
     "extension": "111",
     "full_name": "chau1",
+    "fullName": "chau1",
     "avatar_url": "",
+    "avatarUrl": "",
     "uuid": "122aaa"
 }
 ```
@@ -1129,24 +1131,26 @@ useEffect(() => {
 ```javascript
 // The event is updated every time the call status changes
 const onCallStateChanged = (data: any) => {
+// ⚠️ ⚠️  Currently, we support two data formats: camelCase and snake_case. Snake_case is used for data v1, while camelCase is for v2. We encourage customers to use camelCase instead of snake_case, as we plan to completely remove the snake_case format in the future ❌ ❌
+
   /*
     Call state change event data (Object) includes:
     
     - _id: string (UUID of the call)
     - callInfo: object (Detailed call information)
     - callerNumber: string (Phone number of the caller)
-    - code_end_call: number (Status code when the call ends)
-    - destination_number?: string (Destination phone number, optional)
+    - code_end_call, codeEndCall: number (Status code when the call ends)
+    - destination_number, destinationNumber?: string (Destination phone number, optional)
     - direction: string ("inbound" or "outbound", call direction)
     - disposition: string (Call answer status)
     - incoming: boolean (true if it is an incoming call)
     - isVideo: boolean (true if it is a video call)
-    - sip_user: string (Current SIP user)
-    - source_number: string (SIP number of the user)
+    - sip_user, sipUser: string (Current SIP user)
+    - source_number, sourceNumber: string (SIP number of the user)
     - status: string (value matching with List status call)
-    - time_end: number (Timestamp when the call ended)
-    - time_start_to_answer: number (Time taken to answer the call)
-    - transaction_id: string (OMI Call unique ID)
+    - time_end, timeEnd: number (Timestamp when the call ended)
+    - time_start_to_answer, timeStartToAnswer: number (Time taken to answer the call)
+    - transaction_id, transactionId: string (OMI Call unique ID)
   */
 };
 
@@ -1180,7 +1184,7 @@ const onSwitchboardAnswer = (data: any) => {
 }
 ```
 
-✨ Table describing `code_end_call` status
+✨ Table describing `code_end_call, codeEndCall` status
 
 | Code            | Description                                                                                                           |
 | --------------- | --------------------------------------------------------------------------------------------------------------------- |
