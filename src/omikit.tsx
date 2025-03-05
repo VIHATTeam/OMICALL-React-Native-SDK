@@ -6,16 +6,19 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-const OmikitPlugin = NativeModules.OmikitPlugin
-  ? NativeModules.OmikitPlugin
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
+  const { OmikitPlugin } = NativeModules;
+// ✅ Khai báo chính xác Native Module
+// const OmikitPlugin = NativeModules.OmikitPlugin
+//   ? NativeModules.OmikitPlugin
+//   : new Proxy(
+//       {},
+//       {
+//         get() {
+//           throw new Error(LINKING_ERROR);
+//         },
+//       }
+//     );
+
 
 /**
  * Starts the Omikit services.
@@ -265,7 +268,7 @@ export function rejectCall(): Promise<boolean> {
 }
 
 
-export const omiEmitter = new NativeEventEmitter(OmikitPlugin);
+export const omiEmitter = Platform.OS === 'ios' ? new NativeEventEmitter(OmikitPlugin) : new NativeEventEmitter();     
 
 export const OmiCallEvent = {
   onCallStateChanged: 'CALL_STATE_CHANGED',

@@ -591,7 +591,7 @@ startServices();
   - The `initCallWithApiKey()` function is usually used for your client, who only has a certain function, calling a fixed number. For example, you can only call your hotline number 
 
 ```javascript
-import { initCallWithApiKey } from 'omikit-plugin';
+import { initCallWithApiKey, getCurrentUser } from 'omikit-plugin';
 import messaging from '@react-native-firebase/messaging';
 
 let token: String;
@@ -617,7 +617,18 @@ const loginInfo = {
 // Initialize call functionality using the provided API key
 const result = await initCallWithApiKey(loginInfo);
 
-// If result is true, the user has successfully logged in.
+/* ❌ ❌ NOTE: Please check the user information again, if the object is not empty then you have successfully logged in. 
+Otherwise, if you have not successfully logged in, you should not navigate to the call screen. When startCall with empty information, it may crash your application or not be clear when receiving the startCall error  ❌❌*/
+
+// Example:
+
+if (result){
+  const infoUser = await getCurrentUser()
+  if (infoUser != null && Object.keys(infoUser).length > 0) { 
+    // ✅ Login OMI Success 
+    // Can navigate to call screen or start call 🚀 🚀
+  }
+}
  ```
 
 📌 **initCallWithUserPassword()**
@@ -628,7 +639,7 @@ const result = await initCallWithApiKey(loginInfo);
   - The `initCallWithUserPassword()` function is for employees. They can call any telecommunications number allowed in your business on the OMI system.
   
 ```javascript
-import { initCallWithUserPassword } from 'omikit-plugin';
+import { initCallWithUserPassword, getCurrentUser } from 'omikit-plugin';
 import messaging from '@react-native-firebase/messaging';
 
 let token: String;
@@ -652,7 +663,20 @@ const loginInfo = {
 
 // Initialize call functionality using username and password authentication
 const result = await initCallWithUserPassword(loginInfo);
-// If result is true, the user has successfully logged in.
+
+
+/* ❌ ❌ NOTE: Please check the user information again, if the object is not empty then you have successfully logged in. 
+Otherwise, if you have not successfully logged in, you should not navigate to the call screen. When startCall with empty information, it may crash your application or not be clear when receiving the startCall error  ❌❌*/
+
+// Example:
+
+if (result){
+  const infoUser = await getCurrentUser()
+  if (infoUser != null && Object.keys(infoUser).length > 0) { 
+    // ✅ Login OMI Success 
+    // Can navigate to call screen or start call 🚀 🚀
+  }
+}
 ```
 
 📌 **configPushNotification()**
@@ -1062,6 +1086,20 @@ const result = await startCallWithUuid({
 ### 🚀🚀 Events listener 🚀🚀 
 
 ```javascript
+import { omiEmitter } from 'omikit-plugin';
+
+/*
+❌ ❌ With TypeScript, in android, it seems our omiEmitter is not working properly. Please use the following manual declaration, to ensure performance
+*/
+
+// 📌 For TypeScript, Android 
+import { NativeEventEmitter, NativeModules } from "react-native";
+const { OmikitPlugin } = NativeModules;
+const omiEmitter = new NativeEventEmitter(OmikitPlugin);
+
+
+
+
 useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
@@ -1151,6 +1189,7 @@ const onCallStateChanged = (data: any) => {
     - time_end, timeEnd: number (Timestamp when the call ended)
     - time_start_to_answer, timeStartToAnswer: number (Time taken to answer the call)
     - transaction_id, transactionId: string (OMI Call unique ID)
+    - typeNumber: string ("", "internal", "phone", "zalo")
   */
 };
 

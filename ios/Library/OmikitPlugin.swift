@@ -49,14 +49,19 @@ public class OmikitPlugin: RCTEventEmitter {
   // MARK: - Call Methods
   @objc(initCallWithUserPassword:resolver:rejecter:)
   func initCallWithUserPassword(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    guard let dataOmi = data as? [String: Any] else {
-      reject("INVALID_DATA", "Expected a dictionary with user credentials.", nil)
-      return
-    }
-    let result = CallManager.shareInstance().initWithUserPasswordEndpoint(params: dataOmi)
-    resolve(result)
+      // ✅ Bước 1: Kiểm tra dữ liệu đầu vào có đúng định dạng không
+      guard let dataOmi = data as? [String: Any] else {
+        reject("INVALID_DATA", "Expected a dictionary with user credentials.", nil)
+        return
+      }
+      // ✅ Bước 2: Gọi initWithUserPasswordEndpoint() và kiểm tra kết quả
+      let result = CallManager.shareInstance().initWithUserPasswordEndpoint(params: dataOmi)
+      if result {
+          resolve(true)
+      } else {
+          reject("INIT_FAILED", "Không thể login vào OMI.", nil)
+      }
   }
-  
   
   @objc(initCallWithApiKey:resolver:rejecter:)
   func initCallWithApiKey(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
@@ -70,17 +75,24 @@ public class OmikitPlugin: RCTEventEmitter {
   
   
   @objc(startCall:resolver:rejecter:)
-  func startCall(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-    guard let dataOmi = data as? [String: Any],
-          let phoneNumber = dataOmi["phoneNumber"] as? String else {
-      reject("INVALID_DATA", "Expected a dictionary with phone number.", nil)
-      return
-    }
-    
-    let isVideo = dataOmi["isVideo"] as? Bool ?? false
-    CallManager.shareInstance().startCall(phoneNumber, isVideo: isVideo) { callResult in
-      resolve(callResult)
-    }
+  func startCall(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+      guard let dataOmi = data as? [String: Any],
+            let phoneNumber = dataOmi["phoneNumber"] as? String else {
+          reject("INVALID_DATA", "Expected a dictionary with phone number.", nil)
+          return
+      }
+
+      let isVideo = dataOmi["isVideo"] as? Bool ?? false
+
+      CallManager.shareInstance().startCall(phoneNumber, isVideo: isVideo) { callResult in
+          DispatchQueue.main.async {
+              if let result = callResult as? String, !result.isEmpty {
+                  resolve(result)
+              } else {
+                  reject("CALL_FAILED", "You have not logged into OMI", nil)
+              }
+          }
+      }
   }
   
   @objc(startCallWithUuid:resolver:rejecter:)

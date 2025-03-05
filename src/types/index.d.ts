@@ -1,6 +1,6 @@
 declare module 'omikit-plugin' {
     import { NativeEventEmitter } from 'react-native';
-  
+
     export function startServices(): Promise<any>;
     export function configPushNotification(data: any): Promise<any>;
     export function getInitialCall(): Promise<any>;
@@ -30,8 +30,6 @@ declare module 'omikit-plugin' {
     export function transferCall(data: any): Promise<boolean>;
     export function rejectCall(): Promise<boolean>;
   
-    export const omiEmitter: NativeEventEmitter;
-    
     export enum OmiCallState {
       unknown,
       calling,
@@ -42,9 +40,6 @@ declare module 'omikit-plugin' {
       disconnected,
       hold
     }
-
-
-      
   
     export const OmiCallEvent: {
       onCallStateChanged: string;
@@ -58,4 +53,9 @@ declare module 'omikit-plugin' {
       onAudioChange: string;
       onRequestPermissionAndroid: string;
     };
-  }
+
+
+
+  export const omiEmitter: NativeEventEmitter;
+}
+
