@@ -38,4 +38,15 @@ class OmiKitUtils {
     clearStatusPendingCall(context)
     return status
   }
+
+  fun checkTypeNumber(phoneNumber: String?): String {
+      if (phoneNumber.isNullOrBlank()) return "" // 
+
+      return when {
+          phoneNumber.length < 8 -> "internal"
+          phoneNumber.any { it.isLetter() } && phoneNumber.any { it.isDigit() } -> "zalo"
+          else -> "phone"
+      }
+  }
+
 }

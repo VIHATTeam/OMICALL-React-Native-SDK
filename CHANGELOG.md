@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## 3.2.72
+- Update OMIKIT iOS to version 1.8.9
+- Update OMIKIT android to version 2.3.22
+- Format data return Client with format camelCase 
+- Fix crash when login OMICAll not success 
+
 ## 3.2.70
 - Update OMIKIT to version 1.8.8
 - Add func toggle speaker

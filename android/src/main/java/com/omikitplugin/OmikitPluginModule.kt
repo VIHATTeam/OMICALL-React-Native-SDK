@@ -24,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import vn.vihat.omicall.omisdk.OmiAccountListener
 import vn.vihat.omicall.omisdk.OmiClient
 import vn.vihat.omicall.omisdk.OmiListener
@@ -38,85 +39,105 @@ import vn.vihat.omicall.omisdk.utils.Utils
 class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   ReactContextBaseJavaModule(reactContext), ActivityEventListener, OmiListener {
   private val mainScope = CoroutineScope(Dispatchers.Main)
-  private var isIncomming: Boolean = false
+  private var isIncoming: Boolean = false
   private var isAnserCall: Boolean = false
 
   override fun getName(): String {
     return NAME
   }
 
+
+    private val handler = Handler(Looper.getMainLooper())
+
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
-    isIncomming = true;
+    isIncoming = true;
     Log.d("OMISDK", "=>> START INCOMING CALL REVICED => ")
-    val map: WritableMap = WritableNativeMap()
-    map.putBoolean("isVideo", isVideo ?: true)
-    map.putBoolean("incoming", isIncomming)
-    map.putString("callerNumber", phoneNumber)
-    map.putString("_id", "")
-    map.putInt("status", CallState.incoming.value)
+
+    val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
+
+    val map: WritableMap = WritableNativeMap().apply {
+        putBoolean("isVideo", isVideo ?: true)
+        putBoolean("incoming", isIncoming)
+        putString("callerNumber", phoneNumber ?: "")
+        putString("_id", "")
+        putInt("status", CallState.incoming.value)
+        putString("typeNumber", typeNumber)
+    }
+
     sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onCallEstablished(
-    callerId: Int,
-    phoneNumber: String?,
-    isVideo: Boolean?,
-    startTime: Long,
-    transactionId: String?,
+      callerId: Int,
+      phoneNumber: String?,
+      isVideo: Boolean?,
+      startTime: Long,
+      transactionId: String?,
   ) {
-    isAnserCall = true
-    Log.d("OMISDK", "=>> ON CALL ESTABLISHED => ")
-    Handler(Looper.getMainLooper()).postDelayed({
-      Log.d("OmikitReactNative", "onCallEstablished")
-      val map: WritableMap = WritableNativeMap()
-      map.putString("callerNumber", phoneNumber)
-      map.putBoolean("isVideo", isVideo ?: true)
-      map.putBoolean("incoming", isIncomming)
-      map.putString("transactionId", transactionId)
-      map.putInt("status", CallState.confirmed.value)
-      sendEvent(CALL_STATE_CHANGED, map)
-    }, 200)
+      isAnserCall = true
+      Log.d("OMISDK", "=>> ON CALL ESTABLISHED => ")
+
+      Handler(Looper.getMainLooper()).postDelayed({
+          Log.d("OmikitReactNative", "onCallEstablished")
+
+          val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
+
+          val map: WritableMap = WritableNativeMap().apply {
+              putString("callerNumber", phoneNumber ?: "")
+              putBoolean("isVideo", isVideo ?: true)
+              putBoolean("incoming", isIncoming) // 🔹 Kiểm tra lỗi chính tả biến này
+              putString("transactionId", transactionId ?: "")
+              putInt("status", CallState.confirmed.value)
+              putString("typeNumber", typeNumber)
+          }
+
+          sendEvent(CALL_STATE_CHANGED, map)
+      }, 200)
   }
 
   override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
-    Log.d("OMISDK RN", "=>> onCallEnd 0000 => $callInfo")
-    val call = callInfo as Map<*, *>
-    val map: WritableMap = WritableNativeMap()
-    val timeStartToAnswer = call["time_start_to_answer"] as Long?
-    val timeEnd = call["time_end"] as Long
-    map.putString("direction", call["direction"] as String)
-    map.putString("transaction_id", call["transaction_id"] as String?)
-    map.putString("source_number", call["source_number"] as String)
-    map.putString("destination_number", call["destination_number"] as String)
-    map.putDouble("time_start_to_answer", (timeStartToAnswer ?: 0).toDouble())
-    map.putDouble("time_end", timeEnd.toDouble())
-    map.putString("sip_user", call["sip_user"] as String)
-    map.putInt("code_end_call", statusCode as Int)
-    map.putString("disposition", call["disposition"] as String)
-    map.putInt("status", CallState.disconnected.value)
+      Log.d("OMISDK RN", "=>> onCallEnd 0000 => $callInfo")
 
-    map.putString("transactionId", call["transaction_id"] as String?)
-    map.putString("sourceNumber", call["source_number"] as String)
-    map.putString("destinationNumber", call["destination_number"] as String)
-    map.putDouble("timeStartToAnswer", (timeStartToAnswer ?: 0).toDouble())
-    map.putDouble("timeEnd", timeEnd.toDouble())
-    map.putString("sipUser", call["sip_user"] as String)
-    map.putInt("codeEndCall", statusCode as Int)
+      // Kiểm tra kiểu dữ liệu trước khi ép kiểu để tránh lỗi
+      val call = callInfo ?: mutableMapOf()
 
-    Log.d("OMISDK RN", "=>> onCallEnd  => $map")
-    sendEvent(CALL_STATE_CHANGED, map)
+      val timeStartToAnswer = (call["time_start_to_answer"] as? Long) ?: 0L
+      val timeEnd = (call["time_end"] as? Long) ?: 0L
+      val phoneNumber = (call["destination_number"] as? String) ?: (call["source_number"] as? String) ?: ""
+      val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber)
+
+      val map: WritableMap = WritableNativeMap().apply {
+          putString("direction", call["direction"] as? String ?: "")
+          putString("transactionId", call["transaction_id"] as? String ?: "")
+          putString("sourceNumber", call["source_number"] as? String ?: "")
+          putString("destinationNumber", call["destination_number"] as? String ?: "")
+          putDouble("timeStartToAnswer", timeStartToAnswer.toDouble())
+          putDouble("timeEnd", timeEnd.toDouble())
+          putString("sipUser", call["sip_user"] as? String ?: "")
+          putInt("codeEndCall", statusCode)
+          putString("disposition", call["disposition"] as? String ?: "")
+          putInt("status", CallState.disconnected.value)
+          putString("typeNumber", typeNumber)
+      }
+
+      Log.d("OMISDK RN", "=>> onCallEnd  => $map")
+      sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onConnecting() {
-    Log.d("OMISDK", "=>> ON CONNECTING CALL => ")
-    val map: WritableMap = WritableNativeMap()
-    map.putString("callerNumber", "")
-    map.putBoolean("isVideo", NotificationService.isVideo)
-    map.putBoolean("incoming", isIncomming)
-    map.putString("transactionId", "")
-    map.putString("_id", "")
-    map.putInt("status", CallState.connecting.value)
-    sendEvent(CALL_STATE_CHANGED, map)
+      Log.d("OMISDK", "=>> ON CONNECTING CALL => ")
+
+      val map: WritableMap = WritableNativeMap().apply {
+          putString("callerNumber", "")
+          putBoolean("isVideo", NotificationService.isVideo)
+          putBoolean("incoming", isIncoming ?: false)
+          putString("transactionId", "")
+          putString("_id", "")
+          putInt("status", CallState.connecting.value)
+          putString("typeNumber", "")
+      }
+
+      sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onDescriptionError() {
@@ -126,25 +147,21 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onRinging(callerId: Int, transactionId: String?) {
-    var callDirection = OmiClient.callDirection
-    val map: WritableMap = WritableNativeMap()
+      val callDirection = OmiClient.callDirection
+      val prePhoneNumber = OmiClient.prePhoneNumber ?: ""
+      val typeNumber = OmiKitUtils().checkTypeNumber(prePhoneNumber)
 
-    if (callDirection == "inbound") {
-      Log.d("OMISDK", "=>> ON IN COMMING CALL => ")
-      map.putString("callerNumber", OmiClient.prePhoneNumber)
-      map.putBoolean("isVideo", NotificationService.isVideo)
-      map.putBoolean("incoming", true)
-      map.putString("transactionId", transactionId ?: "")
-      map.putInt("status", CallState.incoming.value)
-    } else {
-      map.putString("callerNumber", "")
-      map.putBoolean("isVideo", NotificationService.isVideo)
-      map.putString("transactionId", transactionId ?: "")
-      map.putInt("status", CallState.early.value)
-      map.putBoolean("incoming", false)
-      Log.d("OMISDK", "=>> ON RINGING CALL => ")
-    }
-    sendEvent(CALL_STATE_CHANGED, map)
+      val map: WritableMap = WritableNativeMap().apply {
+          putString("callerNumber", if (callDirection == "inbound") prePhoneNumber else "")
+          putBoolean("isVideo", NotificationService.isVideo)
+          putString("transactionId", transactionId ?: "")
+          putInt("status", if (callDirection == "inbound") CallState.incoming.value else CallState.early.value)
+          putBoolean("incoming", callDirection == "inbound")
+          putString("typeNumber", typeNumber)
+      }
+
+      Log.d("OMISDK", if (callDirection == "inbound") "=>> ON INCOMING CALL => " else "=>> ON RINGING CALL => ")
+      sendEvent(CALL_STATE_CHANGED, map)
   }
 
 
@@ -175,15 +192,21 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
-    Log.d("OMISDK", "=>> ON OUT GOING STARTED CALL => ")
-    val map: WritableMap = WritableNativeMap()
-    map.putString("callerNumber", "")
-    map.putBoolean("isVideo", NotificationService.isVideo)
-    map.putString("transactionId", "")
-    map.putInt("status", CallState.calling.value)
-    map.putString("_id", "")
-    map.putBoolean("incoming", isIncomming)
-    sendEvent(CALL_STATE_CHANGED, map)
+      Log.d("OMISDK", "=>> ON OUTGOING STARTED CALL => ")
+
+      val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
+
+      val map: WritableMap = WritableNativeMap().apply {
+          putString("callerNumber", phoneNumber ?: "")
+          putBoolean("isVideo", NotificationService.isVideo)
+          putString("transactionId", "")
+          putInt("status", CallState.calling.value)
+          putString("_id", "")
+          putBoolean("incoming", isIncoming) // 🔹 Kiểm tra lỗi chính tả của biến này
+          putString("typeNumber", typeNumber)
+      }
+
+      sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onSwitchBoardAnswer(sip: String) {
@@ -196,14 +219,18 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     Log.d("OMISDK", "=> ON REGISTER COMPLETED => status code: $statusCode")
 
     if (statusCode != 200) {
+      val normalizedStatusCode = if (statusCode == 403) 853 else statusCode
+      val typeNumber = ""
+
       val mapObject = WritableNativeMap().apply {
-        putBoolean("isVideo", false)
-        putBoolean("incoming", true)
-        putString("callerNumber", "")
-        putString("_id", "")
-        putInt("status", 6)
-        putInt("code_end_call", if (statusCode == 403) 853 else statusCode)
-        putInt("codeEndCall", if (statusCode == 403) 853 else statusCode)
+          putBoolean("isVideo", false)
+          putBoolean("incoming", true)
+          putString("callerNumber", "")
+          putString("_id", "")
+          putInt("status", 6)
+          putInt("code_end_call", normalizedStatusCode)
+          putInt("codeEndCall", normalizedStatusCode)
+          putString("typeNumber", typeNumber)
       }
       sendEvent(CALL_STATE_CHANGED, mapObject)
     }
@@ -405,51 +432,68 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   @ReactMethod
-  fun getInitialCall(counter: Int = 4, promise: Promise) {
-    currentActivity?.runOnUiThread {
-      if (reactApplicationContext != null) {
-        val call = Utils.getActiveCall(reactApplicationContext!!)
-        Log.d("getInitialCall RN", "getInitialCall abc $call")
-        if (call == null) {
-          if (counter <= 0) {
-            promise.resolve(false);
-          } else {
-            thread {
-              Thread.sleep(5000) // Chờ 5 giây
-              getInitialCall(counter - 1, promise); // Gọi lại hàm đệ quy
-            }
-          }
-        } else {
-          val phoneNumberTemp: String = call.remoteNumber as String
-          if (phoneNumberTemp.isNotEmpty()) {
-            val map: WritableMap = WritableNativeMap()
-            map.putString("callerNumber", phoneNumberTemp)
-            val statusPendingCall = OmiKitUtils().getStatusPendingCall(reactApplicationContext)
-            if (call.state == 3) {
-              if (statusPendingCall != 0) {
-                call.state = statusPendingCall
-              }
-            }
-            map.putBoolean("incoming", call.direction == "inbound")
-            map.putInt("_id", call.id)
-            map.putInt("status", call.state)
-            map.putBoolean("muted", false)
-            map.putBoolean("isVideo", call.isVideo ?: false)
-            promise.resolve(map)
-            if (statusPendingCall == 2 && call.state != 5) {
-              Log.d("getInitialCall RN", "incomingReceive $statusPendingCall")
-              val map2: WritableMap = WritableNativeMap()
-              map2.putBoolean("isVideo", call.isVideo ?: false)
-              map2.putBoolean("incoming", true)
-              map2.putString("callerNumber", phoneNumberTemp)
-              map2.putString("_id", "")
-              map2.putInt("status", 2)
-              sendEvent(CALL_STATE_CHANGED, map2)
-            }
-          }
-        }
+  fun getInitialCall(counter: Int = 1, promise: Promise) {
+      val context = reactApplicationContext ?: run {
+          Log.e("getInitialCall", "❌ React context is null")
+          promise.resolve(false)
+          return
       }
-    }
+
+      val call = Utils.getActiveCall(context)
+      Log.d("getInitialCall RN", "📞 Active call: $call")
+
+      if (call == null) {
+          if (counter <= 0) {
+              promise.resolve(false)
+          } else {
+              mainScope.launch {
+                  Log.d("getInitialCall RN", "🔄 Retrying in 2s... (Attempts left: $counter)")
+                  delay(1000) // Chờ 2 giây
+                  getInitialCall(counter - 1, promise) // Gọi lại hàm đệ quy
+              }
+          }
+          return
+      }
+
+      val phoneNumber = call.remoteNumber as? String ?: ""
+      if (phoneNumber.isEmpty()) {
+          promise.resolve(false)
+          return
+      }
+
+      val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
+
+      val map: WritableMap = WritableNativeMap().apply {
+          putString("callerNumber", phoneNumber)
+          putBoolean("incoming", call.direction == "inbound")
+          putInt("_id", call.id)
+          putInt("status", call.state)
+          putBoolean("muted", false)
+          putBoolean("isVideo", call.isVideo ?: false)
+          putString("typeNumber", typeNumber)
+      }
+
+      val statusPendingCall = OmiKitUtils().getStatusPendingCall(context)
+      if (call.state == 3 && statusPendingCall != 0) {
+          call.state = statusPendingCall
+      }
+
+      promise.resolve(map)
+
+      if (statusPendingCall == 2 && call.state != 5) {
+          Log.d("getInitialCall RN", "🚀 Incoming Receive Triggered ($statusPendingCall)")
+
+
+          val eventMap: WritableMap = WritableNativeMap().apply {
+              putBoolean("isVideo", call.isVideo ?: false)
+              putBoolean("incoming", true)
+              putString("callerNumber", phoneNumber)
+              putString("_id", "")
+              putInt("status", 2)
+              putString("typeNumber", typeNumber)
+          }
+          sendEvent(CALL_STATE_CHANGED, eventMap)
+      }
   }
 
 
@@ -540,7 +584,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun endCall(promise: Promise) {
-    if (isIncomming && !isAnserCall) {
+    if (isIncoming && !isAnserCall) {
       OmiClient.getInstance(reactApplicationContext!!).decline()
     } else {
       OmiClient.getInstance(reactApplicationContext!!).hangUp()
@@ -551,7 +595,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun rejectCall(promise: Promise) {
-    if (isIncomming && !isAnserCall) {
+    if (isIncoming && !isAnserCall) {
       OmiClient.getInstance(reactApplicationContext!!).decline()
     }
     promise.resolve(true)
@@ -842,18 +886,19 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
-  fun sendEvent(eventName: String?, params: Any?) {
-    if (eventName == null) {
-      Log.e("OmikitPlugin", "eventName is null. Event cannot be emitted.")
-      return
-    }
-    if (currentActivity != null) {
-      currentActivity!!.runOnUiThread {
-        reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
-          .emit(eventName, params)
+    fun sendEvent(eventName: String?, params: Any?) {
+      if (eventName == null) {
+        Log.e("OmikitPlugin", "❌ eventName is null or empty. Không thể gửi event.")
+        return
+      }
+      if (currentActivity != null) {
+        currentActivity!!.runOnUiThread {
+          reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
+            .emit(eventName, params)
+             Log.d("OmikitPlugin", "✅ Event $eventName đã được gửi thành công!")
+        }
       }
     }
-  }
 
   private fun requestPermission(isVideo: Boolean) {
     var permissions = arrayOf(
