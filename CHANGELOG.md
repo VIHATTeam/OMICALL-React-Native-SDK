@@ -3,6 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 
+## 3.2.73
+- Update documents
+
 ## 3.2.72
 - Update OMIKIT iOS to version 1.8.9
 - Update OMIKIT android to version 2.3.22
