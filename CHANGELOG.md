@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.74
+- Update OMIKIT iOS to version 1.8.10
+  
 
 ## 3.2.73
 - Update documents
