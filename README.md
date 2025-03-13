@@ -1089,7 +1089,7 @@ const result = await startCallWithUuid({
 import { omiEmitter } from 'omikit-plugin';
 
 /*
-❌ ❌ With TypeScript, in android, it seems our omiEmitter is not working properly. Please use the following manual declaration, to ensure performance
+❌ ❌ With TypeScript, in Android, it seems our omiEmitter is not working properly. Please use the following manual declaration, to ensure performance
 */
 
 // 📌 For TypeScript, Android 

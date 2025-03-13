@@ -384,41 +384,37 @@ class CallManager {
   
   
   /// Start call
-  func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_ : String) -> Void) {
-      let secondsSinceCurrentTime = lastTimeCall.timeIntervalSinceNow
-      guestPhone = phoneNumber
-      var completionCalled = false  // 🔥 Biến kiểm soát callback đã gọi chưa
+func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: String) -> Void) {
+    let secondsSinceCurrentTime = lastTimeCall.timeIntervalSinceNow
+    guestPhone = phoneNumber
+    var isCompletionCalled = false // ✅ Biến kiểm soát callback để tránh gọi nhiều lần
 
-      OmiClient.startCall(phoneNumber, isVideo: isVideo) { status in
-          DispatchQueue.main.async {
-              guard let callCurrent = self.omiLib.getCurrentCall() else {
-                  if !completionCalled {
-                      completion("{\"status\": \"6\", \"message\": \"REGISTER_ACCOUNT_FAIL\"}")
-                      completionCalled = true
-                  }
-                  return
-              }
+    OmiClient.startCall(phoneNumber, isVideo: isVideo) { status in
+        DispatchQueue.main.async {
+            if isCompletionCalled { return } // ✅ Nếu callback đã gọi trước đó thì không thực hiện tiếp
 
-              let dataToSend: [String: Any] = [
-                  "status": status.rawValue,
-                  "_id": String(describing: OmiCallModel(omiCall: callCurrent).uuid),
-                  "message": OmiUtils.messageCall(type: status.rawValue)
-              ]
+            var dataToSend: [String: Any] = [
+                "status": status.rawValue,
+                "_id": "",
+                "message": OmiUtils.messageCall(type: status.rawValue)
+            ]
 
-              if let jsonString = OmiUtils.convertDictionaryToJson(dictionary: dataToSend) {
-                  if !completionCalled {
-                      completion(jsonString)
-                      completionCalled = true
-                  }
-              } else {
-                  if !completionCalled {
-                      completion("{\"status\": \"error\", \"message\": \"JSON conversion failed\"}")
-                      completionCalled = true
-                  }
-              }
-          }
-      }
-  }
+            // ✅ Kiểm tra và lấy ID cuộc gọi nếu có
+            if let callCurrent = self.omiLib.getCurrentCall() {
+                dataToSend["_id"] = String(describing: OmiCallModel(omiCall: callCurrent).uuid)
+            }
+
+            // ✅ Chuyển đổi Dictionary sang JSON
+            if let jsonString = OmiUtils.convertDictionaryToJson(dictionary: dataToSend) {
+                completion(jsonString)
+            } else {
+                completion("{\"status\": \"error\", \"message\": \"JSON conversion failed\"}")
+            }
+
+            isCompletionCalled = true // ✅ Đánh dấu callback đã được gọi
+        }
+    }
+}
   
   
   /// Start call
