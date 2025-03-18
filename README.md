@@ -765,10 +765,12 @@ const result = await startCall({
 | `"COULD_NOT_FIND_END_POINT"`              | 5          | Please login before making your call                                    |
 | `"REGISTER_ACCOUNT_FAIL"`                 | 6          | Can't log in to OMI (maybe wrong login information)                     |
 | `"START_CALL_FAIL"`                       | 7          | Call failed, please try again                                           |
-| `"HAVE_ANOTHER_CALL"`                     | 9          | There is another call in progress; please wait for that call to end       |
+| `"HAVE_ANOTHER_CALL"`                     | 9          | There is another call in progress; please wait for that call to end     |
+| `"EXTENSION_NUMBER_IS_OFF"`               | 10         | Extension number off User is turn Off                                   |
 | `"START_CALL_SUCCESS"`                    | 8          | START CALL SUCCESSFULLY                                                 |
 
 <br>
+
 
 📌 **startCallWithUuid()**
 

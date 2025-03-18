@@ -35,6 +35,8 @@ public class OmiUtils {
                 return "START_CALL_FAIL"
             case 9:
                 return "HAVE_ANOTHER_CALL"
+            case 10:
+                return "EXTENSION_NUMBER_IS_OFF"
             default:
                 return "START_CALL_SUCCESS"
         }
@@ -64,7 +66,25 @@ public class OmiUtils {
         case 6: return "REGISTER_ACCOUNT_FAIL"
         case 7: return "START_CALL_FAIL"
         case 9: return "HAVE_ANOTHER_CALL"
+        case 10: return "EXTENSION_NUMBER_IS_OFF"
         default: return "START_CALL_SUCCESS"
+        }
+    }
+
+    /// trả về mã lỗi chi tiết
+    static func messageCallDetail(type: Int) -> String {
+        switch type {
+        case 0: return "UUID đang trống hoặc không chính xác"
+        case 1: return "SIP_USER đang trống hoặc không chính xác"
+        case 2: return "Bạn đang gọi chính mình"
+        case 3: return "Vượt quá số lần gọi, vui lòng thử lại sau 2s"
+        case 4: return "Bạn chưa cấp quyền"
+        case 5: return "Vui lòng log in vào OMI"
+        case 6: return "Đăng nhập vào OMI thất bại, thông tin đăng nhập không chính xác"
+        case 7: return "Khởi tạo cuộc gọi không thành công"
+        case 9: return "Có một cuộc gọi khác chưa kết thúc"
+        case 10: return "Số nội bộ đã tắt"
+        default: return "Khởi tạo cuộc gọi thành công"
         }
     }
 
