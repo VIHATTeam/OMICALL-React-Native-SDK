@@ -397,7 +397,7 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
                 "status": status.rawValue,
                 "_id": "",
                 "message": OmiUtils.messageCall(type: status.rawValue),
-                "message_detail": OmiUtils.messageCallDetail(type: statusCall.rawValue)
+                "message_detail": OmiUtils.messageCallDetail(type: status.rawValue)
             ]
 
             // ✅ Kiểm tra và lấy ID cuộc gọi nếu có
@@ -429,7 +429,7 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
           var dataToSend: [String: Any] = [
             "status": statusCall.rawValue,
             "_id": "",
-            "message": OmiUtils.messageCall(type: statusCall.rawValue)
+            "message": OmiUtils.messageCall(type: statusCall.rawValue),
             "message_detail": OmiUtils.messageCallDetail(type: statusCall.rawValue)
           ]
           if(callCurrent != nil){
