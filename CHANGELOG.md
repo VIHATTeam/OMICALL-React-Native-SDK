@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.75
+- Update OMIKIT iOS to version 1.8.11
+- Fix DNS network user block call in iOS
+  
+
 ## 3.2.74
 - Update OMIKIT iOS to version 1.8.10
   
