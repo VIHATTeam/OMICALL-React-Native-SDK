@@ -177,7 +177,15 @@ class CallManager {
           let message = user.string(forKey: "omicall/prefixMissedCallMessage") ?? ""
           let content      = UNMutableNotificationContent()
           content.title    = title
-          content.body = "\(message) \(call.callerNumber!)"
+
+          if let nameCallerNumber = call.callerNumber {
+            let callerName = call.callerName ?? ""
+            let nameShow =  callerName.count > 0 ? callerName : nameCallerNumber
+             content.body = "\(message) \(nameShow)"
+          } else {
+              content.body = "\(message) \(call.callerNumber!)"
+          }
+
           content.sound    = .default
           content.userInfo = [
             "omisdkCallerNumber": call.callerNumber,
