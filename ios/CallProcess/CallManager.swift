@@ -178,10 +178,10 @@ class CallManager {
           let content      = UNMutableNotificationContent()
           content.title    = title
 
-          if let nameCallerNumber = call.callerNumber {
+          if let nameCallerNumber = call.callerNumber { 
             let callerName = call.callerName ?? ""
             let nameShow =  callerName.count > 0 ? callerName : nameCallerNumber
-             content.body = "\(message) \(nameShow)"
+              content.body = message.isEmpty ? nameShow : "\(message) \(nameShow)"
           } else {
               content.body = "\(message) \(call.callerNumber!)"
           }
