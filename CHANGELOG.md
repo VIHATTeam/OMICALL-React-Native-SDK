@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.79
+- Update OMIKIT iOS to version 1.8.14
+- Update show name missed call in ios notification
+
+
 ## 3.2.78
 - Update show name missed call in ios notification
 
