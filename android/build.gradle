@@ -120,7 +120,7 @@ dependencies {
   // use for OMISDK
   implementation("androidx.work:work-runtime:2.8.1")
   implementation "androidx.security:security-crypto:1.1.0-alpha06"
-  api 'vn.vihat.omicall:omi-sdk:2.3.22'
+  api 'vn.vihat.omicall:omi-sdk:2.3.23'
 
   implementation "com.facebook.react:react-native:+" // From node_modules
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

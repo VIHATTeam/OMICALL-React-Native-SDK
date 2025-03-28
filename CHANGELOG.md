@@ -1,6 +1,8 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## 3.2.81
+- Update OMIKIT Android to version 2.3.23
 
 ## 3.2.80
 - Update OMIKIT iOS to version 1.8.16
