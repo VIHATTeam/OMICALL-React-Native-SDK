@@ -198,6 +198,9 @@ public class MainActivity extends ReactActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    FirebaseApp.initializeApp(this); // Initialize firebase if not already there
+
     reactApplicationContext = new ReactApplicationContext(this);
   }
 
@@ -231,7 +234,9 @@ class MainActivity : ReactActivity() {
     private var reactApplicationContext: ReactApplicationContext? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
          FirebaseApp.initializeApp(this); // Initialize firebase if not already there
+
         val reactInstanceManager: ReactInstanceManager = reactNativeHost.reactInstanceManager
         val currentContext = reactInstanceManager.currentReactContext
         if (currentContext != null && currentContext is ReactApplicationContext) {
