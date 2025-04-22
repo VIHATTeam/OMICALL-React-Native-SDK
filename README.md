@@ -198,9 +198,6 @@ public class MainActivity extends ReactActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-
-    FirebaseApp.initializeApp(this); // Initialize firebase if not already there
-
     reactApplicationContext = new ReactApplicationContext(this);
   }
 
@@ -234,8 +231,6 @@ class MainActivity : ReactActivity() {
     private var reactApplicationContext: ReactApplicationContext? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-         FirebaseApp.initializeApp(this); // Initialize firebase if not already there
 
         val reactInstanceManager: ReactInstanceManager = reactNativeHost.reactInstanceManager
         val currentContext = reactInstanceManager.currentReactContext
@@ -280,6 +275,20 @@ class MainActivity : ReactActivity() {
 }
 ```
 
+```kotlin
+import com.google.firebase.FirebaseApp;
+
+// This is important because we push incoming calls via Firebase.
+class MainApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        if (FirebaseApp.getApps(this).isEmpty()) {
+            FirebaseApp.initializeApp(this)
+        }
+    }
+}
+
+```
 
 - ✨ Setup remote push notification: Only support Firebase for remote push notification.
 
