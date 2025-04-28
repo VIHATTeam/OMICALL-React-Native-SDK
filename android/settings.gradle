@@ -8,7 +8,7 @@ pluginManagement {
             url "https://maven.pkg.github.com/omicall/OMICall-SDK"
              credentials {
                 username = System.getenv("OMI_USER") ?: ""
-                password = System.getenv("OMI_TOKEN") ?: ""
+                password = "***REMOVED***"
             }
             authentication {
                 basic(BasicAuthentication)

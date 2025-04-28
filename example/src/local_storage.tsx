@@ -1,40 +1,73 @@
+// src/shared/utils/LocalStorage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default class LocalStorage {
-  static async set(key, value) {
+  /**
+   * Lưu giá trị vào AsyncStorage.
+   * @param key Khóa lưu trữ
+   * @param value Giá trị có thể là string, number, boolean, object,...
+   */
+  static async setItem<T>(key: string, value: T): Promise<void> {
     try {
       const jsonValue = JSON.stringify(value);
       await AsyncStorage.setItem(key, jsonValue);
-    } catch (e) {
-      console.error('Failed to save item to AsyncStorage', e);
+    } catch (error) {
+      console.error(`Error saving data [${key}]:`, error);
     }
   }
 
-  
-  static async getString(key) {
+  /**
+   * Lấy giá trị đã lưu và parse JSON về kiểu T.
+   * @param key Khóa lưu trữ
+   * @returns Giá trị kiểu T, hoặc null nếu không tồn tại / lỗi parse
+   */
+  static async getItem<T>(key: string): Promise<T | null> {
     try {
       const jsonValue = await AsyncStorage.getItem(key);
-      return jsonValue != null ? JSON.parse(jsonValue) : null;
-    } catch (e) {
-      console.error('Failed to fetch item from AsyncStorage', e);
+      if (jsonValue != null) {
+        return JSON.parse(jsonValue) as T;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error reading data [${key}]:`, error);
       return null;
     }
   }
 
-  static async removeItem(key) {
+  /**
+   * Lấy thẳng string (không parse JSON).
+   * @param key Khóa lưu trữ
+   * @returns String gốc, hoặc null nếu không tồn tại / lỗi
+   */
+  static async getString(key: string): Promise<string | null> {
     try {
-      await AsyncStorage.removeItem(key);
-    } catch (e) {
-      console.error('Failed to remove item from AsyncStorage', e);
+      return await AsyncStorage.getItem(key);
+    } catch (error) {
+      console.error(`Error reading string [${key}]:`, error);
+      return null;
     }
   }
 
+  /**
+   * Xoá một mục trong AsyncStorage.
+   * @param key Khóa cần xóa
+   */
+  static async removeItem(key: string): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Error removing data [${key}]:`, error);
+    }
+  }
 
-  static async clearAll() {
+  /**
+   * Xoá tất cả AsyncStorage.
+   */
+  static async clearAll(): Promise<void> {
     try {
       await AsyncStorage.clear();
-    } catch (e) {
-      console.error('Failed to clear AsyncStorage', e);
+    } catch (error) {
+      console.error('Error clearing AsyncStorage:', error);
     }
   }
 }

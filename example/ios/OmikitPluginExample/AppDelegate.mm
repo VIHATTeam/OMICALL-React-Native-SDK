@@ -6,9 +6,12 @@
 // Import OmikitNotification
 #if __has_include("OmikitNotification.h")
 #import "OmikitNotification.h"
+#elif __has_include(<OmikitPlugin/OmikitPlugin-Swift.h>)
+#import <OmikitPlugin/OmikitPlugin-Swift.h>
 #else
 #import <omikit_plugin/OmikitNotification.h>
 #endif
+
 
 #import <React/RCTBundleURLProvider.h>
 
@@ -22,7 +25,13 @@
   self.initialProps = @{};
 
   // ----- Start OmiKit Config ------
+#if DEBUG
   [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image" typePushVoip:TYPE_PUSH_CALLKIT_DEFAULT];
+#else
+  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_PRODUCTION userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image" typePushVoip:TYPE_PUSH_CALLKIT_DEFAULT];
+#endif
+
+//  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image" typePushVoip:TYPE_PUSH_CALLKIT_DEFAULT, presentName: ""];
   
   self.provider = [[CallKitProviderDelegate alloc] initWithCallManager:[OMISIPLib sharedInstance].callManager];
   self.voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];

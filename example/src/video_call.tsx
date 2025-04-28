@@ -36,9 +36,11 @@ export const VideoCallScreen = ({ route }: any) => {
     (data: any) => {
       console.log('onCallEstablished');
       const { status, transactionId, callerNumber, isVideo } = data;
+      
       console.log(transactionId);
       console.log(isVideo);
       console.log(callerNumber);
+
       setCurrentStatus(status);
       if (status === OmiCallState.confirmed) {
         if (Platform.OS === 'android') {

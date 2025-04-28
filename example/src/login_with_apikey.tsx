@@ -61,7 +61,7 @@ export const LoginApiKeyScreen = () => {
     setLoading(false);
     if (result === true) {
       const loginInfoString = JSON.stringify(loginInfo);
-      LocalStorage.set('login_info', loginInfoString);
+      LocalStorage.setItem('login_info', loginInfoString);
       // navigation to home
       navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
     } else {

@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, {
   MutableRefObject,
   useCallback,
@@ -6,9 +7,9 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet, TextInput, View, Linking } from 'react-native';
+import { StyleSheet, TextInput, View, Linking, Alert} from 'react-native';
 
-import { initCallWithUserPassword, getCurrentUser} from 'omikit-plugin';
+import { initCallWithUserPassword, getCurrentUser, logout} from 'omikit-plugin';
 
 import LocalStorage from './local_storage';
 import { requestNotification, token } from './notification';
@@ -22,9 +23,16 @@ import {
 import { CustomLoading } from './components/custom_view/custom_loading';
 
 // HUNGTH
-const REALM = 'dathq';
-const USER_NAME = '121';
-const PASS_WORD = '1jJKD4Ps6X';
+const REALM = 'namplh';
+const USER_NAME = '100';
+const PASS_WORD = 'aRCMrnPODG';
+
+type RootStackParamList = {
+  Login: undefined;
+  Home: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const LoginScreen = () => {
   const [isVideo, setIsVideo] = useState(false);
@@ -37,90 +45,79 @@ export const LoginScreen = () => {
   const [password, setPassword] = useState(PASS_WORD);
   const [realm, setRealm] = useState(REALM);
   const [host, setHost] = useState('vh.omicrm.com');
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
 
   useEffect(() => {
     requestNotification();
   }, []);
 
   const loginUser = async () => {
-    console.log(userName);
-    console.log(password);
+    console.log("*** Starting login process ***");
+    console.log("Username:", userName);
 
     setLoading(true);
     const fcmToken = await token;
-    console.log(fcmToken);
-
-    // const loginInfo = {
-    //   userName: userName,
-    //   password: password,
-    //   realm: realm,
-    //   isVideo: isVideo,
-    //   fcmToken: fcmToken,
-    //   host: host,
-    //   projectId: ""
-    // };
+    console.log("FCM token:", fcmToken ? "Available" : "Not available");
 
     const loginInfo = {
-      userName: "101",
-      password: "Duongngocqui@98",
-      realm: "quidn",
+      userName: userName,
+      password: password,
+      realm: realm,
       isVideo: isVideo,
       fcmToken: fcmToken,
       host: host,
-        projectId: "omicrm-6558a"
+      projectId: "omicrm-6558a"
     };
-    const result11 = await getCurrentUser()
-
-    console.log('result initCallWithUserPassword: ', result11);
-
-
-    // const loginInfo = {
-    //     userName: "100",
-    //     password: "Z5N6IGNa8s",
-    //     realm: "truongphannguyenan",
-    //     isVideo: isVideo,
-    //     fcmToken: fcmToken,
-    //     host: host,
-    //     projectId: "omicrm-6558a"
-    // };
-
-    //  const loginInfoApiKey = {
-    //   fullName: "thanh mơis",
-    //   usrUuid: "0358380646",
-    //   apiKey: "E7AF81703203FC31F5658FAF3B875149CD57368ED07DB4AF414D93D3D2EBC76E",
-    //   isVideo: false,
-    //   phone: "0358380646",
-    //   fcmToken: fcmToken
-    // };
-
-    //  const loginInfoApiKey = {
-    //   usrUuid:"094d4f52-255c-4cdb-ad24-5adff34c3c87",
-    //   fullName:"Lê Hồng Thái",
-    //   apiKey:"687CB3BF9703A7F434964CC64EE72213962AB18812D7EB2FC9C83B89D917E6",
-    //   isVideo: true,
-    //   phone: "0963256096",
-    //   fcmToken: fcmToken
-    // };
-
-    // console.log("loginInfo ", loginInfo);
-
-    const result = await initCallWithUserPassword(loginInfo);
-    // const result = await initCallWithApiKey(loginInfoApiKey);
-    //save login info
-
-    console.log('result initCallWithUserPassword: ', result);
-
-    setLoading(false);
-    if (result) {
-      const result2 = await getCurrentUser()
-      console.log("result2 22 --> ", result2)
-      const loginInfoString = JSON.stringify(loginInfo);
-      LocalStorage.set('login_info', loginInfoString);
-      // navigation to home
-      navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
+    
+    try {
+      console.log("Calling initCallWithUserPassword...");
+      const result = await initCallWithUserPassword(loginInfo);
+      console.log("Login result:", result);
+      
+      if (result) {
+        console.log("Login successful, adding delay for Android...");
+        // Thêm delay cho cả Android và iOS để đảm bảo quá trình đăng nhập hoàn tất
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        console.log("Getting user info...");
+        const infoUser = await getCurrentUser();
+        console.log("User info:", infoUser);
+        
+        if (infoUser != null && Object.keys(infoUser || {}).length > 0) {
+          console.log("Successfully got user info, saving to storage...");
+          // Lưu cả thông tin đăng nhập và thông tin người dùng
+          try {
+            // Lưu thông tin đăng nhập vào localStorage
+            await LocalStorage.setItem('login_data', JSON.stringify(loginInfo));
+            console.log("Login data saved successfully");
+            
+            // Điều hướng đến màn hình Home
+            console.log("Navigating to Home screen...");
+            navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
+          } catch (storageError) {
+            console.error("Error saving login data:", storageError);
+            Alert.alert('Lỗi lưu thông tin', 'Không thể lưu thông tin đăng nhập');
+          }
+        } else {
+          console.error("User info is empty or null");
+          logout();
+          Alert.alert('Lỗi lấy thông tin', 'Không thể lấy thông tin người dùng');
+        }
+      } else {
+        console.error("Login failed");
+        logout();
+        Alert.alert('Lỗi đăng nhập', 'Đăng nhập thất bại, vui lòng thử lại');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      logout();
+      Alert.alert('Lỗi đăng nhập', 'Đã xảy ra lỗi, vui lòng thử lại sau');
+    } finally {
+      setLoading(false);
     }
   };
+
+  
 
   const _videoTrigger = useCallback(() => {
     setIsVideo(!isVideo);
@@ -129,7 +126,7 @@ export const LoginScreen = () => {
 
   useEffect(() => {
     // Hàm xử lý khi nhận deeplink
-    const handleDeepLink = (event) => {
+    const handleDeepLink = (event: {url: string}) => {
       const url = event.url;
       // Xử lý URL ở đây
       console.log('Received deep link: ', url);

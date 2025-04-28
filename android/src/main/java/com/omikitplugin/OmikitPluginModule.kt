@@ -366,33 +366,52 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun initCallWithUserPassword(data: ReadableMap, promise: Promise) {
     mainScope.launch {
       var loginResult = false
+  
+      // Lấy dữ liệu và log giá trị
       val userName = data.getString("userName")
       val password = data.getString("password")
       val realm = data.getString("realm")
       val host = data.getString("host") ?: "vh.omicrm.com"
-      val isVideo = data.getBoolean("isVideo")
+      val isVideo = if (data.hasKey("isVideo")) data.getBoolean("isVideo") else true
       val firebaseToken = data.getString("fcmToken")
       val projectId = data.getString("projectId") ?: ""
-
+  
+      Log.d("OMISDK", """
+        userName: $userName
+        password: ${if (!password.isNullOrEmpty()) "****" else null}
+        realm: $realm
+        host: $host
+        isVideo: $isVideo
+        firebaseToken: ${firebaseToken?.take(10)}...
+        projectId: $projectId
+      """.trimIndent())
+  
       withContext(Dispatchers.Default) {
         try {
-          if (userName != null && password != null && realm != null && firebaseToken != null) {
-            loginResult =
-              OmiClient.register(
-                userName,
-                password,
-                realm,
-                isVideo ?: true,
-                firebaseToken,
-                host,
-                projectId
-              )
-            promise.resolve(loginResult)
+          if (!userName.isNullOrBlank() &&
+              !password.isNullOrBlank() &&
+              !realm.isNullOrBlank() &&
+              !firebaseToken.isNullOrBlank()
+          ) {
+            loginResult = OmiClient.register(
+              userName,
+              password,
+              realm,
+              isVideo,
+              firebaseToken,
+              host,
+              projectId
+            )
+            Log.d("OMISDK", "OmiClient.register() returned: $loginResult")
+          } else {
+            Log.e("OMISDK", "One or more required fields are missing.")
           }
-        } catch (_: Throwable) {
-          promise.resolve(loginResult)
+        } catch (e: Throwable) {
+          Log.e("OMISDK", "Exception during register: ${e.message}", e)
         }
       }
+  
+      // Trả kết quả về React Native
       promise.resolve(loginResult)
     }
   }

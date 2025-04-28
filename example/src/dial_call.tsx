@@ -1,6 +1,7 @@
 import {
   BackHandler,
   Image,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -19,6 +20,7 @@ import {
   omiEmitter,
   sendDTMF,
   toggleMute,
+  toggleSpeaker,
   joinCall,
   getCurrentUser,
   getGuestUser,
@@ -69,22 +71,33 @@ export const DialCallScreen = ({ route }: any) => {
     return StatusDescriptions[status] || '';
   };
 
-  const currentStatusText = useMemo(
-    () => getDescriptionFromStatus(currentStatus ?? 0),
-    [currentStatus]
-  );
+  const currentStatusText = useMemo(() => getDescriptionFromStatus(currentStatus ?? 0),
+    [currentStatus]);
 
   const callStateChanged = async (data: any) => {
+
+    console.log("DIA_CALL STATUS CHANGE ==>", data)
+
     const { status, code_end_call } = data;
-    console.log('Status CallStateChanged =>>>  ', status, code_end_call);
+
+    console.log('Dial_Call Status CallStateChanged =>>>  ', status, code_end_call);
+    
     // if(currentStatus != status && (currentStatus == OmiCallState.confirmed )){ // chặn update status cuộc gọi, khi đang trong cuộc gọi hiện tại
     //   return
     // }
+
     setCurrentStatus(status);
     if (status === OmiCallState.disconnected) {
       const callInfo = await getInitialCall();
       console.log('callInfo getInitialCall ==> ', callInfo);
-      navigation.goBack();
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      }
     }
     if (status === OmiCallState.confirmed) {
       const callInfo = await getInitialCall();
@@ -141,12 +154,13 @@ export const DialCallScreen = ({ route }: any) => {
 
   const onSwitchboardAnswer = useCallback(async (data: any) => {
     const { sip } = data;
-    console.log(sip);
+    console.log("onSwitchboardAnswer sip ", sip, data);
     const guest = await getGuestUser();
     setGuestUser(guest);
   }, []);
 
   const onCallQuality = useCallback((data: any) => {
+    console.log("data call quality", data);
     const { quality } = data;
     console.log(quality);
   }, []);
@@ -161,61 +175,79 @@ export const DialCallScreen = ({ route }: any) => {
   }, []);
 
   const toggleAndCheckDevice = useCallback(async () => {
-    const audioList = await getAudio();
-    if (audioList.length > 2) {
-      setSoundList(audioList);
-      setOnSoundSelection(true);
-    } else {
-      if (currentAudio === 'Receiver') {
-        const speaker = audioList.find((element: any) => {
-          return element.name === 'Speaker';
-        });
-        console.log(speaker);
-        setAudio({
-          portType: speaker.type,
-        });
-      } else {
-        const receiver = audioList.find((element: any) => {
-          return element.name === 'Receiver';
-        });
-        console.log(receiver);
-        setAudio({
-          portType: receiver.type,
-        });
-      }
-    }
+    toggleSpeaker()
+
+    // const audioList = await getAudio();
+    // console.log("audioList --> ", audioList)
+    // if (audioList.length > 2) {
+    //   setSoundList(audioList);
+    //   setOnSoundSelection(true);
+    // } else {
+    //   if (currentAudio === 'Receiver') {
+    //     const speaker = audioList.find((element: any) => {
+    //       return element.name === 'Speaker';
+    //     });
+    //     console.log(speaker);
+    //     setAudio({
+    //       portType: speaker.type,
+    //     });
+    //   } else {
+    //     const receiver = audioList.find((element: any) => {
+    //       return element.name === 'Receiver';
+    //     });
+    //     console.log(receiver);
+    //     setAudio({
+    //       portType: receiver.type,
+    //     });
+    //   }
+    // }
   }, [currentAudio]);
+
+
+  function sanitizeInput(input: string) {
+    return input.replace(/[^a-zA-Z0-9 ]/g, ""); // Chỉ cho phép chữ và số
+  }
 
   const onReqPermission = useCallback((data: any) => {
     console.log('onReqPermission => ', data);
   }, []);
 
+  const onSpeaker =  useCallback((data: any) => {
+    console.log('onReqPermission => ', data);
+  }, []);
+
   useEffect(() => {
-    const onCallStateChanged = omiEmitter.addListener(
-      OmiCallEvent.onCallStateChanged,
-      callStateChanged
-    );
+    console.log("route dia_call --> ", route, route.params)
+    omiEmitter.addListener(OmiCallEvent.onCallStateChanged, callStateChanged);
+    // omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (event) => {
+    //   console.log("📢 Sự kiện onCallStateChanged nhận được:", event);
+    // });
     omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
+    omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
     omiEmitter.addListener(OmiCallEvent.onHold, onHold);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
     omiEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
+
     omiEmitter.addListener(
       OmiCallEvent.onSwitchboardAnswer,
       onSwitchboardAnswer
     );
-
-    omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onReqPermission);
+    
+    if(Platform.OS == "android") {
+     omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onReqPermission);
+    }
 
     LiveData.isOpenedCall = true;
     return () => {
-      onCallStateChanged.remove();
       omiEmitter.removeAllListeners(OmiCallEvent.onAudioChange);
       omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
       omiEmitter.removeAllListeners(OmiCallEvent.onHold);
       omiEmitter.removeAllListeners(OmiCallEvent.onCallQuality);
       omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
       omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
-      omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
+      if(Platform.OS == "android") {
+        omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
+      }
       LiveData.isOpenedCall = false;
     };
   }, []);
@@ -344,9 +376,9 @@ export const DialCallScreen = ({ route }: any) => {
           <TouchableOpacity
             onPress={async () => {
               console.log('=>>>>>>>> end call  rejectCall =>>>>>>>>');
-              // endCall();
+              endCall();
               // navigation.goBack();
-              rejectCall()
+              // rejectCall()
             }}
           >
             <Image source={UIImages.hangup} style={styles.hangup} />

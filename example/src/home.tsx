@@ -14,10 +14,12 @@ import {
   // getInitialCall,
   OmiCallEvent,
   OmiCallState,
-  omiEmitter,
+  // omiEmitter,
   startCall,
 } from 'omikit-plugin';
-
+import { NativeEventEmitter, NativeModules } from "react-native";
+const { OmikitPlugin } = NativeModules;
+const omiEmitter = new NativeEventEmitter(OmikitPlugin);
 import { LiveData } from './livedata';
 import LocalStorage from './local_storage';
 
@@ -38,8 +40,15 @@ export const HomeScreen = () => {
     const callingInfo = await getInitialCall();
     console.log('callerNumber getInitialCall =>>>> ', callingInfo);
     if (callingInfo !== null && callingInfo !== false) {
-      const { callerNumber } = callingInfo;
-      console.log(callerNumber);
+      const { callerNumber, status, isVideo } = callingInfo;
+      console.log(callerNumber, status);
+      if ((status == OmiCallState.incoming || status == OmiCallState.early) && callerNumber?.length > 0) { // Validate call info 
+        if (isVideo === true) {
+          navigation.navigate('VideoCall' as never, input as never);
+        } else {
+          navigation.navigate('DialCall' as never, input as never);
+        }
+      }
     }
   }, []);
 
@@ -123,10 +132,11 @@ export const HomeScreen = () => {
 
   const onCallStateChanged = useCallback(
     (data: any) => {
-      console.log('data onCallStateChanged:  ', data);
-      const { status, callerNumber, isVideo } = data;
+      console.log('home data onCallStateChanged:  ', data);
+      const { status, callerNumber, isVideo, transactionId } = data;
       console.log('status call: ', status);
-      if (status == OmiCallState.incoming) {
+      
+      if (status == OmiCallState.incoming && callerNumber?.length > 0) {
         const input = {
           callerNumber: callerNumber,
           status: status,
@@ -178,7 +188,7 @@ export const HomeScreen = () => {
       return;
     }
     callWithParam(data);
-  }, []);
+  }, [callWithParam]);
 
   useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
@@ -210,7 +220,7 @@ export const HomeScreen = () => {
         isOutGoingCall: true,
       };
       console.log('zô zzzzz: ==>>> ');
-      navigation.navigate('DialCall' as never, data as never);
+      navigation.navigate('DialCall' , data );
     } else {
       console.log('call error ==> ', result);
     }

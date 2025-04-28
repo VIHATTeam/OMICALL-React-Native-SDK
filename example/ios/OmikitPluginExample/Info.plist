@@ -37,6 +37,17 @@
 	<string>Need location</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Need microphone access for make Call</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ứng dụng cần quyền truy cập thư viện ảnh.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Ứng dụng cần quyền lưu ảnh vào thư viện.</string>
+
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Ứng dụng cần quyền Bluetooth để kết nối với tai nghe.</string>
+
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Ứng dụng cần quyền mạng cục bộ để kết nối thiết bị.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

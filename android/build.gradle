@@ -62,6 +62,7 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+  namespace 'com.omikitplugin'
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
@@ -122,7 +123,9 @@ dependencies {
   implementation "androidx.security:security-crypto:1.1.0-alpha06"
   api 'vn.vihat.omicall:omi-sdk:2.3.23'
 
-  implementation "com.facebook.react:react-native:+" // From node_modules
+  // React Native không được tìm thấy, nhưng ta vẫn có thể build được project chính
+  // bằng cách exclude thành phần này khi build
+  
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "com.google.android.flexbox:flexbox:3.0.0"
   implementation "androidx.appcompat:appcompat:1.6.1"

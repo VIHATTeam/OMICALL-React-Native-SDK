@@ -27,12 +27,13 @@ target 'OmikitPluginExample' do
   pod 'GoogleUtilities', :modular_headers => true
   pod 'FirebaseAnalytics', :modular_headers => true
 
-  # pod 'omikit-plugin', :path => '../../'
+
 
   permissions_path = '../node_modules/react-native-permissions/ios'
-  pod 'Permission-Calendars', :path => "#{permissions_path}/Calendars"
-  pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
+
   pod 'Permission-Microphone', :path => "#{permissions_path}/Microphone"
+  pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
+  pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"
 
   use_react_native!(
     :path => config[:reactNativePath],
