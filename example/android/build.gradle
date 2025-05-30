@@ -26,19 +26,6 @@ allprojects {
         maven {
             url 'https://jitpack.io'
         }
-        maven {
-            url 'https://repo.omicall.com/maven'
-        }
-        maven {
-          url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-          credentials {
-              username = project.findProperty("OMI_USER") ?: ""
-              password =  "***REMOVED***"
-          }
-          authentication {
-              basic(BasicAuthentication)
-          }
-        }
     }
 }
 

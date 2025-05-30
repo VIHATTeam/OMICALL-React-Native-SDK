@@ -4,16 +4,6 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven { url "https://jitpack.io" }
-        maven {
-            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-             credentials {
-                username = System.getenv("OMI_USER") ?: ""
-                password = "***REMOVED***"
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
     }
 }
 
@@ -23,15 +13,5 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url "https://jitpack.io" }
-        maven {
-            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-            credentials {
-                 username = System.getenv("OMI_USER") ?: ""
-                password = System.getenv("OMI_TOKEN") ?: ""
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
     }
 }
