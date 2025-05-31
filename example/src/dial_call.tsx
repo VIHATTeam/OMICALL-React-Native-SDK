@@ -18,7 +18,6 @@ import {
   OmiCallEvent,
   omiEmitter,
   sendDTMF,
-  toggleMute,
   joinCall,
   getCurrentUser,
   getGuestUser,
@@ -29,9 +28,11 @@ import {
   getInitialCall,
   transferCall,
   toggleHold,
-  rejectCall
+  testEventEmission,
+  // getAutoUnregisterStatus, // Comment out until exported
+  // preventAutoUnregister // Comment out until exported
 } from 'omikit-plugin';
-
+const { DeviceEventEmitter } = require('react-native');
 import { UIImages } from '../assets';
 import { useNavigation } from '@react-navigation/native';
 import { CustomKeyboard } from './components/custom_view/custom_keyboard';
@@ -60,7 +61,7 @@ export const DialCallScreen = ({ route }: any) => {
   const [title, setTitle] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [guestUser, setGuestUser] = useState<any>(null);
-  const [transaction_id, setTransaction_id] = useState('');
+  const [_transaction_id, _setTransaction_id] = useState('');
 
   const getDescriptionFromStatus = (status: number): string => {
     console.log('status getDescriptionFromStatus ==> ', status);
@@ -74,7 +75,8 @@ export const DialCallScreen = ({ route }: any) => {
     [currentStatus]
   );
 
-  const callStateChanged = async (data: any) => {
+  const callStateChanged = useCallback(async (data: any) => {
+    console.log('🚀 callStateChanged triggered with data:', data);
     const { status, code_end_call } = data;
     console.log('Status CallStateChanged =>>>  ', status, code_end_call);
     // if(currentStatus != status && (currentStatus == OmiCallState.confirmed )){ // chặn update status cuộc gọi, khi đang trong cuộc gọi hiện tại
@@ -90,7 +92,7 @@ export const DialCallScreen = ({ route }: any) => {
       const callInfo = await getInitialCall();
       console.log(callInfo);
     }
-  };
+  }, [navigation]);
 
   const onMuted = useCallback((data: any) => {
     console.log('onMuted');
@@ -123,17 +125,6 @@ export const DialCallScreen = ({ route }: any) => {
     });
   }, []);
 
-  const triggerMute = useCallback(async() => {
-    // setMicOn((prev) => !prev);
-    // toggleMute();
-    try {
-      const result = await toggleHold();
-      console.log("result toggle hold -->", result);
-    } catch (error) {
-      console.log("error toggle hold -->", error);
-    }
-  }, []);
-
   const triggerHold = useCallback(() => {
     // setMicOn((prev) => !prev);
     toggleHold();
@@ -154,7 +145,7 @@ export const DialCallScreen = ({ route }: any) => {
   const onAudioChange = useCallback((audioData: any) => {
     const { data } = audioData;
     console.log("data with data --> ", data);
-    if(data.length > 0) {
+    if (data.length > 0) {
       const { name } = data[0];
       setCurrentAudio(name);
     }
@@ -191,34 +182,50 @@ export const DialCallScreen = ({ route }: any) => {
   }, []);
 
   useEffect(() => {
-    const onCallStateChanged = omiEmitter.addListener(
+    console.log('🔧 Registering event listeners...');
+
+    const onCallStateChanged = DeviceEventEmitter.addListener(
       OmiCallEvent.onCallStateChanged,
       callStateChanged
     );
-    omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
-    omiEmitter.addListener(OmiCallEvent.onHold, onHold);
-    omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
-    omiEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
-    omiEmitter.addListener(
+
+    console.log('✅ onCallStateChanged listener registered:', OmiCallEvent.onCallStateChanged);
+
+    DeviceEventEmitter.addListener(OmiCallEvent.onMuted, onMuted);
+    DeviceEventEmitter.addListener(OmiCallEvent.onHold, onHold);
+    DeviceEventEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
+    DeviceEventEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
+    DeviceEventEmitter.addListener(
       OmiCallEvent.onSwitchboardAnswer,
       onSwitchboardAnswer
     );
 
-    omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onReqPermission);
+    DeviceEventEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onReqPermission);
+
+    // ✅ Test listener để kiểm tra kết nối
+    const testListener = omiEmitter.addListener('test', (data) => {
+      console.log('🧪 Test event received:', data);
+    });
 
     LiveData.isOpenedCall = true;
+
+    console.log('🎯 All event listeners registered successfully');
+
     return () => {
+      console.log('🧹 Cleaning up event listeners...');
       onCallStateChanged.remove();
-      omiEmitter.removeAllListeners(OmiCallEvent.onAudioChange);
-      omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
-      omiEmitter.removeAllListeners(OmiCallEvent.onHold);
-      omiEmitter.removeAllListeners(OmiCallEvent.onCallQuality);
-      omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
-      omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
-      omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
+      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onAudioChange);
+      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onMuted);
+      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onHold);
+      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onCallQuality);
+      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
+      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
+      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
+      testListener.remove();
       LiveData.isOpenedCall = false;
+      console.log('✅ Event listeners cleaned up');
     };
-  }, []);
+  }, [callStateChanged, onMuted, onHold, onCallQuality, onAudioChange, onSwitchboardAnswer, onReqPermission]);
 
   useEffect(() => {
     getCurrentAudio().then((data: any) => {
@@ -268,6 +275,26 @@ export const DialCallScreen = ({ route }: any) => {
     }
   };
 
+  // ✅ Test function để kiểm tra event emission
+  const onPressTestEvent = async () => {
+    try {
+      console.log('🧪 Testing event emission...');
+      const result = await testEventEmission();
+      console.log('🧪 Test event result:', result);
+
+      // ✅ Test AUTO-UNREGISTER status (comment out until functions are exported)
+      // console.log('🔍 Checking AUTO-UNREGISTER status...');
+      // const status = await getAutoUnregisterStatus();
+      // console.log('📊 AUTO-UNREGISTER status:', status);
+
+      // Test manual prevention (comment out until functions are exported)
+      // const preventResult = await preventAutoUnregister('Manual test from React Native');
+      // console.log('🛡️ Manual prevention result:', preventResult);
+    } catch (e) {
+      console.log('❌ Test event error:', e);
+    }
+  };
+
   return (
     <KeyboardAvoid>
       <View style={styles.background}>
@@ -285,8 +312,11 @@ export const DialCallScreen = ({ route }: any) => {
         <View style={styles.title}>
           {currentStatus == OmiCallState.confirmed || currentStatus == OmiCallState.hold ? <CustomTimer /> : null}
         </View>
+        <TouchableOpacity onPress={onPressTestEvent}>
+          <Text style={{ color: 'red', fontSize: 12 }}>TEST</Text>
+        </TouchableOpacity>
         <View style={styles.feature}>
-          {currentStatus == OmiCallState.confirmed  || currentStatus == OmiCallState.hold ? (
+          {currentStatus == OmiCallState.confirmed || currentStatus == OmiCallState.hold ? (
             keyboardOn ? (
               <View style={styles.keyboard}>
                 <CustomKeyboard
@@ -336,6 +366,7 @@ export const DialCallScreen = ({ route }: any) => {
                     <Image source={audioImage()} style={styles.featureImage} />
                   </TouchableOpacity>
                 ) : null}
+                {/* ✅ Test button để kiểm tra event emission */}
               </View>
             )
           ) : null}
@@ -344,16 +375,16 @@ export const DialCallScreen = ({ route }: any) => {
           <TouchableOpacity
             onPress={async () => {
               console.log('=>>>>>>>> end call  rejectCall =>>>>>>>>');
-              // endCall();
-              // navigation.goBack();
-              rejectCall()
+              endCall();
+              navigation.goBack();
+              // rejectCall()
             }}
           >
             <Image source={UIImages.hangup} style={styles.hangup} />
           </TouchableOpacity>
           {(currentStatus == OmiCallState.incoming ||
             currentStatus == OmiCallState.early) &&
-          isOutGoingCall == false ? (
+            isOutGoingCall == false ? (
             <TouchableOpacity
               onPress={async () => {
                 await joinCall();

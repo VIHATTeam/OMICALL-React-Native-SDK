@@ -1,6 +1,16 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## 3.2.82
+- Update OMIKIT Android to version 2.3.67
+- Update OMIKIT iOS to version 1.8.20
+- Cải thiện codec, fix lỗi codec không reset khi end cuộc gọi 
+- Tối ưu SDK Android, cải tiến hiệu năng
+- Cải thiện công thức tính MOS
+- Nâng cao chất lượng âm thanh, kết nối của cuộc gọi 
+
+
 ## 3.2.81
 - Update OMIKIT Android to version 2.3.23
 

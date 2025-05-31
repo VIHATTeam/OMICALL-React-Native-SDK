@@ -29,6 +29,7 @@ allprojects {
         maven {
             url 'https://repo.omicall.com/maven'
         }
+       // Comment out GitHub Maven để tránh lỗi authentication
         maven {
           url "https://maven.pkg.github.com/omicall/OMICall-SDK"
           credentials {

@@ -247,6 +247,11 @@ export const HomeScreen = () => {
           callback={logoutCB}
           style={styles.button}
         />
+        <CustomButton
+          title="TEST EVENTS"
+          callback={() => navigation.navigate('TestEvents' as never)}
+          style={[styles.button, { backgroundColor: '#FF9500' }]}
+        />
       </View>
     </KeyboardAvoid>
   );

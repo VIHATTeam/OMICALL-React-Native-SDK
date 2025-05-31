@@ -172,6 +172,15 @@ class CallManager {
         case .notDetermined:
           break
         case .authorized, .provisional:
+          guard let call = call else {
+            return
+          }
+
+          let statusAnswer = OmiClient.checkHasAnsweredCall(call.omiId ?? "")
+          if (statusAnswer) {
+            return // Do not show missed call notification if the call has been answered
+          }
+          
           let user = UserDefaults.standard
           let title = user.string(forKey: "omicall/missedCallTitle") ?? ""
           let message = user.string(forKey: "omicall/prefixMissedCallMessage") ?? ""

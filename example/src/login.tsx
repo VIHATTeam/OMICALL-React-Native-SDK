@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import { StyleSheet, TextInput, View, Linking } from 'react-native';
 
-import { initCallWithUserPassword, getCurrentUser} from 'omikit-plugin';
+import { initCallWithUserPassword, getCurrentUser, logout } from 'omikit-plugin';
 
 import LocalStorage from './local_storage';
 import { requestNotification, token } from './notification';
@@ -61,14 +61,15 @@ export const LoginScreen = () => {
     //   projectId: ""
     // };
 
+    await logout()
     const loginInfo = {
-      userName: "101",
-      password: "Duongngocqui@98",
-      realm: "quidn",
+      userName: "100",
+      password: "aRCMrnPODG",
+      realm: "namplh",
       isVideo: isVideo,
       fcmToken: fcmToken,
       host: host,
-        projectId: "omicrm-6558a"
+      projectId: "omicrm-6558a"
     };
     const result11 = await getCurrentUser()
 
@@ -149,7 +150,7 @@ export const LoginScreen = () => {
     // Lắng nghe sự kiện URL
     Linking.addEventListener('url', handleDeepLink);
 
-  
+
   }, []);
 
 
