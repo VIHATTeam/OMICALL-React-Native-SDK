@@ -1,4 +1,4 @@
-import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
+import { NativeModules, Platform, NativeEventEmitter, DeviceEventEmitter } from 'react-native';
 
 const LINKING_ERROR =
   `The package 'omikit-plugin' doesn't seem to be linked. Make sure: \n\n` +
@@ -6,19 +6,22 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-  const { OmikitPlugin } = NativeModules;
 // ✅ Khai báo chính xác Native Module
-// const OmikitPlugin = NativeModules.OmikitPlugin
-//   ? NativeModules.OmikitPlugin
-//   : new Proxy(
-//       {},
-//       {
-//         get() {
-//           throw new Error(LINKING_ERROR);
-//         },
-//       }
-//     );
+const OmikitPlugin = NativeModules.OmikitPlugin
+  ? NativeModules.OmikitPlugin
+  : new Proxy(
+    {},
+    {
+      get() {
+        throw new Error(LINKING_ERROR);
+      },
+    }
+  );
 
+// ✅ Setup omiEmitter cho iOS và Android
+const omiEmitter = Platform.OS === 'ios'
+  ? new NativeEventEmitter(OmikitPlugin)
+  : DeviceEventEmitter;
 
 /**
  * Starts the Omikit services.
@@ -27,7 +30,6 @@ const LINKING_ERROR =
 export function startServices(): Promise<any> {
   return OmikitPlugin.startServices();
 }
-
 
 /**
  * Configures push notifications with the given data.
@@ -43,8 +45,8 @@ export function configPushNotification(data: any): Promise<any> {
  * @returns {Promise<any>} A promise containing the initial call details.
  */
 export function getInitialCall(): Promise<any> {
-  if(Platform.OS == "ios"){
-  return OmikitPlugin.getInitialCall();
+  if (Platform.OS == "ios") {
+    return OmikitPlugin.getInitialCall();
   } else {
     return OmikitPlugin.getInitialCall(4);
   }
@@ -86,7 +88,6 @@ export function startCallWithUuid(data: any): Promise<boolean> {
   return OmikitPlugin.startCallWithUuid(data);
 }
 
-
 /**
  * Joins an ongoing call.
  * @returns {Promise<any>} A promise that resolves when the user successfully joins the call.
@@ -95,7 +96,6 @@ export function joinCall(): Promise<any> {
   return OmikitPlugin.joinCall();
 }
 
-
 /**
  * Ends the current call.
  * @returns {Promise<any>} A promise that resolves when the call ends successfully.
@@ -103,7 +103,6 @@ export function joinCall(): Promise<any> {
 export function endCall(): Promise<any> {
   return OmikitPlugin.endCall();
 }
-
 
 /**
  * Toggles the mute status of the microphone.
@@ -128,7 +127,6 @@ export function toggleSpeaker(): Promise<boolean> {
 export function toggleHold(): Promise<boolean> {
   return OmikitPlugin.toggleHold();
 }
-
 
 /**
  * Places the call on hold or resumes it.
@@ -164,7 +162,6 @@ export function toggleOmiVideo(): Promise<boolean> {
   return OmikitPlugin.toggleOmiVideo();
 }
 
-
 /**
  * Logs the user out of the Omikit services.
  * @returns {Promise<boolean>} A promise that resolves to `true` if logout is successful.
@@ -172,7 +169,6 @@ export function toggleOmiVideo(): Promise<boolean> {
 export function logout(): Promise<boolean> {
   return OmikitPlugin.logout();
 }
-
 
 /**
  * Registers for video call events.
@@ -189,7 +185,6 @@ export function registerVideoEvent(): Promise<boolean> {
 export function removeVideoEvent(): Promise<boolean> {
   return OmikitPlugin.removeVideoEvent();
 }
-
 
 /**
  * Retrieves the current user's details.
@@ -267,8 +262,17 @@ export function rejectCall(): Promise<boolean> {
   return OmikitPlugin.rejectCall()
 }
 
+export function hideSystemNotificationSafely(): Promise<boolean> {
+  return OmikitPlugin.hideSystemNotificationSafely();
+}
 
-export const omiEmitter = Platform.OS === 'ios' ? new NativeEventEmitter(OmikitPlugin) : new NativeEventEmitter();     
+export function hideSystemNotificationOnly(): Promise<boolean> {
+  return OmikitPlugin.hideSystemNotificationOnly();
+}
+
+export function hideSystemNotificationAndUnregister(reason: string): Promise<boolean> {
+  return OmikitPlugin.hideSystemNotificationAndUnregister(reason);
+}
 
 export const OmiCallEvent = {
   onCallStateChanged: 'CALL_STATE_CHANGED',
@@ -280,6 +284,26 @@ export const OmiCallEvent = {
   onSwitchboardAnswer: 'SWITCHBOARD_ANSWER',
   onCallQuality: 'CALL_QUALITY',
   onAudioChange: 'AUDIO_CHANGE',
-  onRequestPermissionAndroid: 'REQUEST_PERMISSION',
+  onRequestPermissionAndroid: 'REQUEST_PERMISSION'
 };
+
+export { omiEmitter };
+
+/**
+ * Check credentials without maintaining connection (OmiSDK 2.3.67+)
+ * @param {any} data - Credential data for validation
+ * @returns {Promise<{success: boolean, statusCode?: number, message?: string}>} Validation result
+ */
+export function checkCredentials(data: any): Promise<{ success: boolean, statusCode?: number, message?: string }> {
+  return OmikitPlugin.checkCredentials(data);
+}
+
+/**
+ * Register with full control over notification and auto-unregister (OmiSDK 2.3.67+)
+ * @param {any} data - Registration data with options
+ * @returns {Promise<{success: boolean, statusCode?: number, message?: string}>} Registration result
+ */
+export function registerWithOptions(data: any): Promise<{ success: boolean, statusCode?: number, message?: string }> {
+  return OmikitPlugin.registerWithOptions(data);
+}
 

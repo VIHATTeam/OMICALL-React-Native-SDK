@@ -10,6 +10,7 @@ import { HomeScreen } from './home';
 import { DialCallScreen } from './dial_call';
 import { VideoCallScreen } from './video_call';
 import { LoginApiKeyScreen } from './login_with_apikey';
+import { TestEventsScreen } from './TestEventsScreen';
 import { Linking } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -60,6 +61,13 @@ export const App = (props: AppProps) => {
           options={{
             headerShown: false,
             gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="TestEvents"
+          component={TestEventsScreen}
+          options={{
+            title: 'Event Testing',
           }}
         />
         {/* <Stack.Screen name="Tips" component={TipsScreen} />

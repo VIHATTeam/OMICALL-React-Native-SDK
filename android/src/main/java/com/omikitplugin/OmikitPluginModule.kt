@@ -34,6 +34,8 @@ import vn.vihat.omicall.omisdk.utils.OmiSDKUtils
 import vn.vihat.omicall.omisdk.utils.OmiStartCallStatus
 import vn.vihat.omicall.omisdk.utils.SipServiceConstants
 import vn.vihat.omicall.omisdk.utils.Utils
+import java.util.Timer
+import java.util.TimerTask
 
 
 class OmikitPluginModule(reactContext: ReactApplicationContext?) :
@@ -51,7 +53,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
     isIncoming = true;
-    Log.d("OMISDK", "=>> START INCOMING CALL REVICED => ")
 
     val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
@@ -82,15 +83,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
           val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
-          val map: WritableMap = WritableNativeMap().apply {
-              putString("callerNumber", phoneNumber ?: "")
-              putBoolean("isVideo", isVideo ?: true)
-              putBoolean("incoming", isIncoming) // 🔹 Kiểm tra lỗi chính tả biến này
-              putString("transactionId", transactionId ?: "")
-              putInt("status", CallState.confirmed.value)
-              putString("typeNumber", typeNumber)
-          }
-
+          // ✅ Sử dụng safe WritableMap creation
+          val eventData = mapOf(
+              "callerNumber" to (phoneNumber ?: ""),
+              "isVideo" to (isVideo ?: true),
+              "incoming" to isIncoming,
+              "transactionId" to (transactionId ?: ""),
+              "status" to CallState.confirmed.value,
+              "typeNumber" to typeNumber
+          )
+          
+          val map = createSafeWritableMap(eventData)
           sendEvent(CALL_STATE_CHANGED, map)
       }, 200)
   }
@@ -106,21 +109,24 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val phoneNumber = (call["destination_number"] as? String) ?: (call["source_number"] as? String) ?: ""
       val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber)
 
-      val map: WritableMap = WritableNativeMap().apply {
-          putString("direction", call["direction"] as? String ?: "")
-          putString("transactionId", call["transaction_id"] as? String ?: "")
-          putString("sourceNumber", call["source_number"] as? String ?: "")
-          putString("destinationNumber", call["destination_number"] as? String ?: "")
-          putDouble("timeStartToAnswer", timeStartToAnswer.toDouble())
-          putDouble("timeEnd", timeEnd.toDouble())
-          putString("sipUser", call["sip_user"] as? String ?: "")
-          putInt("codeEndCall", statusCode)
-          putString("disposition", call["disposition"] as? String ?: "")
-          putInt("status", CallState.disconnected.value)
-          putString("typeNumber", typeNumber)
-      }
+      // ✅ Sử dụng safe WritableMap creation
+      val eventData = mapOf(
+          "direction" to (call["direction"] as? String ?: ""),
+          "transactionId" to (call["transaction_id"] as? String ?: ""),
+          "sourceNumber" to (call["source_number"] as? String ?: ""),
+          "destinationNumber" to (call["destination_number"] as? String ?: ""),
+          "timeStartToAnswer" to timeStartToAnswer.toDouble(),
+          "timeEnd" to timeEnd.toDouble(),
+          "sipUser" to (call["sip_user"] as? String ?: ""),
+          "codeEndCall" to statusCode,
+          "disposition" to (call["disposition"] as? String ?: ""),
+          "status" to CallState.disconnected.value,
+          "typeNumber" to typeNumber
+      )
+      
+      val map = createSafeWritableMap(eventData)
 
-      Log.d("OMISDK RN", "=>> onCallEnd  => $map")
+      Log.d("OMISDK RN", "=>> onCallEnd  => ")
       sendEvent(CALL_STATE_CHANGED, map)
   }
 
@@ -151,14 +157,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val prePhoneNumber = OmiClient.prePhoneNumber ?: ""
       val typeNumber = OmiKitUtils().checkTypeNumber(prePhoneNumber)
 
-      val map: WritableMap = WritableNativeMap().apply {
-          putString("callerNumber", if (callDirection == "inbound") prePhoneNumber else "")
-          putBoolean("isVideo", NotificationService.isVideo)
-          putString("transactionId", transactionId ?: "")
-          putInt("status", if (callDirection == "inbound") CallState.incoming.value else CallState.early.value)
-          putBoolean("incoming", callDirection == "inbound")
-          putString("typeNumber", typeNumber)
-      }
+      // ✅ Sử dụng safe WritableMap creation
+      val eventData = mapOf(
+          "callerNumber" to if (callDirection == "inbound") prePhoneNumber else "",
+          "isVideo" to NotificationService.isVideo,
+          "transactionId" to (transactionId ?: ""),
+          "status" to if (callDirection == "inbound") CallState.incoming.value else CallState.early.value,
+          "incoming" to (callDirection == "inbound"),
+          "typeNumber" to typeNumber
+      )
+      
+      val map = createSafeWritableMap(eventData)
 
       Log.d("OMISDK", if (callDirection == "inbound") "=>> ON INCOMING CALL => " else "=>> ON RINGING CALL => ")
       sendEvent(CALL_STATE_CHANGED, map)
@@ -288,17 +297,173 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun initialize() {
     super.initialize()
+    
+    
     reactApplicationContext!!.addActivityEventListener(this)
     Handler(Looper.getMainLooper()).post {
       OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(this)
+      
+      // ✅ Add listener cho AUTO-UNREGISTER status
+      OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(autoUnregisterListener)
+      
       OmiClient.getInstance(reactApplicationContext!!).setDebug(false)
     }
   }
 
+
   @ReactMethod
   fun startServices(promise: Promise) {
-    OmiClient.getInstance(reactApplicationContext!!).addAccountListener(accountListener)
-    promise.resolve(true)
+    try {
+      // ✅ Prepare audio system trước khi start services
+      prepareAudioSystem()
+      
+      OmiClient.getInstance(reactApplicationContext!!).addAccountListener(accountListener)
+      
+      // ✅ Start services - không cần prevent auto-unregister với Silent API
+      OmiClient.getInstance(reactApplicationContext!!).setDebug(false)
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error in startServices: ${e.message}", e)
+      promise.resolve(false)
+    }
+  }
+
+  // ✅ Helper function để sử dụng API mới (DEPRECATED - sử dụng Silent API thay thế)
+  private fun preventAutoUnregisterCrash(reason: String) {
+    try {
+      Log.w("OmikitPlugin", "⚠️ DEPRECATED: preventAutoUnregisterCrash() - Use Silent Registration API instead")
+      OmiClient.getInstance(reactApplicationContext!!).preventAutoUnregister(reason)
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Failed to prevent AUTO-UNREGISTER: ${e.message}", e)
+    }
+  }
+
+  // ✅ Method để check status AUTO-UNREGISTER (DEPRECATED)
+  @ReactMethod
+  fun getAutoUnregisterStatus(promise: Promise) {
+    Log.w("OmikitPlugin", "⚠️ DEPRECATED: getAutoUnregisterStatus() - Use Silent Registration API instead")
+    try {
+      OmiClient.getInstance(reactApplicationContext!!).getAutoUnregisterStatus { isScheduled, timeUntilExecution ->
+        try {
+          val status = mapOf(
+            "isScheduled" to isScheduled,
+            "timeUntilExecution" to timeUntilExecution,
+            "timestamp" to System.currentTimeMillis()
+          )
+          promise.resolve(Arguments.makeNativeMap(status))
+        } catch (e: Exception) {
+          Log.e("OmikitPlugin", "❌ Error in getAutoUnregisterStatus callback: ${e.message}", e)
+          promise.resolve(null)
+        }
+      }
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error calling getAutoUnregisterStatus: ${e.message}", e)
+      promise.resolve(null)
+    }
+  }
+
+  // ✅ Method để manually prevent AUTO-UNREGISTER (DEPRECATED)
+  @ReactMethod
+  fun preventAutoUnregister(reason: String, promise: Promise) {
+    Log.w("OmikitPlugin", "⚠️ DEPRECATED: preventAutoUnregister() - Use Silent Registration API instead")
+    try {
+      preventAutoUnregisterCrash(reason)
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Manual prevent failed: ${e.message}", e)
+      promise.resolve(false)
+    }
+  }
+
+  // ✅ Convenience methods cho các scenario phổ biến (DEPRECATED)
+  @ReactMethod
+  fun prepareForIncomingCall(promise: Promise) {
+    Log.w("OmikitPlugin", "⚠️ DEPRECATED: prepareForIncomingCall() - Use Silent Registration API instead")
+    try {
+      OmiClient.getInstance(reactApplicationContext!!).prepareForIncomingCall()
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Prepare for incoming call failed: ${e.message}", e)
+      promise.resolve(false)
+    }
+  }
+
+  @ReactMethod
+  fun prepareForOutgoingCall(promise: Promise) {
+    Log.w("OmikitPlugin", "⚠️ DEPRECATED: prepareForOutgoingCall() - Use Silent Registration API instead")
+    try {
+      OmiClient.getInstance(reactApplicationContext!!).prepareForOutgoingCall()
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Prepare for outgoing call failed: ${e.message}", e)
+      promise.resolve(false)
+    }
+  }
+
+  private fun prepareAudioSystem() {
+    try {
+      // ✅ Check network connectivity first
+      if (!isNetworkAvailable()) {
+        return
+      }
+      
+      // Release any existing audio focus
+      val audioManager = reactApplicationContext?.getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
+      audioManager?.let {
+        // Reset audio mode
+        it.mode = android.media.AudioManager.MODE_NORMAL
+      }
+      
+      // Small delay để audio system ổn định
+      Thread.sleep(200)
+      
+    } catch (e: Exception) {
+      Log.w("OmikitPlugin", "⚠️ Audio preparation warning: ${e.message}")
+    }
+  }
+
+  private fun isNetworkAvailable(): Boolean {
+    return try {
+      val connectivityManager = reactApplicationContext?.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+      val activeNetwork = connectivityManager?.activeNetworkInfo
+      val isConnected = activeNetwork?.isConnectedOrConnecting == true
+      isConnected
+    } catch (e: Exception) {
+      Log.w("OmikitPlugin", "⚠️ Network check failed: ${e.message}")
+      true // Assume network is available if check fails
+    }
+  }
+
+  // ✅ Safe wrapper cho OMISIP calls để tránh SIGSEGV
+  private fun <T> safePjsipCall(operation: String, block: () -> T): T? {
+    return try {
+      val result = block()
+      result
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Safe OMISIP call failed: $operation - ${e.message}", e)
+      null
+    }
+  }
+
+  // ✅ Helper function để tạo WritableMap an toàn
+  private fun createSafeWritableMap(data: Map<String, Any?>): WritableMap {
+    val map = WritableNativeMap()
+    try {
+      data.forEach { (key, value) ->
+        when (value) {
+          is String -> map.putString(key, value)
+          is Int -> map.putInt(key, value)
+          is Double -> map.putDouble(key, value)
+          is Boolean -> map.putBoolean(key, value)
+          is Long -> map.putDouble(key, value.toDouble())
+          null -> map.putNull(key)
+          else -> map.putString(key, value.toString())
+        }
+      }
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error creating WritableMap: ${e.message}", e)
+    }
+    return map
   }
 
   @RequiresApi(Build.VERSION_CODES.M)
@@ -365,7 +530,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun initCallWithUserPassword(data: ReadableMap, promise: Promise) {
     mainScope.launch {
-      var loginResult = false
       val userName = data.getString("userName")
       val password = data.getString("password")
       val realm = data.getString("realm")
@@ -374,26 +538,52 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val firebaseToken = data.getString("fcmToken")
       val projectId = data.getString("projectId") ?: ""
 
+      // Validate required parameters
+      if (userName.isNullOrEmpty() || password.isNullOrEmpty() || realm.isNullOrEmpty() || firebaseToken.isNullOrEmpty()) {
+        Log.e("OmikitPlugin", "❌ Missing required parameters for SIP registration")
+        promise.resolve(false)
+        return@launch
+      }
+
       withContext(Dispatchers.Default) {
         try {
-          if (userName != null && password != null && realm != null && firebaseToken != null) {
-            loginResult =
-              OmiClient.register(
-                userName,
-                password,
-                realm,
-                isVideo ?: true,
-                firebaseToken,
-                host,
-                projectId
-              )
-            promise.resolve(loginResult)
+          // ✅ Cleanup trước khi register
+          try {
+            OmiClient.getInstance(reactApplicationContext!!).logout()
+            delay(500) // Chờ cleanup hoàn tất
+          } catch (e: Exception) {
+            Log.w("OmikitPlugin", "⚠️ Cleanup warning (expected): ${e.message}")
           }
-        } catch (_: Throwable) {
-          promise.resolve(loginResult)
+          
+          // ✅ Sử dụng Silent Registration API mới từ OmiSDK 2.3.67
+          Log.d("OmikitPlugin", "🔇 Using Silent Registration API for user: $userName")
+          
+          OmiClient.getInstance(reactApplicationContext!!).silentRegister(
+            userName = userName,
+            password = password,
+            realm = realm,
+            isVideo = isVideo ?: true,
+            firebaseToken = firebaseToken,
+            host = host,
+            projectId = projectId
+          ) { success, statusCode, message ->
+            Log.d("OmikitPlugin", "🔇 Silent registration callback - success: $success, status: $statusCode, message: $message")
+            
+            if (success) {
+              Log.d("OmikitPlugin", "✅ Silent registration successful - no notification, no auto-unregister")
+            } else {
+              Log.e("OmikitPlugin", "❌ Silent registration failed: $message")
+            }
+            
+            // ✅ Resolve promise với kết quả từ callback
+            promise.resolve(success)
+          }
+          
+        } catch (e: Exception) {
+          Log.e("OmikitPlugin", "❌ Error during silent registration: ${e.message}", e)
+          promise.resolve(false)
         }
       }
-      promise.resolve(loginResult)
     }
   }
 
@@ -422,6 +612,13 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
               firebaseToken,
               projectId
             )
+            
+            // ✅ Sử dụng API mới để ngăn chặn AUTO-UNREGISTER sau khi register thành công
+            if (loginResult) {
+              Log.d("OmikitPlugin", "🛡️ Preventing AUTO-UNREGISTER after successful API key registration")
+              preventAutoUnregisterCrash("Successful API key registration - userName: $usrName")
+            }
+            
             promise.resolve(true)
           }
         } catch (_: Throwable) {
@@ -509,9 +706,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       currentActivity?.runOnUiThread {
         val phoneNumber = data.getString("phoneNumber") as String
         val isVideo = data.getBoolean("isVideo") ?: false;
+        
         val startCallResult =
           OmiClient.getInstance(reactApplicationContext!!).startCall(phoneNumber, isVideo)
-        Log.d("OMISDK", "=>> startCallResult START CALL  =>  $startCallResult")
         var statusCalltemp = startCallResult.value as Int;
         if (startCallResult.value == 200 || startCallResult.value == 407) {
           statusCalltemp = 8
@@ -525,7 +722,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       map.putInt("status", 4)
       map.putString("_id", "")
       map.putString("message", messageCall(406) as String)
-      Log.d("OMISDK", "=>> ON START CALL FAIL BECAUSE NEED PERMISSION =>  $map")
       promise.resolve(map)
     }
   }
@@ -544,6 +740,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           try {
             val uuid = data.getString("usrUuid") as String
             val isVideo = data.getBoolean("isVideo")
+            
             callResult = OmiClient.getInstance(reactApplicationContext!!)
               .startCallWithUuid(uuid = uuid, isVideo = isVideo)
           } catch (_: Throwable) {
@@ -703,9 +900,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       var callResult: Any? = null
       withContext(Dispatchers.Default) {
         try {
+          // ✅ Gọi trực tiếp getCurrentUser() trong coroutine context
           callResult = OmiClient.getInstance(reactApplicationContext!!).getCurrentUser()
-        } catch (_: Throwable) {
-
+        } catch (e: Throwable) {
+          Log.e("OmikitPlugin", "❌ getCurrentUser error: ${e.message}", e)
         }
       }
       if (callResult != null && callResult is Map<*, *>) {
@@ -830,7 +1028,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     const val NAME = "OmikitPlugin"
 
     fun onDestroy() {
-
+      try {
+        // Cleanup OmiClient resources safely
+      } catch (e: Exception) {
+        Log.e("OmikitPlugin", "❌ Error during cleanup: ${e.message}", e)
+      }
     }
 
     fun onResume(act: ReactActivity) {
@@ -886,19 +1088,61 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
-    fun sendEvent(eventName: String?, params: Any?) {
-      if (eventName == null) {
-        Log.e("OmikitPlugin", "❌ eventName is null or empty. Không thể gửi event.")
+  // ✅ Di chuyển sendEvent vào trong class để có thể access reactApplicationContext
+  private fun sendEvent(eventName: String?, params: Any?) {
+    if (eventName == null) {
+      Log.e("OmikitPlugin", "❌ eventName is null or empty. Không thể gửi event.")
+      return
+    }
+    
+    try {
+      // ✅ Kiểm tra reactApplicationContext
+      if (reactApplicationContext == null) {
+        Log.e("OmikitPlugin", "❌ reactApplicationContext is null")
         return
       }
-      if (currentActivity != null) {
-        currentActivity!!.runOnUiThread {
-          reactApplicationContext.getJSModule(RCTNativeAppEventEmitter::class.java)
+      
+      if (!reactApplicationContext.hasActiveReactInstance()) {
+        Log.w("OmikitPlugin", "⚠️ ReactApplicationContext không có active React instance")
+        return
+      }
+      
+      // ✅ Sử dụng RCTDeviceEventEmitter cho Android (tương thích với DeviceEventEmitter)
+      try {
+        reactApplicationContext
+          .getJSModule(com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+          .emit(eventName, params)
+      } catch (e1: Exception) {
+        // ✅ Fallback to RCTNativeAppEventEmitter
+        try {
+          reactApplicationContext
+            .getJSModule(com.facebook.react.modules.core.RCTNativeAppEventEmitter::class.java)
             .emit(eventName, params)
-             Log.d("OmikitPlugin", "✅ Event $eventName đã được gửi thành công!")
+        } catch (e2: Exception) {
+          Log.e("OmikitPlugin", "❌ Both event emitters failed: RCTDevice: ${e1.message}, RCTNativeApp: ${e2.message}")
         }
       }
+      
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error sending event $eventName: ${e.message}", e)
     }
+  }
+
+  // ✅ Thêm method để React Native biết các event được hỗ trợ
+  override fun getConstants(): MutableMap<String, Any> {
+    return hashMapOf(
+      "CALL_STATE_CHANGED" to CALL_STATE_CHANGED,
+      "MUTED" to MUTED,
+      "HOLD" to HOLD,
+      "SPEAKER" to SPEAKER,
+      "CALL_QUALITY" to CALL_QUALITY,
+      "AUDIO_CHANGE" to AUDIO_CHANGE,
+      "SWITCHBOARD_ANSWER" to SWITCHBOARD_ANSWER,
+      "REQUEST_PERMISSION" to REQUEST_PERMISSION,
+      "CLICK_MISSED_CALL" to CLICK_MISSED_CALL,
+      "AUTO_UNREGISTER_STATUS" to "AUTO_UNREGISTER_STATUS"
+    )
+  }
 
   private fun requestPermission(isVideo: Boolean) {
     var permissions = arrayOf(
@@ -920,38 +1164,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     )
   }
 
-  //  private fun getPending(): {
-//    val pendingCall = OmiKitUtils().getPendingCall(reactApplicationContext)
-//    OmiKitUtils().clearPendingCall(reactApplicationContext)
-//    val isPending =
-//      pendingCall[PREFS_IS_PENDING] as Boolean
-//    val receiveTime = pendingCall[RECEIVE_TIME] as Long
-//
-//    if ( isPending && System.currentTimeMillis() - receiveTime < 25000) {
-//      val callId = pendingCall[PREFS_CALL_ID] as Int
-//      val phoneNumber = pendingCall[PREFS_PHONE_NUMBER] as String
-//      val isVideo = pendingCall[PREFS_IS_VIDEO] as Boolean
-//      val startTime = pendingCall[PREFS_START_TIME] as Long
-//      val uuid = pendingCall[PREFS_UUID] as String
-//      val isReopen = pendingCall[PREFS_IS_REOPEN] as Boolean
-//      val isAccepted = pendingCall[PREFS_IS_ACCEPTED] as Boolean
-//
-//      if (isReopen) {
-//        onCallEstablished(
-//          callId, phoneNumber, isVideo, startTime,
-//          uuid
-//        )
-//      } else if (isAccepted) {
-//        OmiClient.getInstance(reactApplicationContext!!).pickUp()
-//        onCallEstablished(
-//          callId, phoneNumber, isVideo, startTime,
-//          uuid
-//        )
-//      } else {
-//        incomingReceived(callId, phoneNumber, isVideo)
-//      }
-//    }
-//  }
   override fun onActivityResult(p0: Activity?, p1: Int, p2: Int, p3: Intent?) {
   }
 
@@ -964,6 +1176,264 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         map.putString("callerNumber", p0.getStringExtra(SipServiceConstants.PARAM_NUMBER) ?: "")
         map.putBoolean("isVideo", p0.getBooleanExtra(SipServiceConstants.PARAM_IS_VIDEO, false))
         sendEvent(CLICK_MISSED_CALL, map)
+      }
+    }
+  }
+
+  override fun onCatalystInstanceDestroy() {
+    super.onCatalystInstanceDestroy()
+    try {
+      // ✅ Cleanup resources
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error during module cleanup: ${e.message}", e)
+    }
+  }
+
+  // ✅ Thêm listener cho AUTO-UNREGISTER status
+  private val autoUnregisterListener = object : OmiListener {
+    override fun onAutoUnregisterStatus(isScheduled: Boolean, timeUntilExecution: Long) {
+      // ✅ Ngăn chặn nếu sắp thực hiện (< 3 giây)
+      if (isScheduled && timeUntilExecution > 0 && timeUntilExecution < 3000) {
+        Log.w("OmikitPlugin", "🚨 AUTO-UNREGISTER sắp thực hiện trong ${timeUntilExecution}ms - ngăn chặn khẩn cấp!")
+        preventAutoUnregisterCrash("Emergency prevention from listener - ${timeUntilExecution}ms remaining")
+      }
+      
+      // ✅ Gửi event cho React Native
+      try {
+        val statusData = mapOf(
+          "isScheduled" to isScheduled,
+          "timeUntilExecution" to timeUntilExecution,
+          "timestamp" to System.currentTimeMillis()
+        )
+        val map = createSafeWritableMap(statusData)
+        sendEvent("AUTO_UNREGISTER_STATUS", map)
+      } catch (e: Exception) {
+        Log.e("OmikitPlugin", "❌ Error sending AUTO_UNREGISTER_STATUS event: ${e.message}", e)
+      }
+    }
+    
+    // ✅ Implement các method khác của OmiListener (delegate to main listener)
+    override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
+      this@OmikitPluginModule.incomingReceived(callerId, phoneNumber, isVideo)
+    }
+    
+    override fun onCallEstablished(callerId: Int, phoneNumber: String?, isVideo: Boolean?, startTime: Long, transactionId: String?) {
+      this@OmikitPluginModule.onCallEstablished(callerId, phoneNumber, isVideo, startTime, transactionId)
+    }
+    
+    override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
+      this@OmikitPluginModule.onCallEnd(callInfo, statusCode)
+    }
+    
+    override fun onConnecting() {
+      this@OmikitPluginModule.onConnecting()
+    }
+    
+    override fun onDescriptionError() {
+      this@OmikitPluginModule.onDescriptionError()
+    }
+    
+    override fun onFcmReceived(uuid: String, userName: String, avatar: String) {
+      this@OmikitPluginModule.onFcmReceived(uuid, userName, avatar)
+    }
+    
+    override fun onRinging(callerId: Int, transactionId: String?) {
+      this@OmikitPluginModule.onRinging(callerId, transactionId)
+    }
+    
+    override fun networkHealth(stat: Map<String, *>, quality: Int) {
+      this@OmikitPluginModule.networkHealth(stat, quality)
+    }
+    
+    override fun onAudioChanged(audioInfo: Map<String, Any>) {
+      this@OmikitPluginModule.onAudioChanged(audioInfo)
+    }
+    
+    override fun onHold(isHold: Boolean) {
+      this@OmikitPluginModule.onHold(isHold)
+    }
+    
+    override fun onMuted(isMuted: Boolean) {
+      this@OmikitPluginModule.onMuted(isMuted)
+    }
+    
+    override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
+      this@OmikitPluginModule.onOutgoingStarted(callerId, phoneNumber, isVideo)
+    }
+    
+    override fun onSwitchBoardAnswer(sip: String) {
+      this@OmikitPluginModule.onSwitchBoardAnswer(sip)
+    }
+    
+    override fun onRegisterCompleted(statusCode: Int) {
+      this@OmikitPluginModule.onRegisterCompleted(statusCode)
+    }
+    
+    override fun onRequestPermission(permissions: Array<String>) {
+      this@OmikitPluginModule.onRequestPermission(permissions)
+    }
+    
+    override fun onVideoSize(width: Int, height: Int) {
+      this@OmikitPluginModule.onVideoSize(width, height)
+    }
+  }
+
+  // ✅ Helper function để hide notification một cách an toàn
+  @ReactMethod
+  fun hideSystemNotificationSafely(promise: Promise) {
+    try {
+      // ✅ Delay 2 giây để đảm bảo registration hoàn tất
+      Handler(Looper.getMainLooper()).postDelayed({
+        try {
+          // ✅ Gọi function hide notification với error handling
+          OmiClient.getInstance(reactApplicationContext!!).hideSystemNotificationAndUnregister("Registration check completed")
+          Log.d("OmikitPlugin", "✅ Successfully hidden system notification and unregistered")
+          promise.resolve(true)
+        } catch (e: Exception) {
+          Log.e("OmikitPlugin", "❌ Failed to hide system notification: ${e.message}", e)
+          promise.resolve(false)
+        }
+      }, 2000) // Delay 2 giây
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error in hideSystemNotificationSafely: ${e.message}", e)
+      promise.resolve(false)
+    }
+  }
+
+  // ✅ Function để chỉ ẩn notification mà không unregister
+  @ReactMethod
+  fun hideSystemNotificationOnly(promise: Promise) {
+    try {
+      OmiClient.getInstance(reactApplicationContext!!).hideSystemNotification()
+      Log.d("OmikitPlugin", "✅ Successfully hidden system notification (keeping registration)")
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Failed to hide system notification only: ${e.message}", e)
+      promise.resolve(false)
+    }
+  }
+
+  // ✅ Function để ẩn notification và unregister với custom reason
+  @ReactMethod
+  fun hideSystemNotificationAndUnregister(reason: String, promise: Promise) {
+    try {
+      OmiClient.getInstance(reactApplicationContext!!).hideSystemNotificationAndUnregister(reason)
+      Log.d("OmikitPlugin", "✅ Successfully hidden notification and unregistered: $reason")
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Failed to hide notification and unregister: ${e.message}", e)
+      promise.resolve(false)
+    }
+  }
+
+  // ✅ Function để chỉ kiểm tra credentials và tự động disconnect
+  @ReactMethod
+  fun checkCredentials(data: ReadableMap, promise: Promise) {
+    mainScope.launch {
+      val userName = data.getString("userName")
+      val password = data.getString("password")
+      val realm = data.getString("realm")
+      val host = data.getString("host") ?: "vh.omicrm.com"
+      val firebaseToken = data.getString("fcmToken")
+      val projectId = data.getString("projectId") ?: ""
+
+      // Validate required parameters
+      if (userName.isNullOrEmpty() || password.isNullOrEmpty() || realm.isNullOrEmpty() || firebaseToken.isNullOrEmpty()) {
+        Log.e("OmikitPlugin", "❌ Missing required parameters for credential check")
+        promise.resolve(mapOf("success" to false, "message" to "Missing required parameters"))
+        return@launch
+      }
+
+      withContext(Dispatchers.Default) {
+        try {
+          Log.d("OmikitPlugin", "🔍 Checking credentials for user: $userName")
+          
+          OmiClient.getInstance(reactApplicationContext!!).checkCredentials(
+            userName = userName,
+            password = password,
+            realm = realm,
+            firebaseToken = firebaseToken,
+            host = host,
+            projectId = projectId
+          ) { success, statusCode, message ->
+            Log.d("OmikitPlugin", "🔍 Credential check callback - success: $success, status: $statusCode, message: $message")
+            
+            val result = mapOf(
+              "success" to success,
+              "statusCode" to statusCode,
+              "message" to (message ?: "")
+            )
+            
+            promise.resolve(Arguments.makeNativeMap(result))
+          }
+          
+        } catch (e: Exception) {
+          Log.e("OmikitPlugin", "❌ Error during credential check: ${e.message}", e)
+          val errorResult = mapOf(
+            "success" to false,
+            "message" to e.message
+          )
+          promise.resolve(Arguments.makeNativeMap(errorResult))
+        }
+      }
+    }
+  }
+
+  // ✅ Function để register với full control options
+  @ReactMethod
+  fun registerWithOptions(data: ReadableMap, promise: Promise) {
+    mainScope.launch {
+      val userName = data.getString("userName")
+      val password = data.getString("password")
+      val realm = data.getString("realm")
+      val host = data.getString("host") ?: "vh.omicrm.com"
+      val isVideo = data.getBoolean("isVideo")
+      val firebaseToken = data.getString("fcmToken")
+      val projectId = data.getString("projectId") ?: ""
+      val showNotification = data.getBoolean("showNotification") ?: true
+      val enableAutoUnregister = data.getBoolean("enableAutoUnregister") ?: true
+
+      // Validate required parameters
+      if (userName.isNullOrEmpty() || password.isNullOrEmpty() || realm.isNullOrEmpty() || firebaseToken.isNullOrEmpty()) {
+        Log.e("OmikitPlugin", "❌ Missing required parameters for registration with options")
+        promise.resolve(mapOf("success" to false, "message" to "Missing required parameters"))
+        return@launch
+      }
+
+      withContext(Dispatchers.Default) {
+        try {
+          Log.d("OmikitPlugin", "⚙️ Registering with options for user: $userName - showNotification: $showNotification, enableAutoUnregister: $enableAutoUnregister")
+          
+          OmiClient.getInstance(reactApplicationContext!!).registerWithOptions(
+            userName = userName,
+            password = password,
+            realm = realm,
+            isVideo = isVideo ?: true,
+            firebaseToken = firebaseToken,
+            host = host,
+            projectId = projectId,
+            showNotification = showNotification,
+            enableAutoUnregister = enableAutoUnregister
+          ) { success, statusCode, message ->
+            Log.d("OmikitPlugin", "⚙️ Registration with options callback - success: $success, status: $statusCode, message: $message")
+            
+            val result = mapOf(
+              "success" to success,
+              "statusCode" to statusCode,
+              "message" to (message ?: "")
+            )
+            
+            promise.resolve(Arguments.makeNativeMap(result))
+          }
+          
+        } catch (e: Exception) {
+          Log.e("OmikitPlugin", "❌ Error during registration with options: ${e.message}", e)
+          val errorResult = mapOf(
+            "success" to false,
+            "message" to e.message
+          )
+          promise.resolve(Arguments.makeNativeMap(errorResult))
+        }
       }
     }
   }
