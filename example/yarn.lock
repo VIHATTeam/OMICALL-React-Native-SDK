@@ -5989,8 +5989,8 @@ object.values@^1.1.6, object.values@^1.2.1:
     define-properties "^1.2.1"
     es-object-atoms "^1.0.0"
 
-omikit-plugin@../..:
-  version "0.0.0"
+"omikit-plugin@file:..":
+  version "3.2.83"
 
 on-finished@2.4.1:
   version "2.4.1"

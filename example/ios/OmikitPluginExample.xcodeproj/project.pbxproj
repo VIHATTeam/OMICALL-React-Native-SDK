@@ -8,14 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* OmikitPluginExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* OmikitPluginExampleTests.m */; };
-		02B4B43B95BC4C2C35B078B4 /* Pods_OmikitPluginExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB994495E5FA1FE59ECC9FE9 /* Pods_OmikitPluginExample.framework */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		986276522D3748ED00A7D5CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 986276512D3748ED00A7D5CB /* GoogleService-Info.plist */; };
 		A449C6BA470EB8B5A859755E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		AB2A7C22EBE77EAEAE6F63DA /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89ACF2C2E3994E817228EF29 /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework */; };
+		C0628D5F38CFAE9A57259B39 /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04503D959ED2E05D99661CAA /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework */; };
+		EECBBCE020884330CBC7DF46 /* Pods_OmikitPluginExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E3720623E730B44CD6FA3255 /* Pods_OmikitPluginExample.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +32,7 @@
 		00E356EE1AD99517003FC87E /* OmikitPluginExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OmikitPluginExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* OmikitPluginExampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OmikitPluginExampleTests.m; sourceTree = "<group>"; };
+		04503D959ED2E05D99661CAA /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OmikitPluginExample_OmikitPluginExampleTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* OmikitPluginExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OmikitPluginExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = OmikitPluginExample/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = OmikitPluginExample/AppDelegate.mm; sourceTree = "<group>"; };
@@ -43,11 +44,10 @@
 		5709B34CF0A7D63546082F79 /* Pods-OmikitPluginExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OmikitPluginExample.release.xcconfig"; path = "Target Support Files/Pods-OmikitPluginExample/Pods-OmikitPluginExample.release.xcconfig"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-OmikitPluginExample-OmikitPluginExampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OmikitPluginExample-OmikitPluginExampleTests.debug.xcconfig"; path = "Target Support Files/Pods-OmikitPluginExample-OmikitPluginExampleTests/Pods-OmikitPluginExample-OmikitPluginExampleTests.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = OmikitPluginExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		89ACF2C2E3994E817228EF29 /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OmikitPluginExample_OmikitPluginExampleTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig"; path = "Target Support Files/Pods-OmikitPluginExample-OmikitPluginExampleTests/Pods-OmikitPluginExample-OmikitPluginExampleTests.release.xcconfig"; sourceTree = "<group>"; };
 		984BE1422D3662ED00BFD361 /* OmikitPluginExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = OmikitPluginExample.entitlements; path = OmikitPluginExample/OmikitPluginExample.entitlements; sourceTree = "<group>"; };
 		986276512D3748ED00A7D5CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		DB994495E5FA1FE59ECC9FE9 /* Pods_OmikitPluginExample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OmikitPluginExample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E3720623E730B44CD6FA3255 /* Pods_OmikitPluginExample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_OmikitPluginExample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -56,7 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AB2A7C22EBE77EAEAE6F63DA /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework in Frameworks */,
+				C0628D5F38CFAE9A57259B39 /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -64,7 +64,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				02B4B43B95BC4C2C35B078B4 /* Pods_OmikitPluginExample.framework in Frameworks */,
+				EECBBCE020884330CBC7DF46 /* Pods_OmikitPluginExample.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,8 +108,8 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				DB994495E5FA1FE59ECC9FE9 /* Pods_OmikitPluginExample.framework */,
-				89ACF2C2E3994E817228EF29 /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework */,
+				E3720623E730B44CD6FA3255 /* Pods_OmikitPluginExample.framework */,
+				04503D959ED2E05D99661CAA /* Pods_OmikitPluginExample_OmikitPluginExampleTests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
