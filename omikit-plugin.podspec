@@ -1,6 +1,7 @@
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
+folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
 Pod::Spec.new do |s|
   s.name         = "omikit-plugin"
@@ -10,12 +11,12 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "11.0" }
+  s.platforms    = { :ios => "13.0" }
   s.source       = { :git => "https://github.com/VIHATTeam/OMICALL-React-Native-SDK.git", :tag => "#{s.version}" }
 
   # Chỉ định source files
   s.source_files = "ios/**/*.{h,m,mm,swift}"
-
+  s.public_header_files = "ios/**/*.h"
 
   # Đảm bảo hỗ trợ Swift
   s.swift_versions = ["5.0"]
@@ -23,7 +24,9 @@ Pod::Spec.new do |s|
   # Định nghĩa module để tránh lỗi Swift bridging header
   s.static_framework = true
   s.pod_target_xcconfig = {
-    "DEFINES_MODULE" => "YES"
+    "DEFINES_MODULE" => "YES",
+    "SWIFT_OPTIMIZATION_LEVEL" => "-Onone",
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]" => "arm64"
   }
 
   # Xác định module name
@@ -31,10 +34,11 @@ Pod::Spec.new do |s|
 
   # Thêm dependency bắt buộc
   s.dependency "React-Core"
-  s.dependency "OmiKit", "1.8.20"
+  # Sử dụng version OmiKit ổn định hơn
+  s.dependency "OmiKit", "1.8.32"
 
-  # Đảm bảo Swift bridging header được tự động tạo
-  # s.requires_arc = true
+
+  s.requires_arc = true
 
   # Xử lý riêng cho kiến trúc mới (New Architecture)
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1'

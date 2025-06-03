@@ -1,9 +1,7 @@
 #import <RCTAppDelegate.h>
 #import <UIKit/UIKit.h>
 #import <UserNotifications/UserNotifications.h>
-#import <OmiKit/OmiKit-umbrella.h>
-#import <OmiKit/Constants.h>
-
+#import <OmiKit/OmiKit.h>
 
 @interface AppDelegate : RCTAppDelegate <UIApplicationDelegate, RCTBridgeDelegate, UNUserNotificationCenterDelegate>
 

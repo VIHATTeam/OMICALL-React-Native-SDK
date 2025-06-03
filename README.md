@@ -312,7 +312,8 @@ class MainApplication : Application() {
 ```objc
 #import <UIKit/UIKit.h>
 #import <UserNotifications/UserNotifications.h>
-#import <OmiKit/OmiKit-umbrella.h>
+// #import <OmiKit/OmiKit-umbrella.h>
+#import <OmiKit/OmiKit.h>
 #import <OmiKit/Constants.h>
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate, RCTBridgeDelegate, UNUserNotificationCenterDelegate>

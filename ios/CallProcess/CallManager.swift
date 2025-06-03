@@ -172,8 +172,8 @@ class CallManager {
         case .notDetermined:
           break
         case .authorized, .provisional:
-          guard let call = call else {
-            return
+          if call == nil {
+            return // No missed call to show
           }
 
           let statusAnswer = OmiClient.checkHasAnsweredCall(call.omiId ?? "")
