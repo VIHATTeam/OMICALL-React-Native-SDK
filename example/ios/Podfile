@@ -14,7 +14,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-use_frameworks! :linkage => :static
+# use_frameworks! :linkage => :static
 $RNFirebaseAsStaticFramework = true
 $RN_NEW_ARCH_ENABLED = false
 target 'OmikitPluginExample' do
@@ -37,7 +37,7 @@ target 'OmikitPluginExample' do
   use_react_native!(
     :path => config[:reactNativePath],
     :hermes_enabled => true,
-    :fabric_enabled => true,
+    :fabric_enabled => $RN_NEW_ARCH_ENABLED,
     :new_arch_enabled => $RN_NEW_ARCH_ENABLED,
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
