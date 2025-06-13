@@ -262,6 +262,17 @@ export function rejectCall(): Promise<boolean> {
   return OmikitPlugin.rejectCall()
 }
 
+/**
+ * End an calling
+ * This function terminates an ongoing call as well as any incoming call. It sends the code 603 to the PBX, which triggers the “cancel ringing on other devices” mechanism.
+ * 
+ * @returns {Promise<boolean>} A promise that resolves to `true` if the call was successfully rejected, or `false` if an error occurred.
+ */
+export function dropCall(): Promise<boolean> {
+  return OmikitPlugin.dropCall()
+}
+
+
 export function hideSystemNotificationSafely(): Promise<boolean> {
   return OmikitPlugin.hideSystemNotificationSafely();
 }

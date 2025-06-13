@@ -487,43 +487,67 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun configPushNotification(data: ReadableMap, promise: Promise) {
-    currentActivity?.runOnUiThread {
-      val notificationIcon = data.getString("notificationIcon") ?: ""
-      val prefix = data?.getString("prefix") ?: ""
-      val incomingBackgroundColor = data?.getString("incomingBackgroundColor") ?: ""
-      val incomingAcceptButtonImage = data?.getString("incomingAcceptButtonImage") ?: ""
-      val incomingDeclineButtonImage = data?.getString("incomingDeclineButtonImage") ?: ""
-      val prefixMissedCallMessage = data?.getString("prefixMissedCallMessage") ?: ""
-      val backImage = data?.getString("backImage") ?: ""
-      val userImage = data?.getString("userImage") ?: ""
-      val userNameKey = data?.getString("userNameKey") ?: ""
-      val channelId = data?.getString("channelId") ?: ""
-      val missedCallTitle = data?.getString("missedCallTitle") ?: ""
-      val audioNotificationDescription = data?.getString("audioNotificationDescription") ?: ""
-      val videoNotificationDescription = data?.getString("videoNotificationDescription") ?: ""
-      val displayNameType = data?.getString("displayNameType") ?: ""
-      val appRepresentName = data?.getString("representName") ?: ""
+    try {
+        val context = reactApplicationContext ?: run {
+            promise.reject("E_NULL_CONTEXT", "React context is null")
+            return
+        }
 
+        currentActivity?.runOnUiThread {
+            try {
+                // Lấy các giá trị từ data với null safety
+              val notificationIcon = data.getString("notificationIcon") ?: ""
+              val prefix = data?.getString("prefix") ?: ""
+              val incomingBackgroundColor = data?.getString("incomingBackgroundColor") ?: ""
+              val incomingAcceptButtonImage = data?.getString("incomingAcceptButtonImage") ?: ""
+              val incomingDeclineButtonImage = data?.getString("incomingDeclineButtonImage") ?: ""
+              val prefixMissedCallMessage = data?.getString("prefixMissedCallMessage") ?: ""
+              val backImage = data?.getString("backImage") ?: ""
+              val userImage = data?.getString("userImage") ?: ""
+              val userNameKey = data?.getString("userNameKey") ?: ""
+              val channelId = data?.getString("channelId") ?: ""
+              val missedCallTitle = data?.getString("missedCallTitle") ?: ""
+              val audioNotificationDescription = data?.getString("audioNotificationDescription") ?: ""
+              val videoNotificationDescription = data?.getString("videoNotificationDescription") ?: ""
+              val displayNameType = data?.getString("displayNameType") ?: ""
+              val appRepresentName = data?.getString("representName") ?: ""
+                // Chuyển đổi isUserBusy thành Boolean
+              val isUserBusy = data.getBoolean("isUserBusy") ?: true
 
-      OmiClient.getInstance(reactApplicationContext!!).configPushNotification(
-        showMissedCall = true,
-        notificationIcon = notificationIcon ?: "ic_notification",
-        notificationAvatar = userImage ?: "ic_inbound_avatar_notification",
-        fullScreenAvatar = userImage ?: "ic_inbound_avatar_fullscreen",
-        internalCallText = "Gọi nội bộ",
-        videoCallText = "Gọi Video",
-        inboundCallText = prefix,
-        unknownContactText = "Cuộc gọi không xác định",
-        showUUID = false,
-        inboundChannelId = "${channelId}-inbound",
-        inboundChannelName = "Cuộc gọi đến",
-        missedChannelId = "${channelId}-missed",
-        missedChannelName = "Cuộc gọi nhỡ",
-        displayNameType = userNameKey ?: "full_name",
-        notificationMissedCallPrefix = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
-        representName = appRepresentName ?: ""
-      )
-      promise.resolve(true)
+                // Cấu hình push notification
+                   OmiClient.getInstance(context).configPushNotification(
+                    showMissedCall = true,
+                    notificationIcon = notificationIcon ?: "ic_notification",
+                    notificationAvatar = userImage ?: "ic_inbound_avatar_notification",
+                    fullScreenAvatar = userImage ?: "ic_inbound_avatar_fullscreen",
+                    internalCallText = "Gọi nội bộ",
+                    videoCallText = "Gọi Video",
+                    inboundCallText = prefix,
+                    unknownContactText = "Cuộc gọi không xác định",
+                    showUUID = false,
+                    inboundChannelId = "${channelId}-inbound",
+                    inboundChannelName = "Cuộc gọi đến",
+                    missedChannelId = "${channelId}-missed",
+                    missedChannelName = "Cuộc gọi nhỡ",
+                    displayNameType = userNameKey ?: "full_name",
+                    notificationMissedCallPrefix = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
+                    representName = appRepresentName ?: ""
+                  )
+
+                // Cấu hình decline call behavior
+                OmiClient.getInstance(context).configureDeclineCallBehavior(isUserBusy)
+
+                promise.resolve(true)
+            } catch (e: Exception) {
+                Log.e("OmikitPlugin", "Error configuring push notification: ${e.message}", e)
+                promise.reject("E_CONFIG_FAILED", "Failed to configure push notification", e)
+            }
+        } ?: run {
+            promise.reject("E_NULL_ACTIVITY", "Current activity is null")
+        }
+    } catch (e: Exception) {
+        Log.e("OmikitPlugin", "Error in configPushNotification: ${e.message}", e)
+        promise.reject("E_UNKNOWN", "Unknown error occurred", e)
     }
   }
 
@@ -787,13 +811,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       OmiClient.getInstance(reactApplicationContext!!).hangUp()
     }
     promise.resolve(true)
-
   }
 
   @ReactMethod
   fun rejectCall(promise: Promise) {
     if (isIncoming && !isAnserCall) {
-      OmiClient.getInstance(reactApplicationContext!!).decline()
+      OmiClient.getInstance(reactApplicationContext!!).declineWithCode(true) // 486
+    }
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun dropCall(promise: Promise) {
+    if (isIncoming && !isAnserCall) {
+      OmiClient.getInstance(reactApplicationContext!!).declineWithCode(false) // 603
+    } else {
+      OmiClient.getInstance(reactApplicationContext!!).hangUp()
     }
     promise.resolve(true)
   }

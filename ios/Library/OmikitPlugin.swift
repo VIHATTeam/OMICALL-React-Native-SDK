@@ -121,6 +121,12 @@ public class OmikitPlugin: RCTEventEmitter {
     resolve(true)
   }
   
+  @objc(dropCall:rejecter:)
+  func dropCall(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    CallManager.shareInstance().dropCall()
+    resolve(true)
+  }
+
   @objc(toggleMute:rejecter:)
   func toggleMute(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
     CallManager.shareInstance().toggleMute()

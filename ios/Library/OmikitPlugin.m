@@ -43,6 +43,10 @@ RCT_EXTERN_METHOD(joinCall:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(endCall:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+// Drop a call
+RCT_EXTERN_METHOD(dropCall:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 // Toggle mute
 RCT_EXTERN_METHOD(toggleMute:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)

@@ -13,8 +13,11 @@ const config = {
         path.resolve(__dirname, '..'),
     ],
     resolver: {
-        alias: {
-            // Map omikit-plugin to the parent directory
+        nodeModulesPaths: [
+            path.resolve(__dirname, 'node_modules'),
+            path.resolve(__dirname, '..'),
+        ],
+        extraNodeModules: {
             'omikit-plugin': path.resolve(__dirname, '..'),
         },
     },
