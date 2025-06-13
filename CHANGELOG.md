@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.86
+- Fix cú pháp swift trong class CallManager
+
+
 ## 3.2.85
 - Update OMIKIT iOS to version 1.8.37
 - Update OMIKIT Android to version 2.3.69
