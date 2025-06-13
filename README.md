@@ -717,7 +717,8 @@ configPushNotification({
   channelId: "com.channel.sample", // Custom notification channel ID for Android
   audioNotificationDescription: "", // Description for audio call notifications
   videoNotificationDescription: "", // Description for video call notifications
-  representName: "" // Representative name to display for all incoming calls (e.g., business name)
+  representName: "", // Representative name to display for all incoming calls (e.g., business name)
+  isUserBusy: true // By default, it is set to true. The Omicall system will continue ringing the next user if isUserBusy is true. If it is false, the call will be immediately terminated, assuming the call scenario is based on a criteria-based routing.
 });
 
 // Note: Ensure that the following images are added to `android/app/src/main/res/drawable`:
@@ -851,6 +852,17 @@ const result = await startCallWithUuid({
        "sip_user":111,
        "disposition":"answered"
     }
+```
+
+📌 **dropCall()**
+
+✅ Description:   When an incoming call has not yet been answered, and the call scenario is based on criteria, invoking dropCall will cause the OMI system to cancel the ringing on other devices simultaneously.
+
+```javascript
+ import {dropCall} from 'omikit-plugin';
+
+ const value = await dropCall(); // return true/false
+   
 ```
 
 📌 **toggleMute()**
