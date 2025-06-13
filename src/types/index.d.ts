@@ -29,6 +29,7 @@ declare module 'omikit-plugin' {
   export function getCurrentAudio(): Promise<any>;
   export function transferCall(data: any): Promise<boolean>;
   export function rejectCall(): Promise<boolean>;
+  export function dropCall(): Promise<boolean>;
   export function testEventEmission(): Promise<boolean>;
   export function getKeepAliveStatus(): Promise<any>;
   export function triggerKeepAlivePing(): Promise<boolean>;

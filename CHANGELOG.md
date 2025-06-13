@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.85
+- Update OMIKIT iOS to version 1.8.37
+- Update OMIKIT Android to version 2.3.69
+- Thêm func config từ chối cuộc gọi ở callkit 
+- Thêm func dropCall 
 
 ## 3.2.84
 - Update OMIKIT iOS to version 1.8.32

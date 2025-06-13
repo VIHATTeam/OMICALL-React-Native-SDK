@@ -29,6 +29,7 @@ import {
   transferCall,
   toggleHold,
   testEventEmission,
+  dropCall
   // getAutoUnregisterStatus, // Comment out until exported
   // preventAutoUnregister // Comment out until exported
 } from 'omikit-plugin';
@@ -375,7 +376,7 @@ export const DialCallScreen = ({ route }: any) => {
           <TouchableOpacity
             onPress={async () => {
               console.log('=>>>>>>>> end call  rejectCall =>>>>>>>>');
-              endCall();
+              dropCall();
               navigation.goBack();
               // rejectCall()
             }}

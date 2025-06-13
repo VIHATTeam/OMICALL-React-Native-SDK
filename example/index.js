@@ -20,7 +20,7 @@ export const Main = () => {
     const initData = async () => {
       try {
         startServices();
-        if (Platform.OS == 'android' ){
+        // if (Platform.OS == 'android') {
           configPushNotification({
             notificationIcon: 'assets_images_calling_face',
             incomingBackgroundColor: '#FFFFFFFF',
@@ -35,11 +35,12 @@ export const Main = () => {
             audioNotificationDescription: 'Cuộc gọi audio nè',
             videoNotificationDescription: 'Cuộc gọi video nè',
             representName: 'CTY H-SOLUTIONS',
+            isUserBusy: false
           });
-        }
+        // }
         const data = await LocalStorage.getString("login_info");
         console.log('data login_info ==> ', data, data != undefined);
-        if (data != undefined){
+        if (data != undefined) {
           setIsLogin(true);
         }
       } catch (error) {
@@ -62,7 +63,7 @@ export const Main = () => {
   ) : (
     <App isLogin={isLogin} />
   );
-  
+
 };
 
 const styles = StyleSheet.create({

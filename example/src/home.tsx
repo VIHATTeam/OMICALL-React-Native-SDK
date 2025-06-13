@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, DeviceEventEmitter } from 'react-native';
 import {
   checkMultiple,
   PERMISSIONS,
@@ -181,11 +181,14 @@ export const HomeScreen = () => {
   }, []);
 
   useEffect(() => {
-    omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
+
+
+    console.log('✅ onCallStateChanged listener registered:', OmiCallEvent.onCallStateChanged);
+    DeviceEventEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     return () => {
       omiEmitter.removeAllListeners(OmiCallEvent.onClickMissedCall);
-      omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
+      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
     };
   }, []);
 

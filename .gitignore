@@ -72,3 +72,5 @@ lib/
 
 example/.yarn
 .yarn
+
+example/android/gradle.properties

@@ -125,9 +125,9 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - OmiKit (1.8.32)
-  - omikit-plugin (3.2.84):
-    - OmiKit (= 1.8.32)
+  - OmiKit (1.8.37)
+  - omikit-plugin (3.2.85):
+    - OmiKit (= 1.8.37)
     - React-Core
   - Permission-Calendars (3.0.6):
     - RNPermissions
@@ -2061,8 +2061,8 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   hermes-engine: 3852e37f6158a2fcfad23e31215ed495da3a6a40
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  OmiKit: b0d138acf1d16ea210a9db2fbc3122aad7e1ce17
-  omikit-plugin: c83a176d158ea150db36994ef767c2b03a5bce48
+  OmiKit: aff09f251c7865b0cba33735bf0d8905ce6d7fbb
+  omikit-plugin: 6832f07ab17ed075846efbe76a43f1256de55297
   Permission-Calendars: 80ed37a7eba0ebc904c8b2f8dd75b61b6dd0aef3
   Permission-Camera: 88e9a03de1250fb86697f48e24eabfffbf0ec6a0
   Permission-Microphone: 428135c97f1cc652908aa1168dc1cbfd154a05fa

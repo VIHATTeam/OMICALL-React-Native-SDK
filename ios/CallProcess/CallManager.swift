@@ -75,7 +75,26 @@ class CallManager {
               if callInfo.callState == .confirmed {
                 try callInfo.hangup()
               } else {
-                try callInfo.decline()
+                try callInfo.declineWithBusyHere(true) // 486
+              }
+              return true
+          }
+      } catch {
+          print("ERROR_WHEN_TRANSFER_CALL_IOS:", error)
+      }
+      return false
+  }
+
+  func dropCall() -> Bool {
+      do {
+          if let callInfo = omiLib.getCurrentCall(), callInfo.callState != .disconnected {
+              if callInfo.callState == .confirmed {
+                 omiLib.callManager.end(callInfo) { error in
+                  if error != nil {
+                  }
+                }
+              } else {
+                try callInfo.dropCall() // 603
               }
               return true
           }
@@ -91,6 +110,9 @@ class CallManager {
       user.set(title, forKey: "omicall/missedCallTitle")
       user.set(message, forKey: "omicall/prefixMissedCallMessage")
     }
+
+    let isUserBusy = data["isUserBusy"] as? Bool ?? true
+    OmiClient.configureDeclineCallBehavior(isUserBusy: isUserBusy)
   }
   
   
