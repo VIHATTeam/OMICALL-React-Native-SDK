@@ -70,49 +70,52 @@ class CallManager {
   }
   
   func rejectCall() -> Bool {
-      do {
-          if let callInfo = omiLib.getCurrentCall(), callInfo.callState != .disconnected {
-              if callInfo.callState == .confirmed {
-                try callInfo.hangup()
-              } else {
-                try callInfo.declineWithBusyHere(true) // 486
-              }
-              return true
-          }
-      } catch {
-          print("ERROR_WHEN_TRANSFER_CALL_IOS:", error)
+    do {
+      if let callInfo = omiLib.getCurrentCall(), callInfo.callState != .disconnected {
+        if callInfo.callState == .confirmed {
+          try callInfo.hangup()
+        } else {
+          try callInfo.decline(withBusyHere: true)  // 486
+        }
+        return true
       }
-      return false
+    } catch {
+      print("ERROR_WHEN_TRANSFER_CALL_IOS:", error)
+    }
+    return false
   }
 
   func dropCall() -> Bool {
-      do {
-          if let callInfo = omiLib.getCurrentCall(), callInfo.callState != .disconnected {
-              if callInfo.callState == .confirmed {
-                 omiLib.callManager.end(callInfo) { error in
-                  if error != nil {
-                  }
-                }
-              } else {
-                try callInfo.dropCall() // 603
-              }
-              return true
+    do {
+      if let callInfo = omiLib.getCurrentCall(), callInfo.callState != .disconnected {
+        if callInfo.callState == .confirmed {
+          omiLib.callManager.end(callInfo) { error in
+            if error != nil {
+            }
           }
-      } catch {
-          print("ERROR_WHEN_TRANSFER_CALL_IOS:", error)
+        } else {
+          try callInfo.drop()  // 603
+        }
+        return true
       }
-      return false
+    } catch {
+      print("ERROR_WHEN_TRANSFER_CALL_IOS:", error)
+    }
+    return false
   }
   
   func configNotification(data: [String: Any]) {
     let user = UserDefaults.standard
-    if let title = data["missedCallTitle"] as? String, let message = data["prefixMissedCallMessage"] as? String {
+    if let title = data["missedCallTitle"] as? String,
+      let message = data["prefixMissedCallMessage"] as? String
+    {
       user.set(title, forKey: "omicall/missedCallTitle")
       user.set(message, forKey: "omicall/prefixMissedCallMessage")
     }
 
     let isUserBusy = data["isUserBusy"] as? Bool ?? true
-    OmiClient.configureDeclineCallBehavior(isUserBusy: isUserBusy)
+    OmiClient.configureDeclineCallBehavior(isUserBusy)
+
   }
   
   
