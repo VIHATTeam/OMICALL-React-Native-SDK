@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.87
+- Update OMIKIT Android to version 2.3.70
+- Vá lỗi từ chối cuộc gọi ở kịch bản tiêu chí
+ 
+
 ## 3.2.86
 - Fix cú pháp swift trong class CallManager
 
