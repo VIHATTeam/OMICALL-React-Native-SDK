@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.88
+- Update OMIKIT iOS to version 1.8.38
+- Hot fix crash khi ở background open foreground
+
 ## 3.2.87
 - Update OMIKIT Android to version 2.3.70
 - Vá lỗi từ chối cuộc gọi ở kịch bản tiêu chí
