@@ -52,7 +52,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     private val handler = Handler(Looper.getMainLooper())
 
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
+    Log.d("OMISDK", "=>> incomingReceived CALLED - BEFORE: isIncoming: $isIncoming, isAnserCall: $isAnserCall")
     isIncoming = true;
+    isAnserCall = false; // Reset answer state for new incoming call
+    Log.d("OMISDK", "=>> incomingReceived AFTER SET - isIncoming: $isIncoming, isAnserCall: $isAnserCall, phoneNumber: $phoneNumber")
 
     val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
@@ -99,7 +102,13 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
-      Log.d("OMISDK RN", "=>> onCallEnd 0000 => $callInfo")
+      Log.d("OMISDK RN", "=>> onCallEnd CALLED - BEFORE RESET: isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+      Log.d("OMISDK RN", "=>> onCallEnd callInfo => $callInfo")
+
+      // Reset call state variables
+      isIncoming = false
+      isAnserCall = false
+      Log.d("OMISDK", "=>> onCallEnd AFTER RESET - isIncoming: $isIncoming, isAnserCall: $isAnserCall")
 
       // Kiểm tra kiểu dữ liệu trước khi ép kiểu để tránh lỗi
       val call = callInfo ?: mutableMapOf()
@@ -157,6 +166,18 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val prePhoneNumber = OmiClient.prePhoneNumber ?: ""
       val typeNumber = OmiKitUtils().checkTypeNumber(prePhoneNumber)
 
+      Log.d("OMISDK", "=>> onRinging CALLED - BEFORE: isIncoming: $isIncoming, isAnserCall: $isAnserCall, callDirection: $callDirection")
+
+      if (callDirection == "inbound") {
+        isIncoming = true;
+        Log.d("OMISDK", "=>> onRinging SET isIncoming = true for inbound call")
+      } else if (callDirection == "outbound") {
+        isIncoming = false;
+        Log.d("OMISDK", "=>> onRinging SET isIncoming = false for outbound call")
+      }
+
+      Log.d("OMISDK", "=>> onRinging AFTER: isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+
       // ✅ Sử dụng safe WritableMap creation
       val eventData = mapOf(
           "callerNumber" to if (callDirection == "inbound") prePhoneNumber else "",
@@ -201,7 +222,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
-      Log.d("OMISDK", "=>> ON OUTGOING STARTED CALL => ")
+      Log.d("OMISDK", "=>> onOutgoingStarted CALLED - BEFORE: isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+      
+      // For outgoing calls, set states appropriately
+      isIncoming = false;
+      isAnserCall = false;
+      Log.d("OMISDK", "=>> onOutgoingStarted AFTER SET - isIncoming: $isIncoming, isAnserCall: $isAnserCall")
 
       val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
@@ -211,7 +237,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           putString("transactionId", "")
           putInt("status", CallState.calling.value)
           putString("_id", "")
-          putBoolean("incoming", isIncoming) // 🔹 Kiểm tra lỗi chính tả của biến này
+          putBoolean("incoming", isIncoming)
           putString("typeNumber", typeNumber)
       }
 
@@ -422,6 +448,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
+  @Suppress("MissingPermission")
   private fun isNetworkAvailable(): Boolean {
     return try {
       val connectivityManager = reactApplicationContext?.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
@@ -813,12 +840,25 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     promise.resolve(true)
   }
 
-  @ReactMethod
+ @ReactMethod
   fun rejectCall(promise: Promise) {
-    if (isIncoming && !isAnserCall) {
-      OmiClient.getInstance(reactApplicationContext!!).declineWithCode(true) // 486
-    }
-    promise.resolve(true)
+      Log.d("OMISDK", "➡️ rejectCall called - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
+      if (isIncoming) {
+          Log.d("OMISDK", "📞 Incoming call")
+
+          if (!isAnswerCall) {
+              Log.d("OMISDK", "🚫 Declining call with declineWithCode(true)")
+              OmiClient.getInstance(reactApplicationContext!!).declineWithCode(true) // 486 Busy Here
+          } else {
+              Log.d("OMISDK", "📴 Call already answered, hanging up")
+              OmiClient.getInstance(reactApplicationContext!!).hangUp()
+          }
+
+          promise.resolve(true)
+      } else {
+          Log.d("OMISDK", "📤 Not incoming call, skipping reject")
+          promise.resolve(false)
+      }
   }
 
   @ReactMethod
