@@ -74,3 +74,6 @@ example/.yarn
 .yarn
 
 example/android/gradle.properties
+
+/dev
+/dev/*

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.91
+- Update OMIKIT iOS to version 1.8.42
+- Fix missed transaction_id ở step early khi gọi ra
+
+
+## 3.2.90
+- Fix wrong name isAnswerCall
+
 ## 3.2.89
 - Update OMIKIT iOS to version 1.8.40
 - Update OMIKIT Android to version 2.3.71

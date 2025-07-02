@@ -42,7 +42,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   ReactContextBaseJavaModule(reactContext), ActivityEventListener, OmiListener {
   private val mainScope = CoroutineScope(Dispatchers.Main)
   private var isIncoming: Boolean = false
-  private var isAnserCall: Boolean = false
+  private var isAnswerCall: Boolean = false
 
   override fun getName(): String {
     return NAME
@@ -52,10 +52,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     private val handler = Handler(Looper.getMainLooper())
 
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
-    Log.d("OMISDK", "=>> incomingReceived CALLED - BEFORE: isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+    Log.d("OMISDK", "=>> incomingReceived CALLED - BEFORE: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
     isIncoming = true;
-    isAnserCall = false; // Reset answer state for new incoming call
-    Log.d("OMISDK", "=>> incomingReceived AFTER SET - isIncoming: $isIncoming, isAnserCall: $isAnserCall, phoneNumber: $phoneNumber")
+    isAnswerCall = false; // Reset answer state for new incoming call
+    Log.d("OMISDK", "=>> incomingReceived AFTER SET - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall, phoneNumber: $phoneNumber")
 
     val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
@@ -78,7 +78,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       startTime: Long,
       transactionId: String?,
   ) {
-      isAnserCall = true
+      isAnswerCall = true
       Log.d("OMISDK", "=>> ON CALL ESTABLISHED => ")
 
       Handler(Looper.getMainLooper()).postDelayed({
@@ -102,13 +102,13 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
-      Log.d("OMISDK RN", "=>> onCallEnd CALLED - BEFORE RESET: isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+      Log.d("OMISDK RN", "=>> onCallEnd CALLED - BEFORE RESET: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
       Log.d("OMISDK RN", "=>> onCallEnd callInfo => $callInfo")
 
       // Reset call state variables
       isIncoming = false
-      isAnserCall = false
-      Log.d("OMISDK", "=>> onCallEnd AFTER RESET - isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+      isAnswerCall = false
+      Log.d("OMISDK", "=>> onCallEnd AFTER RESET - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
 
       // Kiểm tra kiểu dữ liệu trước khi ép kiểu để tránh lỗi
       val call = callInfo ?: mutableMapOf()
@@ -166,7 +166,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val prePhoneNumber = OmiClient.prePhoneNumber ?: ""
       val typeNumber = OmiKitUtils().checkTypeNumber(prePhoneNumber)
 
-      Log.d("OMISDK", "=>> onRinging CALLED - BEFORE: isIncoming: $isIncoming, isAnserCall: $isAnserCall, callDirection: $callDirection")
+      Log.d("OMISDK", "=>> onRinging CALLED - BEFORE: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall, callDirection: $callDirection")
 
       if (callDirection == "inbound") {
         isIncoming = true;
@@ -176,7 +176,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         Log.d("OMISDK", "=>> onRinging SET isIncoming = false for outbound call")
       }
 
-      Log.d("OMISDK", "=>> onRinging AFTER: isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+      Log.d("OMISDK", "=>> onRinging AFTER: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
 
       // ✅ Sử dụng safe WritableMap creation
       val eventData = mapOf(
@@ -222,12 +222,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
-      Log.d("OMISDK", "=>> onOutgoingStarted CALLED - BEFORE: isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+      Log.d("OMISDK", "=>> onOutgoingStarted CALLED - BEFORE: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
       
       // For outgoing calls, set states appropriately
       isIncoming = false;
-      isAnserCall = false;
-      Log.d("OMISDK", "=>> onOutgoingStarted AFTER SET - isIncoming: $isIncoming, isAnserCall: $isAnserCall")
+      isAnswerCall = false;
+      Log.d("OMISDK", "=>> onOutgoingStarted AFTER SET - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
 
       val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
@@ -832,7 +832,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun endCall(promise: Promise) {
-    if (isIncoming && !isAnserCall) {
+    if (isIncoming && !isAnswerCall) {
       OmiClient.getInstance(reactApplicationContext!!).decline()
     } else {
       OmiClient.getInstance(reactApplicationContext!!).hangUp()
@@ -863,7 +863,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun dropCall(promise: Promise) {
-    if (isIncoming && !isAnserCall) {
+    if (isIncoming && !isAnswerCall) {
       OmiClient.getInstance(reactApplicationContext!!).declineWithCode(false) // 603
     } else {
       OmiClient.getInstance(reactApplicationContext!!).hangUp()

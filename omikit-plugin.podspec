@@ -34,8 +34,8 @@ Pod::Spec.new do |s|
 
   # Thêm dependency bắt buộc
   s.dependency "React-Core"
-  # Sử dụng version OmiKit ổn định hơn
-  s.dependency "OmiKit", "1.8.40"
+ 
+  s.dependency "OmiKit", "1.8.42"
 
 
   s.requires_arc = true
