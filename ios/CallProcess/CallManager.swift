@@ -206,6 +206,16 @@ class CallManager {
             return // Do not show missed call notification if the call has been answered
           }
           
+          // Lý do không cần hiển thị
+          switch call.terminateReason {
+          case .callCompletedElsewhere:
+            return
+          case .originatorCancel, .unknown:
+            break // Tiếp tục show
+          default:
+            return
+          }
+          
           let user = UserDefaults.standard
           let title = user.string(forKey: "omicall/missedCallTitle") ?? ""
           let message = user.string(forKey: "omicall/prefixMissedCallMessage") ?? ""
