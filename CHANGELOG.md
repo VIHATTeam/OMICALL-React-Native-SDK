@@ -2,11 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.2.93
+- Update OMIKIT android to version 2.3.76
+- Fix show missed call in android
+  
 ## 3.2.92
 - Update OMIKIT iOS to version 1.8.44
 - Update OMIKIT android to version 2.3.75
 - Add API check show missed call 
-- Import quality call android 
+- Import quality call android
 
 ## 3.2.91
 - Update OMIKIT iOS to version 1.8.42
