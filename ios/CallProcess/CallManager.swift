@@ -201,9 +201,9 @@ class CallManager {
             return // No missed call to show
           }
 
-          let statusAnswer = OmiClient.checkHasAnsweredCall(call.omiId ?? "")
-          if (statusAnswer) {
-            return // Do not show missed call notification if the call has been answered
+          let statusAnswer = OmiClient.checkHasShowMissedCall(call.omiId ?? "")
+          if (!statusAnswer) {
+            return // Do not show missed call notification 
           }
           
           // Lý do không cần hiển thị
