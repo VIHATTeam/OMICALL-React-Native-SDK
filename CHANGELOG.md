@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.3.1 [26/07/2025]
+- Update OMIKIT android to version 2.3.77
+- Update targetSDK 35
+  
+
 ## 3.2.93
 - Update OMIKIT android to version 2.3.76
 - Fix show missed call in android
@@ -18,7 +23,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## 3.2.90
-- Fix wrong name isAnswerCall
+- Fix wrong name isAnswerCallcd a
 
 ## 3.2.89
 - Update OMIKIT iOS to version 1.8.40
