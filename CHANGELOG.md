@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.3.2 [28/07/2025]
+- Update OMIKIT android to version 2.3.78
+- Remove permission `camera` at foregroundType 
+  
+
 ## 3.3.1 [26/07/2025]
 - Update OMIKIT android to version 2.3.77
 - Update targetSDK 35
