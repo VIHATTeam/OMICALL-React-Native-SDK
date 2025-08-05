@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## 3.3.4 [29/07/2025]
+- Update OMIKIT android to version 2.3.84
+- Fix crash SDK Android 
+
+
 ## 3.3.3 [29/07/2025]
 - Update OMIKIT android to version 2.3.79
 
