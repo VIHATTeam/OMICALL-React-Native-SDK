@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 3.3.7 [18/08/2025]
+## 3.3.7, 3.3.8 [18/08/2025]
 - Update OMIKIT android to version 2.3.88
 - Fix crash SDK Android 
 - Add func required permission before login OMI
