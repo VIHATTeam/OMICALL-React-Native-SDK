@@ -37,12 +37,70 @@ import vn.vihat.omicall.omisdk.utils.Utils
 import java.util.Timer
 import java.util.TimerTask
 
+/**
+ * OmiSDK Registration Status Mapping
+ */
+object OmiRegistrationStatus {
+    private val statusMap = mapOf(
+        // Success
+        200 to ("ERROR_SUCCESS" to "Registration successful"),
+        
+        // Parameter validation errors (4xx)
+        400 to ("ERROR_MISSING_PARAMETERS" to "Missing required parameters. Please check your configuration."),
+        401 to ("ERROR_INVALID_CREDENTIALS" to "Invalid credentials. Please check username/password."),
+        
+        // Permission errors (45x) - Android specific
+        450 to ("ERROR_MISSING_RECORD_AUDIO" to "RECORD_AUDIO permission required for Android 14+"),
+        451 to ("ERROR_MISSING_FOREGROUND_SERVICE" to "FOREGROUND_SERVICE permission required"),
+        452 to ("ERROR_MISSING_POST_NOTIFICATIONS" to "POST_NOTIFICATIONS permission required for Android 13+"),
+        
+        // Service errors (5xx)
+        500 to ("ERROR_SERVICE_START_FAILED" to "Failed to start SIP service"),
+        501 to ("ERROR_SERVICE_NOT_AVAILABLE" to "SIP service not available"),
+        502 to ("ERROR_SERVICE_DEGRADED" to "Service degraded - may miss calls when app killed"),
+        
+        // Network errors (6xx)
+        600 to ("ERROR_NETWORK_UNAVAILABLE" to "Network unavailable"),
+        601 to ("ERROR_CONNECTION_TIMEOUT" to "Connection timeout"),
+        
+        // Legacy compatibility
+        403 to ("ERROR_FORBIDDEN" to "Access denied. Check realm/domain permissions."),
+        404 to ("ERROR_REALM_NOT_FOUND" to "Realm not found. Check configuration."),
+        408 to ("ERROR_TIMEOUT" to "Connection timeout"),
+        503 to ("ERROR_SERVICE_UNAVAILABLE" to "Service temporarily unavailable"),
+        
+        // Unknown
+        999 to ("ERROR_UNKNOWN" to "Unknown error occurred")
+    )
+    
+    fun getError(code: Int): Pair<String, String> {
+        return statusMap[code] ?: ("ERROR_REGISTRATION_FAILED" to "Registration failed (Status: $code)")
+    }
+}
+
+/**
+ * Helper functions for parameter validation
+ */
+object ValidationHelper {
+    fun validateRequired(params: Map<String, String?>, promise: Promise): Boolean {
+        params.forEach { (key, value) ->
+            if (value.isNullOrEmpty()) {
+                val errorCode = "ERROR_MISSING_${key.uppercase()}"
+                val message = "$key is required for OMICALL initialization. Please provide a valid $key."
+                promise.reject(errorCode, message)
+                return false
+            }
+        }
+        return true
+    }
+}
 
 class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   ReactContextBaseJavaModule(reactContext), ActivityEventListener, OmiListener {
   private val mainScope = CoroutineScope(Dispatchers.Main)
   private var isIncoming: Boolean = false
   private var isAnswerCall: Boolean = false
+  private var permissionPromise: Promise? = null
 
   override fun getName(): String {
     return NAME
@@ -522,58 +580,57 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
         currentActivity?.runOnUiThread {
             try {
-                // Lấy các giá trị từ data với null safety
-              val notificationIcon = data.getString("notificationIcon") ?: ""
-              val prefix = data?.getString("prefix") ?: ""
-              val incomingBackgroundColor = data?.getString("incomingBackgroundColor") ?: ""
-              val incomingAcceptButtonImage = data?.getString("incomingAcceptButtonImage") ?: ""
-              val incomingDeclineButtonImage = data?.getString("incomingDeclineButtonImage") ?: ""
-              val prefixMissedCallMessage = data?.getString("prefixMissedCallMessage") ?: ""
-              val backImage = data?.getString("backImage") ?: ""
-              val userImage = data?.getString("userImage") ?: ""
-              val userNameKey = data?.getString("userNameKey") ?: ""
-              val channelId = data?.getString("channelId") ?: ""
-              val missedCallTitle = data?.getString("missedCallTitle") ?: ""
-              val audioNotificationDescription = data?.getString("audioNotificationDescription") ?: ""
-              val videoNotificationDescription = data?.getString("videoNotificationDescription") ?: ""
-              val displayNameType = data?.getString("displayNameType") ?: ""
-              val appRepresentName = data?.getString("representName") ?: ""
-                // Chuyển đổi isUserBusy thành Boolean
-              val isUserBusy = data.getBoolean("isUserBusy") ?: true
+                // Extract parameters from data with proper defaults
+                val notificationIcon = data.getString("notificationIcon") ?: "ic_notification"
+                val incomingBackgroundColor = data.getString("incomingBackgroundColor") ?: "#FFFFFF"
+                val incomingAcceptButtonImage = data.getString("incomingAcceptButtonImage") ?: "ic_accept"
+                val incomingDeclineButtonImage = data.getString("incomingDeclineButtonImage") ?: "ic_decline"
+                val prefixMissedCallMessage = data.getString("prefixMissedCallMessage") ?: "Cuộc gọi nhỡ từ"
+                val backImage = data.getString("backImage") ?: "ic_back"
+                val userImage = data.getString("userImage") ?: "ic_user"
+                val userNameKey = data.getString("userNameKey") ?: "full_name"
+                val channelId = data.getString("channelId") ?: "omicall_channel"
+                val missedCallTitle = data.getString("missedCallTitle") ?: "Cuộc gọi nhỡ"
+                val audioNotificationDescription = data.getString("audioNotificationDescription") ?: "Cuộc gọi audio"
+                val videoNotificationDescription = data.getString("videoNotificationDescription") ?: "Cuộc gọi video"
+                val representName = data.getString("representName") ?: ""
+                val isUserBusy = data.getBoolean("isUserBusy")
 
-                // Cấu hình push notification
-                   OmiClient.getInstance(context).configPushNotification(
+                // Configure push notification with extracted parameters
+                OmiClient.getInstance(context).configPushNotification(
                     showMissedCall = true,
-                    notificationIcon = notificationIcon ?: "ic_notification",
-                    notificationAvatar = userImage ?: "ic_inbound_avatar_notification",
-                    fullScreenAvatar = userImage ?: "ic_inbound_avatar_fullscreen",
+                    notificationIcon = notificationIcon,
+                    notificationAvatar = userImage,
+                    fullScreenAvatar = userImage,
                     internalCallText = "Gọi nội bộ",
-                    videoCallText = "Gọi Video",
-                    inboundCallText = prefix,
+                    videoCallText = videoNotificationDescription,
+                    inboundCallText = audioNotificationDescription,
                     unknownContactText = "Cuộc gọi không xác định",
                     showUUID = false,
                     inboundChannelId = "${channelId}-inbound",
                     inboundChannelName = "Cuộc gọi đến",
                     missedChannelId = "${channelId}-missed",
-                    missedChannelName = "Cuộc gọi nhỡ",
-                    displayNameType = userNameKey ?: "full_name",
-                    notificationMissedCallPrefix = prefixMissedCallMessage ?: "Cuộc gọi nhỡ từ",
-                    representName = appRepresentName ?: ""
-                  )
+                    missedChannelName = missedCallTitle,
+                    displayNameType = userNameKey,
+                    notificationMissedCallPrefix = prefixMissedCallMessage,
+                    representName = representName
+                )
 
-                // Cấu hình decline call behavior
+                // Configure decline call behavior
                 OmiClient.getInstance(context).configureDeclineCallBehavior(isUserBusy)
 
+                Log.d("OmikitPlugin", "✅ Push notification configured successfully")
                 promise.resolve(true)
             } catch (e: Exception) {
-                Log.e("OmikitPlugin", "Error configuring push notification: ${e.message}", e)
+                Log.e("OmikitPlugin", "❌ Error configuring push notification: ${e.message}", e)
                 promise.reject("E_CONFIG_FAILED", "Failed to configure push notification", e)
             }
         } ?: run {
+            Log.e("OmikitPlugin", "❌ Current activity is null")
             promise.reject("E_NULL_ACTIVITY", "Current activity is null")
         }
     } catch (e: Exception) {
-        Log.e("OmikitPlugin", "Error in configPushNotification: ${e.message}", e)
+        Log.e("OmikitPlugin", "❌ Error in configPushNotification: ${e.message}", e)
         promise.reject("E_UNKNOWN", "Unknown error occurred", e)
     }
   }
@@ -590,11 +647,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val projectId = data.getString("projectId") ?: ""
 
       // Validate required parameters
-      if (userName.isNullOrEmpty() || password.isNullOrEmpty() || realm.isNullOrEmpty() || firebaseToken.isNullOrEmpty()) {
-        Log.e("OmikitPlugin", "❌ Missing required parameters for SIP registration")
-        promise.resolve(false)
-        return@launch
-      }
+      if (!ValidationHelper.validateRequired(mapOf(
+          "userName" to userName,
+          "password" to password, 
+          "realm" to realm,
+          "fcmToken" to firebaseToken
+        ), promise)) return@launch
 
       withContext(Dispatchers.Default) {
         try {
@@ -610,29 +668,33 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           Log.d("OmikitPlugin", "🔇 Using Silent Registration API for user: $userName")
           
           OmiClient.getInstance(reactApplicationContext!!).silentRegister(
-            userName = userName,
-            password = password,
-            realm = realm,
+            userName = userName ?: "",
+            password = password ?: "",
+            realm = realm ?: "",
             isVideo = isVideo ?: true,
-            firebaseToken = firebaseToken,
+            firebaseToken = firebaseToken ?: "",
             host = host,
             projectId = projectId
           ) { success, statusCode, message ->
             Log.d("OmikitPlugin", "🔇 Silent registration callback - success: $success, status: $statusCode, message: $message")
-            
             if (success) {
               Log.d("OmikitPlugin", "✅ Silent registration successful - no notification, no auto-unregister")
+              // ✅ Resolve promise với kết quả từ callback
+              promise.resolve(success)
             } else {
               Log.e("OmikitPlugin", "❌ Silent registration failed: $message")
+              if (statusCode == 200) {
+                promise.resolve(true)
+              } else {
+                val (errorCode, errorMessage) = OmiRegistrationStatus.getError(statusCode)
+                promise.reject(errorCode, "$errorMessage (Status: $statusCode)")
+              }
             }
-            
-            // ✅ Resolve promise với kết quả từ callback
-            promise.resolve(success)
           }
           
         } catch (e: Exception) {
           Log.e("OmikitPlugin", "❌ Error during silent registration: ${e.message}", e)
-          promise.resolve(false)
+          promise.reject("ERROR_INITIALIZATION_EXCEPTION", "OMICALL initialization failed due to an unexpected error: ${e.message}. Please check your network connection and configuration.", e)
         }
       }
     }
@@ -653,27 +715,36 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       requestPermission(isVideo)
       withContext(Dispatchers.Default) {
         try {
-          if (usrName != null && usrUuid != null && apiKey != null && firebaseToken != null) {
-            loginResult = OmiClient.registerWithApiKey(
-              apiKey = apiKey,
-              userName = usrName,
-              uuid = usrUuid,
-              phone = phone ?: "",
-              isVideo = isVideo,
-              firebaseToken,
-              projectId
-            )
-            
-            // ✅ Sử dụng API mới để ngăn chặn AUTO-UNREGISTER sau khi register thành công
-            if (loginResult) {
-              Log.d("OmikitPlugin", "🛡️ Preventing AUTO-UNREGISTER after successful API key registration")
-              preventAutoUnregisterCrash("Successful API key registration - userName: $usrName")
-            }
-            
+          // Validate required parameters
+          if (!ValidationHelper.validateRequired(mapOf(
+              "fullName" to usrName,
+              "usrUuid" to usrUuid,
+              "apiKey" to apiKey,
+              "fcmToken" to firebaseToken
+            ), promise)) return@withContext
+
+          loginResult = OmiClient.registerWithApiKey(
+            apiKey = apiKey ?: "",
+            userName = usrName ?: "",
+            uuid = usrUuid ?: "",
+            phone = phone ?: "",
+            isVideo = isVideo,
+            firebaseToken,
+            projectId
+          )
+          
+          // ✅ Sử dụng API mới để ngăn chặn AUTO-UNREGISTER sau khi register thành công
+          if (loginResult) {
+            Log.d("OmikitPlugin", "🛡️ Preventing AUTO-UNREGISTER after successful API key registration")
+            preventAutoUnregisterCrash("Successful API key registration - userName: $usrName")
             promise.resolve(true)
+          } else {
+            Log.e("OmikitPlugin", "❌ API key registration failed")
+            promise.reject("ERROR_API_KEY_REGISTRATION_FAILED", "OMICALL API key initialization failed. Please check your API key, UUID, and network connection.")
           }
-        } catch (_: Throwable) {
-          promise.resolve(loginResult)
+        } catch (e: Exception) {
+          Log.e("OmikitPlugin", "❌ Error during API key registration: ${e.message}", e)
+          promise.reject("ERROR_API_KEY_INITIALIZATION_EXCEPTION", "OMICALL API key initialization failed due to an unexpected error: ${e.message}. Please check your configuration and network connection.", e)
         }
       }
     }
@@ -1099,6 +1170,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   companion object {
     const val NAME = "OmikitPlugin"
+    const val REQUEST_PERMISSIONS_CODE = 1001
+    const val REQUEST_OVERLAY_PERMISSION_CODE = 1002
 
     fun onDestroy() {
       try {
@@ -1123,7 +1196,53 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       act: ReactActivity,
     ) {
       act.runOnUiThread {
+        // Handle our custom permission request
+        if (requestCode == REQUEST_PERMISSIONS_CODE) {
+          handlePermissionResults(permissions, grantResults, act)
+        }
+        
+        // Also handle SDK permission request
         OmiSDKUtils.handlePermissionRequest(requestCode, permissions, grantResults, act)
+      }
+    }
+    
+    private fun handlePermissionResults(
+      permissions: Array<out String>,
+      grantResults: IntArray,
+      act: ReactActivity
+    ) {
+      try {
+        val deniedPermissions = mutableListOf<String>()
+        val grantedPermissions = mutableListOf<String>()
+        
+        for (i in permissions.indices) {
+          if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+            grantedPermissions.add(permissions[i])
+          } else {
+            deniedPermissions.add(permissions[i])
+          }
+        }
+        
+        Log.d("OmikitPlugin", "✅ Granted: ${grantedPermissions.joinToString()}")
+        if (deniedPermissions.isNotEmpty()) {
+          Log.w("OmikitPlugin", "❌ Denied: ${deniedPermissions.joinToString()}")
+        }
+        
+        // Check if we have essential permissions for VoIP
+        val hasRecordAudio = grantedPermissions.contains(Manifest.permission.RECORD_AUDIO)
+        val hasCallPhone = grantedPermissions.contains(Manifest.permission.CALL_PHONE)
+        val hasModifyAudio = grantedPermissions.contains(Manifest.permission.MODIFY_AUDIO_SETTINGS)
+        
+        val canProceed = hasRecordAudio && hasCallPhone && hasModifyAudio
+        
+        if (canProceed) {
+          Log.d("OmikitPlugin", "🎉 Essential VoIP permissions granted!")
+        } else {
+          Log.e("OmikitPlugin", "⚠️ Missing essential VoIP permissions - app may not work properly")
+        }
+        
+      } catch (e: Exception) {
+        Log.e("OmikitPlugin", "❌ Error handling permission results: ${e.message}", e)
       }
     }
 
@@ -1217,23 +1336,224 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     )
   }
 
-  private fun requestPermission(isVideo: Boolean) {
-    var permissions = arrayOf(
+  @ReactMethod
+  fun checkAndRequestPermissions(isVideo: Boolean, promise: Promise) {
+    try {
+      val missingPermissions = getMissingPermissions(isVideo)
+      
+      if (missingPermissions.isEmpty()) {
+        Log.d("OmikitPlugin", "✅ All permissions already granted")
+        promise.resolve(true)
+        return
+      }
+      
+      Log.d("OmikitPlugin", "📋 Missing permissions: ${missingPermissions.joinToString()}")
+      
+      // Store promise for callback
+      permissionPromise = promise
+      
+      ActivityCompat.requestPermissions(
+        reactApplicationContext.currentActivity!!,
+        missingPermissions.toTypedArray(),
+        REQUEST_PERMISSIONS_CODE,
+      )
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error checking permissions: ${e.message}", e)
+      promise.resolve(false)
+    }
+  }
+
+  private fun getMissingPermissions(isVideo: Boolean): List<String> {
+    val allPermissions = mutableListOf<String>()
+    
+    // Basic permissions for VoIP
+    allPermissions.addAll(arrayOf(
       Manifest.permission.USE_SIP,
       Manifest.permission.CALL_PHONE,
       Manifest.permission.MODIFY_AUDIO_SETTINGS,
       Manifest.permission.RECORD_AUDIO,
-    )
+    ))
+    
+    // Video call permissions
     if (isVideo) {
-      permissions = permissions.plus(Manifest.permission.CAMERA)
+      allPermissions.add(Manifest.permission.CAMERA)
     }
+    
+    // Android 13+ notifications
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      permissions = permissions.plus(Manifest.permission.POST_NOTIFICATIONS)
+      allPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
     }
+    
+    // Android 14+ foreground service permissions  
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+      allPermissions.addAll(arrayOf(
+        Manifest.permission.FOREGROUND_SERVICE_MICROPHONE,
+        Manifest.permission.FOREGROUND_SERVICE_PHONE_CALL
+      ))
+    }
+    
+    return allPermissions.filter { permission ->
+      ContextCompat.checkSelfPermission(reactApplicationContext, permission) != PackageManager.PERMISSION_GRANTED
+    }
+  }
+
+  @ReactMethod
+  fun checkPermissionStatus(promise: Promise) {
+    try {
+      val permissionStatus = mutableMapOf<String, Any>()
+      
+      // Essential permissions
+      val essentialPermissions = arrayOf(
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.CALL_PHONE,
+        Manifest.permission.MODIFY_AUDIO_SETTINGS,
+        Manifest.permission.USE_SIP
+      )
+      
+      // Check essential permissions
+      val missingEssential = mutableListOf<String>()
+      val grantedEssential = mutableListOf<String>()
+      
+      essentialPermissions.forEach { permission ->
+        if (ContextCompat.checkSelfPermission(reactApplicationContext, permission) == PackageManager.PERMISSION_GRANTED) {
+          grantedEssential.add(permission)
+        } else {
+          missingEssential.add(permission)
+        }
+      }
+      
+      // Check Android 14+ foreground service permissions
+      val foregroundServiceStatus = mutableMapOf<String, Boolean>()
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        foregroundServiceStatus["FOREGROUND_SERVICE_MICROPHONE"] = ContextCompat.checkSelfPermission(
+          reactApplicationContext, 
+          Manifest.permission.FOREGROUND_SERVICE_MICROPHONE
+        ) == PackageManager.PERMISSION_GRANTED
+        
+        foregroundServiceStatus["FOREGROUND_SERVICE_PHONE_CALL"] = ContextCompat.checkSelfPermission(
+          reactApplicationContext, 
+          Manifest.permission.FOREGROUND_SERVICE_PHONE_CALL
+        ) == PackageManager.PERMISSION_GRANTED
+      }
+      
+      // Check system alert window permission
+      val canDrawOverlays = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        Settings.canDrawOverlays(reactApplicationContext)
+      } else {
+        true
+      }
+      
+      permissionStatus["essentialGranted"] = grantedEssential
+      permissionStatus["essentialMissing"] = missingEssential
+      permissionStatus["canMakeVoipCalls"] = missingEssential.isEmpty()
+      permissionStatus["foregroundServicePermissions"] = foregroundServiceStatus
+      permissionStatus["canDrawOverlays"] = canDrawOverlays
+      permissionStatus["androidVersion"] = Build.VERSION.SDK_INT
+      permissionStatus["targetSdk"] = reactApplicationContext.applicationInfo.targetSdkVersion
+      
+      val map = Arguments.makeNativeMap(permissionStatus)
+      promise.resolve(map)
+      
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error checking permission status: ${e.message}", e)
+      promise.resolve(null)
+    }
+  }
+
+  @ReactMethod
+  fun requestSystemAlertWindowPermission(promise: Promise) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      if (!Settings.canDrawOverlays(reactApplicationContext)) {
+        permissionPromise = promise
+        val intent = Intent(
+          Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+          Uri.parse("package:${reactApplicationContext.packageName}")
+        )
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        reactApplicationContext.currentActivity?.startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION_CODE)
+      } else {
+        promise.resolve(true)
+      }
+    } else {
+      promise.resolve(true)
+    }
+  }
+
+  /**
+   * Request specific permissions for error codes 450, 451, 452
+   * Shows permission request popup for customers
+   * @param codes - Array of permission codes to request (450, 451, 452)
+   * @param promise - Promise to resolve with request result
+   */
+  @ReactMethod
+  fun requestPermissionsByCodes(codes: ReadableArray, promise: Promise) {
+    try {
+      val permissionCodes = codes.toArrayList().map { it.toString().toInt() }
+      val permissionsToRequest = mutableListOf<String>()
+      
+      for (code in permissionCodes) {
+        when (code) {
+          450 -> { // RECORD_AUDIO permission
+            if (ContextCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+              permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
+            }
+          }
+          451 -> { // FOREGROUND_SERVICE permissions  
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+              if (ContextCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.FOREGROUND_SERVICE_MICROPHONE) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.FOREGROUND_SERVICE_MICROPHONE)
+              }
+              if (ContextCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.FOREGROUND_SERVICE_PHONE_CALL) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.FOREGROUND_SERVICE_PHONE_CALL)
+              }
+            }
+          }
+          452 -> { // POST_NOTIFICATIONS permission
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+              if (ContextCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+              }
+            }
+          }
+        }
+      }
+      
+      if (permissionsToRequest.isEmpty()) {
+        promise.resolve(true)
+        return
+      }
+      
+      // Store promise for callback
+      permissionPromise = promise
+      
+      Log.d("OmikitPlugin", "🔐 Requesting permissions for codes ${permissionCodes.joinToString()}: ${permissionsToRequest.joinToString()}")
+      
+      ActivityCompat.requestPermissions(
+        reactApplicationContext.currentActivity!!,
+        permissionsToRequest.toTypedArray(),
+        REQUEST_PERMISSIONS_CODE
+      )
+      
+    } catch (e: Exception) {
+      Log.e("OmikitPlugin", "❌ Error requesting permissions by codes: ${e.message}", e)
+      promise.reject("ERROR_PERMISSION_REQUEST", "Failed to request permissions: ${e.message}")
+    }
+  }
+
+  private fun requestPermission(isVideo: Boolean) {
+    val missingPermissions = getMissingPermissions(isVideo)
+    
+    if (missingPermissions.isEmpty()) {
+      Log.d("OmikitPlugin", "✅ All permissions already granted")
+      return
+    }
+    
+    Log.d("OmikitPlugin", "📋 Requesting missing permissions for Android ${Build.VERSION.SDK_INT}: ${missingPermissions.joinToString()}")
+    
     ActivityCompat.requestPermissions(
       reactApplicationContext.currentActivity!!,
-      permissions,
-      0,
+      missingPermissions.toTypedArray(),
+      REQUEST_PERMISSIONS_CODE,
     )
   }
 
@@ -1422,10 +1742,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           Log.d("OmikitPlugin", "🔍 Checking credentials for user: $userName")
           
           OmiClient.getInstance(reactApplicationContext!!).checkCredentials(
-            userName = userName,
-            password = password,
-            realm = realm,
-            firebaseToken = firebaseToken,
+            userName = userName ?: "",
+            password = password ?: "",
+            realm = realm ?: "",
+            firebaseToken = firebaseToken ?: "",
             host = host,
             projectId = projectId
           ) { success, statusCode, message ->
@@ -1478,12 +1798,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           Log.d("OmikitPlugin", "⚙️ Registering with options for user: $userName - showNotification: $showNotification, enableAutoUnregister: $enableAutoUnregister")
           
           OmiClient.getInstance(reactApplicationContext!!).registerWithOptions(
-            userName = userName,
-            password = password,
-            realm = realm,
+            userName = userName ?: "",
+            password = password ?: "",
+            realm = realm ?: "",
             isVideo = isVideo ?: true,
-            firebaseToken = firebaseToken,
-            host = host,
+            firebaseToken = firebaseToken ?: "",
+            host = host ,
             projectId = projectId,
             showNotification = showNotification,
             enableAutoUnregister = enableAutoUnregister

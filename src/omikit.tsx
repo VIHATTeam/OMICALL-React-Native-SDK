@@ -318,3 +318,50 @@ export function registerWithOptions(data: any): Promise<{ success: boolean, stat
   return OmikitPlugin.registerWithOptions(data);
 }
 
+/**
+ * Check current permission status for VoIP calls (Android 15+ only)
+ * @returns {Promise<any>} Permission status object (null on iOS)
+ */
+export function checkPermissionStatus(): Promise<any> {
+  if (Platform.OS !== 'android') {
+    return Promise.resolve(null);
+  }
+  return OmikitPlugin.checkPermissionStatus();
+}
+
+/**
+ * Check and request permissions for VoIP calls (Android 15+ only)
+ * @param {boolean} isVideo - Whether this is for video call (requires camera permission)
+ * @returns {Promise<boolean>} True if all permissions granted (always true on iOS)
+ */
+export function checkAndRequestPermissions(isVideo: boolean = false): Promise<boolean> {
+  if (Platform.OS !== 'android') {
+    return Promise.resolve(true);
+  }
+  return OmikitPlugin.checkAndRequestPermissions(isVideo);
+}
+
+/**
+ * Request system alert window permission (Android 15+ only)
+ * @returns {Promise<boolean>} True if permission granted (always true on iOS)
+ */
+export function requestSystemAlertWindowPermission(): Promise<boolean> {
+  if (Platform.OS !== 'android') {
+    return Promise.resolve(true);
+  }
+  return OmikitPlugin.requestSystemAlertWindowPermission();
+}
+
+/**
+ * Request specific permissions by error codes 450, 451, 452 (Android only)
+ * Shows permission request popup for customers to grant necessary permissions
+ * @param {number[]} codes - Array of permission codes to request (450, 451, 452)
+ * @returns {Promise<boolean>} True if all permissions granted (always true on iOS)
+ */
+export function requestPermissionsByCodes(codes: number[]): Promise<boolean> {
+  if (Platform.OS !== 'android') {
+    return Promise.resolve(true);
+  }
+  return OmikitPlugin.requestPermissionsByCodes(codes);
+}
+

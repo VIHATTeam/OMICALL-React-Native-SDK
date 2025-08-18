@@ -125,6 +125,17 @@ You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blo
       <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
       <uses-permission android:name="android.permission.WAKE_LOCK" />
       <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+      
+      <!-- 🔥 Android 15+ (SDK 35+) Required Permissions -->
+      <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+      <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+      <uses-permission android:name="android.permission.CALL_PHONE"/>
+      <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+      <uses-permission android:name="android.permission.USE_SIP"/>
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
+      <uses-permission android:name="android.permission.CAMERA"/> <!-- For video calls -->
+      
       // ... your config
 
          <application
@@ -559,12 +570,43 @@ We support 2 environments. So you need set correct key in Appdelegate.
 ```
 -Android:
 + PERMISSIONS.ANDROID.RECORD_AUDIO
++ PERMISSIONS.ANDROID.POST_NOTIFICATIONS
 + PERMISSIONS.ANDROID.CALL_PHONE
 + PERMISSIONS.ANDROID.CAMERA; (if you want to make Video calls)
 
 -IOS:
 + PERMISSIONS.IOS.MICROPHONE;
 + PERMISSIONS.IOS.CAMERA; (if you want to make Video calls)
+
+```
+
+### 🔥 **Android Permission Management**
+
+**📌 For Android (SDK), additional permissions are required:**
+
+🔥 Notes:
+	
+  •	POST_NOTIFICATIONS and RECORD_AUDIO must be requested at runtime in your code.
+	
+  •	FOREGROUND_SERVICE* permissions only need to be declared in the manifest; Android will enforce them automatically when you call startForegroundService().
+
+```xml
+<!-- Runtime permissions -->
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+<!-- Foreground service permissions (manifest only, no runtime request needed) -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" tools:node="remove" /> 
+
+<service 
+    android:name="net.gotev.sipservice.SipService" 
+    android:foregroundServiceType="phoneCall|microphone" 
+    tools:replace="android:foregroundServiceType" 
+    android:exported="false" 
+/>
 
 ```
 
@@ -598,6 +640,69 @@ startServices();
   •	Ensure that `omikit-plugin` is installed before using this function.
 
 *Add the following code to the root file of your application, such as `App.js` or `index.js`*
+
+
+📌 **requestLoginPermissions()**
+
+`Note`: Starting from Android 13+, certain foreground services (such as microphone or phone call) require explicit user permission before they can be started.
+This means the user must grant these permissions before initiating a call or any service that relies on them.
+
+```TypeScript
+import { 
+  PERMISSIONS, 
+  request, 
+  check, 
+  RESULTS, 
+  requestMultiple 
+} from 'react-native-permissions';
+import { Platform } from 'react-native';
+
+export async function requestLoginPermissions(): Promise<boolean> {
+  if (Platform.OS !== 'android') return true;
+
+  const permissions: string[] = [];
+
+  // Android 13+ cần POST_NOTIFICATIONS
+  if (Platform.Version >= 33) {
+    permissions.push(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
+  }
+
+  // Android 14+ và 15+ cần RECORD_AUDIO trước khi start foreground service
+  permissions.push(PERMISSIONS.ANDROID.RECORD_AUDIO);
+
+  const statuses = await requestMultiple(permissions);
+
+  // Check kết quả
+  const allGranted = Object.values(statuses).every(
+    status => status === RESULTS.GRANTED
+  );
+
+  if (!allGranted) {
+    console.warn('❌ Some required permissions were not granted');
+    return false;
+  }
+
+  console.log('✅ All required permissions granted');
+  return true;
+}
+```
+
+Example: use func `requestLoginPermissions()`
+
+```TypeScript
+async function handleLogin() {
+  const ok = await requestLoginPermissions();
+  if (!ok) {
+    // Block login, show alert
+    return;
+  }
+
+  // ✅ Safe để start service login
+  // initCallWithApiKey(); 
+  initCallWithUserPassword()
+}
+```
+
 
 📌 **initCallWithApiKey()**
 
@@ -678,22 +783,52 @@ const loginInfo = {
 };
 
 // Initialize call functionality using username and password authentication
-const result = await initCallWithUserPassword(loginInfo);
+ initCallWithUserPassword(loginInfo)
+      .then(result => {
+        console.log('initCallWithUserPassword success:', result);
 
-
-/* ❌ ❌ NOTE: Please check the user information again, if the object is not empty then you have successfully logged in. 
+        if (result) {
+        // ✅ Login OMI Success 
+        /* ❌ ❌ NOTE: Please check the user information again, if the object is not empty then you have successfully logged in. 
 Otherwise, if you have not successfully logged in, you should not navigate to the call screen. When startCall with empty information, it may crash your application or not be clear when receiving the startCall error  ❌❌*/
-
-// Example:
-
-if (result){
-  const infoUser = await getCurrentUser()
-  if (infoUser != null && Object.keys(infoUser).length > 0) { 
-    // ✅ Login OMI Success 
-    // Can navigate to call screen or start call 🚀 🚀
-  }
-}
+          const infoUser = await getCurrentUser()
+          if (infoUser != null && Object.keys(infoUser).length > 0) { 
+            // ✅ Login OMI Success 
+            // Can navigate to call screen or start call 🚀 🚀
+          }
+        }
+      })
+      .catch(error => {
+        // You can log error and check cause error
+        console.error('initCallWithUserPassword error:', error?.code, error?.message);
+        if (error?.code === 'ERROR_MISSING_RECORD_AUDIO') { // Please request permission audio
+          requestPermission(); 
+        }
+      })
+      .finally(() => {
+        // Doing something 
+        // setLoading(false);
+      });
 ```
+📝 **Detailed Description of Possible Errors(error?.code)**
+
+| **Message**                        | **Description**                                                                 | **Next Action**                                                                 |
+|------------------------------------|---------------------------------------------------------------------------------|----------------------------                                        
+| `ERROR_MISSING_PARAMETERS`         | Missing required parameters. Please check your configuration.                   | Verify all required fields are provided                                         |
+| `ERROR_INVALID_CREDENTIALS`        | Invalid credentials. Please check username/password.                            | Double-check login info                                                         |
+| `ERROR_FORBIDDEN`                  | Access denied. Check realm/domain permissions.                                  | Confirm account permissions with provider                                       |
+| `ERROR_REALM_NOT_FOUND`            | Realm not found. Check configuration.                                           | Ensure realm/domain is correct                                                  |
+| `ERROR_TIMEOUT`                    | Connection timeout                                                              | Retry with stable network                                                       |
+| `ERROR_MISSING_RECORD_AUDIO`       | RECORD_AUDIO permission required for Android 14+                                | Ask user to grant microphone permission                                         |
+| `ERROR_MISSING_FOREGROUND_SERVICE` | FOREGROUND_SERVICE permission required                                          | Request foreground service permission before starting service                   |
+| `ERROR_MISSING_POST_NOTIFICATIONS` | POST_NOTIFICATIONS permission required for Android 13+                          | Request notification permission before registering                              |
+| `ERROR_SERVICE_START_FAILED`       | Failed to start SIP service                                                     | Check logs and required permissions                                             |
+| `ERROR_SERVICE_NOT_AVAILABLE`      | SIP service not available                                                       | Ensure service is running                                                       |
+| `ERROR_SERVICE_DEGRADED`           | Service degraded - may miss calls when app killed                               | Keep app in foreground or request proper permissions                            |
+| `ERROR_SERVICE_UNAVAILABLE`        | Service temporarily unavailable                                                 | Try again later                                                                 |
+| `ERROR_NETWORK_UNAVAILABLE`        | Network unavailable                                                             | Check network connection                                                        |
+| `ERROR_CONNECTION_TIMEOUT`         | Connection timeout                                                              | Verify network and server availability                                          |
+| `ERROR_UNKNOWN`                    | Unknown error occurred                                                          | Check logs and report issue                                                     |
 
 📌 **configPushNotification()**
 
@@ -715,8 +850,8 @@ configPushNotification({
   missedCallTitle: "Cuộc gọi nhỡ", // Title for missed call notifications
   userNameKey: "uuid", // User identification key: options are "uuid", "full_name", or "extension"
   channelId: "com.channel.sample", // Custom notification channel ID for Android
-  audioNotificationDescription: "", // Description for audio call notifications
-  videoNotificationDescription: "", // Description for video call notifications
+  audioNotificationDescription: "Cuộc gọi audio", // Description for audio call notifications
+  videoNotificationDescription: "Cuộc gọi video", // Description for video call notifications
   representName: "", // Representative name to display for all incoming calls (e.g., business name)
   isUserBusy: true // By default, it is set to true. The Omicall system will continue ringing the next user if isUserBusy is true. If it is false, the call will be immediately terminated, assuming the call scenario is based on a criteria-based routing.
 });
@@ -1284,6 +1419,12 @@ const onSwitchboardAnswer = (data: any) => {
 | `863`           | Temporary block on VinaPhone direction, please try again |
 | `864`           | Temporary block on Mobifone direction, please try again |
 | `865`           | he advertising number is currently outside the permitted calling hours, please try again later |
+
+
+### **Breaking Changes**
+- **Android 15+ Support**: Requires additional permissions in AndroidManifest.xml
+- **New Architecture**: Still requires `newArchEnabled=false`
+- **Minimum SDK**: Android SDK 21+ recommended for full feature support
 
 # ⚠️ Issues
 
