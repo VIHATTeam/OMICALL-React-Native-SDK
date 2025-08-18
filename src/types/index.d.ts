@@ -33,6 +33,10 @@ declare module 'omikit-plugin' {
   export function testEventEmission(): Promise<boolean>;
   export function getKeepAliveStatus(): Promise<any>;
   export function triggerKeepAlivePing(): Promise<boolean>;
+  export function checkPermissionStatus(): Promise<any>;
+  export function checkAndRequestPermissions(isVideo?: boolean): Promise<boolean>;
+  export function requestSystemAlertWindowPermission(): Promise<boolean>;
+  export function requestPermissionsByCodes(codes: number[]): Promise<boolean>;
 
   export enum OmiCallState {
     unknown,
