@@ -1392,9 +1392,9 @@ const onSwitchboardAnswer = (data: any) => {
 }
 
 // * onAudioChange have callback when the user switches the audio output device (headphones)
-const onAudioChange = (data: any) => {
-  const { sip } = data
-  // sip: String 
+const onAudioChange = (audioData: any) => {
+  const { data } = audioData;
+    
 }
 ```
 
