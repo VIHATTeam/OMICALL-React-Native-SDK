@@ -1273,7 +1273,10 @@ useEffect(() => {
     omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
     omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, onSwitchboardAnswer);
     omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
-    
+
+    omiEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
+
+
     if(Platform.OS == "android") {
       omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onRequestPermission);
     }
@@ -1292,7 +1295,8 @@ useEffect(() => {
         omiEmitter.removeAllListeners(OmiCallEvent.onHold);
         omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
         omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
-        
+        omiEmitter.removeAllListeners(OmiCallEvent.onAudioChange);
+
         if(Platform.OS == "android") {
           omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
         }
@@ -1383,6 +1387,12 @@ const onSpeaker = (isSpeaker: boolean) => {
 
 // * onSwitchboardAnswer have callback when employee answered script call.
 const onSwitchboardAnswer = (data: any) => {
+  const { sip } = data
+  // sip: String 
+}
+
+// * onAudioChange have callback when the user switches the audio output device (headphones)
+const onAudioChange = (data: any) => {
   const { sip } = data
   // sip: String 
 }
