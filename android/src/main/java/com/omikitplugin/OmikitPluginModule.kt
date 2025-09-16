@@ -412,15 +412,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
-  // ✅ Helper function để sử dụng API mới (DEPRECATED - sử dụng Silent API thay thế)
-  private fun preventAutoUnregisterCrash(reason: String) {
-    try {
-      Log.w("OmikitPlugin", "⚠️ DEPRECATED: preventAutoUnregisterCrash() - Use Silent Registration API instead")
-      OmiClient.getInstance(reactApplicationContext!!).preventAutoUnregister(reason)
-    } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Failed to prevent AUTO-UNREGISTER: ${e.message}", e)
-    }
-  }
+  // ✅ Helper function removed - deprecated in new SDK version
+  // preventAutoUnregisterCrash is no longer supported
 
   // ✅ Method để check status AUTO-UNREGISTER (DEPRECATED)
   @ReactMethod
@@ -449,14 +442,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   // ✅ Method để manually prevent AUTO-UNREGISTER (DEPRECATED)
   @ReactMethod
   fun preventAutoUnregister(reason: String, promise: Promise) {
-    Log.w("OmikitPlugin", "⚠️ DEPRECATED: preventAutoUnregister() - Use Silent Registration API instead")
-    try {
-      preventAutoUnregisterCrash(reason)
-      promise.resolve(true)
-    } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Manual prevent failed: ${e.message}", e)
-      promise.resolve(false)
-    }
+    Log.w("OmikitPlugin", "⚠️ DEPRECATED: preventAutoUnregister() - No longer supported in new SDK version")
+    // Function removed - no longer supported
+    promise.resolve(false)
   }
 
   // ✅ Convenience methods cho các scenario phổ biến (DEPRECATED)
@@ -723,20 +711,27 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
               "fcmToken" to firebaseToken
             ), promise)) return@withContext
 
+          // ✅ Cleanup trước khi register
+          try {
+            OmiClient.getInstance(reactApplicationContext!!).logout()
+            delay(500) // Chờ cleanup hoàn tất
+          } catch (e: Exception) {
+            Log.w("OmikitPlugin", "⚠️ Cleanup warning (expected): ${e.message}")
+          }
+
+          Log.d("OmikitPlugin", "🔑 Using API key registration for user: $usrName")
+
           loginResult = OmiClient.registerWithApiKey(
-            apiKey = apiKey ?: "",
-            userName = usrName ?: "",
-            uuid = usrUuid ?: "",
-            phone = phone ?: "",
-            isVideo = isVideo,
-            firebaseToken,
-            projectId
+            apiKey ?: "",
+            usrName ?: "",
+            phone ?: "",
+            usrUuid ?: "",
+            isVideo,
+            firebaseToken
           )
           
-          // ✅ Sử dụng API mới để ngăn chặn AUTO-UNREGISTER sau khi register thành công
           if (loginResult) {
-            Log.d("OmikitPlugin", "🛡️ Preventing AUTO-UNREGISTER after successful API key registration")
-            preventAutoUnregisterCrash("Successful API key registration - userName: $usrName")
+            Log.d("OmikitPlugin", "✅ API key registration successful")
             promise.resolve(true)
           } else {
             Log.e("OmikitPlugin", "❌ API key registration failed")
@@ -855,6 +850,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         reactApplicationContext!!,
         Manifest.permission.RECORD_AUDIO
       )
+    val map: WritableMap = WritableNativeMap()
     if (audio == PackageManager.PERMISSION_GRANTED) {
       mainScope.launch {
         var callResult: OmiStartCallStatus? = null
@@ -869,10 +865,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
           }
         }
-        promise.resolve(callResult)
+        var statusCalltemp = callResult?.ordinal ?: 7
+        map.putInt("status", statusCalltemp)
+        map.putString("_id", "")
+        map.putString("message", messageCall(statusCalltemp) as String)
+        promise.resolve(map)
       }
     } else {
-      promise.resolve(false)
+      map.putInt("status", 4)
+      map.putString("_id", "")
+      map.putString("message", messageCall(406) as String)
+      promise.resolve(map)
     }
   }
 
@@ -1585,10 +1588,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   // ✅ Thêm listener cho AUTO-UNREGISTER status
   private val autoUnregisterListener = object : OmiListener {
     override fun onAutoUnregisterStatus(isScheduled: Boolean, timeUntilExecution: Long) {
-      // ✅ Ngăn chặn nếu sắp thực hiện (< 3 giây)
+      // ✅ Auto-unregister prevention removed - no longer supported in new SDK
       if (isScheduled && timeUntilExecution > 0 && timeUntilExecution < 3000) {
-        Log.w("OmikitPlugin", "🚨 AUTO-UNREGISTER sắp thực hiện trong ${timeUntilExecution}ms - ngăn chặn khẩn cấp!")
-        preventAutoUnregisterCrash("Emergency prevention from listener - ${timeUntilExecution}ms remaining")
+        Log.w("OmikitPlugin", "🚨 AUTO-UNREGISTER sắp thực hiện trong ${timeUntilExecution}ms - SDK tự xử lý")
+        // preventAutoUnregisterCrash deprecated - SDK handles automatically
       }
       
       // ✅ Gửi event cho React Native

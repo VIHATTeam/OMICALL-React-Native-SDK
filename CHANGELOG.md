@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.3.9 [16/09/2025]
+- Update OMIKIT android to version 2.3.90
+- Fix crash SDK Android 
+- Hot Fix crash when call func startCallWithUUID 
+
+
 ## 3.3.7, 3.3.8 [18/08/2025]
 - Update OMIKIT android to version 2.3.88
 - Fix crash SDK Android 
