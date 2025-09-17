@@ -79,7 +79,7 @@ object OmiRegistrationStatus {
 }
 
 /**
- * Helper functions for parameter validation
+ * Helper functions for parameter validation and safe OmiClient access
  */
 object ValidationHelper {
     fun validateRequired(params: Map<String, String?>, promise: Promise): Boolean {
@@ -93,6 +93,24 @@ object ValidationHelper {
         }
         return true
     }
+    
+    /**
+     * Safe OmiClient access to prevent crashes during service shutdown
+     */
+    fun safeOmiClientAccess(context: ReactApplicationContext, action: (OmiClient) -> Unit): Boolean {
+        return try {
+            val omiClient = OmiClient.getInstance(context)
+            if (omiClient != null) {
+                action(omiClient)
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("OMISDK", "Error accessing OmiClient: ${e.message}")
+            false
+        }
+    }
 }
 
 class OmikitPluginModule(reactContext: ReactApplicationContext?) :
@@ -101,9 +119,59 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   private var isIncoming: Boolean = false
   private var isAnswerCall: Boolean = false
   private var permissionPromise: Promise? = null
+  
+  // Call state management to prevent concurrent calls
+  private var isCallInProgress: Boolean = false
+  private var lastCallTime: Long = 0
+  private val callCooldownMs: Long = 2000 // 2 seconds cooldown between calls
+  private val callStateLock = Any()
 
   override fun getName(): String {
     return NAME
+  }
+  
+  /**
+   * Check if we can start a new call (no concurrent calls, cooldown passed)
+   */
+  private fun canStartNewCall(): Boolean {
+    synchronized(callStateLock) {
+      val currentTime = System.currentTimeMillis()
+      val timeSinceLastCall = currentTime - lastCallTime
+      
+      // Check if call is in progress or cooldown not passed
+      if (isCallInProgress) {
+        Log.d("OMISDK", "🚫 Call blocked: Call already in progress")
+        return false
+      }
+      
+      if (timeSinceLastCall < callCooldownMs) {
+        Log.d("OMISDK", "🚫 Call blocked: Cooldown period (${callCooldownMs - timeSinceLastCall}ms remaining)")
+        return false
+      }
+      
+      return true
+    }
+  }
+  
+  /**
+   * Mark call as started
+   */
+  private fun markCallStarted() {
+    synchronized(callStateLock) {
+      isCallInProgress = true
+      lastCallTime = System.currentTimeMillis()
+      Log.d("OMISDK", "📞 Call started, marking in progress")
+    }
+  }
+  
+  /**
+   * Mark call as ended
+   */
+  private fun markCallEnded() {
+    synchronized(callStateLock) {
+      isCallInProgress = false
+      Log.d("OMISDK", "📴 Call ended, clearing in progress flag")
+    }
   }
 
 
@@ -166,6 +234,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       // Reset call state variables
       isIncoming = false
       isAnswerCall = false
+      // Clear call progress state when remote party ends call
+      markCallEnded()
       Log.d("OMISDK", "=>> onCallEnd AFTER RESET - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
 
       // Kiểm tra kiểu dữ liệu trước khi ép kiểu để tránh lỗi
@@ -851,21 +921,57 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         Manifest.permission.RECORD_AUDIO
       )
     val map: WritableMap = WritableNativeMap()
+    
+    // Check if we can start a new call first
+    if (!canStartNewCall()) {
+      map.putInt("status", 8) // HAVE_ANOTHER_CALL
+      map.putString("_id", "")
+      map.putString("message", messageCall(8) as String)
+      promise.resolve(map)
+      return
+    }
+    
     if (audio == PackageManager.PERMISSION_GRANTED) {
       mainScope.launch {
         var callResult: OmiStartCallStatus? = null
-        withContext(Dispatchers.Default) {
-          try {
-            val uuid = data.getString("usrUuid") as String
-            val isVideo = data.getBoolean("isVideo")
+        try {
+          val uuid = data.getString("usrUuid") as String
+          val isVideo = data.getBoolean("isVideo")
+          
+          // Mark call as started before making the actual call
+          markCallStarted()
+          
+          // Check if OmiClient instance and service are ready before making call
+          val omiClient = OmiClient.getInstance(reactApplicationContext!!)
+          if (omiClient == null) {
+            callResult = null
+            markCallEnded() // Clean up state
+          } else {
+            // Add small delay to ensure service is fully initialized
+            kotlinx.coroutines.delay(200) // Increased delay for better stability
             
-            callResult = OmiClient.getInstance(reactApplicationContext!!)
-              .startCallWithUuid(uuid = uuid, isVideo = isVideo)
-          } catch (_: Throwable) {
-
+            // Call on main thread to avoid PJSIP thread registration issues
+            callResult = omiClient.startCallWithUuid(uuid = uuid, isVideo = isVideo)
+            
+            // If call failed, mark as ended  
+            if (callResult == null || callResult.ordinal <= 7) { // 0-7 are failure statuses
+              markCallEnded()
+            }
           }
+        } catch (e: IllegalStateException) {
+          // Handle service not ready state
+          callResult = null
+          markCallEnded()
+        } catch (e: NullPointerException) {
+          // Handle null pointer exceptions
+          callResult = null
+          markCallEnded()
+        } catch (e: Throwable) {
+          // Handle any other exceptions including PJSIP thread issues
+          callResult = null
+          markCallEnded()
         }
-        var statusCalltemp = callResult?.ordinal ?: 7
+        var statusCalltemp = callResult?.ordinal ?: 8
         map.putInt("status", statusCalltemp)
         map.putString("_id", "")
         map.putString("message", messageCall(statusCalltemp) as String)
@@ -906,11 +1012,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun endCall(promise: Promise) {
-    if (isIncoming && !isAnswerCall) {
-      OmiClient.getInstance(reactApplicationContext!!).decline()
-    } else {
-      OmiClient.getInstance(reactApplicationContext!!).hangUp()
+    ValidationHelper.safeOmiClientAccess(reactApplicationContext!!) { omiClient ->
+      if (isIncoming && !isAnswerCall) {
+        omiClient.decline()
+      } else {
+        omiClient.hangUp()
+      }
     }
+    // Clear call state when ending call
+    markCallEnded()
     promise.resolve(true)
   }
 
@@ -919,15 +1029,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       Log.d("OMISDK", "➡️ rejectCall called - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
       if (isIncoming) {
           Log.d("OMISDK", "📞 Incoming call")
-
-          if (!isAnswerCall) {
-              Log.d("OMISDK", "🚫 Declining call with declineWithCode(true)")
-              OmiClient.getInstance(reactApplicationContext!!).declineWithCode(true) // 486 Busy Here
-          } else {
-              Log.d("OMISDK", "📴 Call already answered, hanging up")
-              OmiClient.getInstance(reactApplicationContext!!).hangUp()
+          ValidationHelper.safeOmiClientAccess(reactApplicationContext!!) { omiClient ->
+              if (!isAnswerCall) {
+                  Log.d("OMISDK", "🚫 Declining call with declineWithCode(true)")
+                  omiClient.declineWithCode(true) // 486 Busy Here
+              } else {
+                  Log.d("OMISDK", "📴 Call already answered, hanging up")
+                  omiClient.hangUp()
+              }
           }
-
+          // Clear call state when rejecting call
+          markCallEnded()
           promise.resolve(true)
       } else {
           Log.d("OMISDK", "📤 Not incoming call, skipping reject")
@@ -937,11 +1049,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun dropCall(promise: Promise) {
-    if (isIncoming && !isAnswerCall) {
-      OmiClient.getInstance(reactApplicationContext!!).declineWithCode(false) // 603
-    } else {
-      OmiClient.getInstance(reactApplicationContext!!).hangUp()
+    ValidationHelper.safeOmiClientAccess(reactApplicationContext!!) { omiClient ->
+      if (isIncoming && !isAnswerCall) {
+        omiClient.declineWithCode(false) // 603
+      } else {
+        omiClient.hangUp()
+      }
     }
+    // Clear call state when dropping call
+    markCallEnded()
     promise.resolve(true)
   }
 
