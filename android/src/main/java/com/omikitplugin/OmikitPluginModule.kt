@@ -762,15 +762,14 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun initCallWithApiKey(data: ReadableMap, promise: Promise) {
     mainScope.launch {
       var loginResult = false
-      val usrName = data.getString("fullName")
-      val usrUuid = data.getString("usrUuid")
-      val apiKey = data.getString("apiKey")
+      val usrName = data.getString("fullName") ?: ""
+      val usrUuid = data.getString("usrUuid")  ?: ""
+      val apiKey = data.getString("apiKey") ?: ""
       val isVideo = data.getBoolean("isVideo") ?: false
       val phone = data.getString("phone")
-      val firebaseToken = data.getString("fcmToken") as String
+      val firebaseToken = data.getString("fcmToken") ?: ""
       val projectId = data.getString("projectId") ?: ""
 
-      requestPermission(isVideo)
       withContext(Dispatchers.Default) {
         try {
           // Validate required parameters
@@ -794,10 +793,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           loginResult = OmiClient.registerWithApiKey(
             apiKey ?: "",
             usrName ?: "",
-            phone ?: "",
             usrUuid ?: "",
+            phone ?: "",
             isVideo,
-            firebaseToken
+            firebaseToken,
+            projectId
           )
           
           if (loginResult) {
@@ -920,61 +920,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         reactApplicationContext!!,
         Manifest.permission.RECORD_AUDIO
       )
+    Log.d("OMISDK", "📤 Start Call With UUID")
     val map: WritableMap = WritableNativeMap()
-    
-    // Check if we can start a new call first
-    if (!canStartNewCall()) {
-      map.putInt("status", 8) // HAVE_ANOTHER_CALL
-      map.putString("_id", "")
-      map.putString("message", messageCall(8) as String)
-      promise.resolve(map)
-      return
-    }
-    
     if (audio == PackageManager.PERMISSION_GRANTED) {
       mainScope.launch {
-        var callResult: OmiStartCallStatus? = null
-        try {
-          val uuid = data.getString("usrUuid") as String
-          val isVideo = data.getBoolean("isVideo")
-          
-          // Mark call as started before making the actual call
-          markCallStarted()
-          
-          // Check if OmiClient instance and service are ready before making call
-          val omiClient = OmiClient.getInstance(reactApplicationContext!!)
-          if (omiClient == null) {
-            callResult = null
-            markCallEnded() // Clean up state
-          } else {
-            // Add small delay to ensure service is fully initialized
-            kotlinx.coroutines.delay(200) // Increased delay for better stability
-            
-            // Call on main thread to avoid PJSIP thread registration issues
-            callResult = omiClient.startCallWithUuid(uuid = uuid, isVideo = isVideo)
-            
-            // If call failed, mark as ended  
-            if (callResult == null || callResult.ordinal <= 7) { // 0-7 are failure statuses
-              markCallEnded()
-            }
-          }
-        } catch (e: IllegalStateException) {
-          // Handle service not ready state
-          callResult = null
-          markCallEnded()
-        } catch (e: NullPointerException) {
-          // Handle null pointer exceptions
-          callResult = null
-          markCallEnded()
-        } catch (e: Throwable) {
-          // Handle any other exceptions including PJSIP thread issues
-          callResult = null
-          markCallEnded()
+        val uuid = data.getString("usrUuid") ?: ""
+        val isVideo = data.getBoolean("isVideo") ?: false;
+        
+        val startCallResult =
+          OmiClient.getInstance(reactApplicationContext!!).startCallWithUuid(uuid, isVideo)
+        var statusCalltemp = startCallResult.value as Int;
+        if (startCallResult.value == 200 || startCallResult.value == 407) {
+          statusCalltemp = 8
         }
-        var statusCalltemp = callResult?.ordinal ?: 8
         map.putInt("status", statusCalltemp)
         map.putString("_id", "")
-        map.putString("message", messageCall(statusCalltemp) as String)
+        map.putString("message", messageCall(startCallResult.value) as String)
         promise.resolve(map)
       }
     } else {
@@ -984,6 +945,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       promise.resolve(map)
     }
   }
+
 
   @ReactMethod
   fun joinCall(promise: Promise) {
