@@ -490,13 +490,26 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
           if let jsonString = OmiUtils.convertDictionaryToJson(dictionary: dataToSend) {
             completion(jsonString)
           } else {
-            completion("Conversion to JSON failed")
+             completion("{\"status\": \"error\", \"message\": \"JSON conversion failed\"}")
           }
           return
           
         }
       
       return
+    } else {
+       var dataToSend: [String: Any] = [
+            "status": 0,
+            "_id": "",
+            "message": "INVALID_UUID",
+            "message_detail": "UUID does not exist"
+          ]
+          if let jsonString = OmiUtils.convertDictionaryToJson(dictionary: dataToSend) {
+            completion(jsonString)
+          } else {
+           completion("{\"status\": \"error\", \"message\": \"JSON conversion failed\"}")
+          }
+          return
     }
   }
   
