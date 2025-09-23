@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.3.19 [23/09/2025]
+- Update OMIKIT android to version 2.4.3
+- Support policy 16kb off CH Play
+
+
 ## 3.3.18 [23/09/2025]
 - Update OMIKIT android to version 2.4.2
 - Update OMIKIT iOS to version 1.8.45
