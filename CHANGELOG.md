@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.3.18 [23/09/2025]
+- Update OMIKIT android to version 2.4.2
+- Update OMIKIT iOS to version 1.8.45
+- Improve performance app android sdk  
+
 ## 3.3.15 [18/09/2025]
 - Remove func check permission off func initCallWithApiKey
 

@@ -1,6 +1,6 @@
 {
   "name": "omikit-plugin",
-  "version": "3.3.15",
+  "version": "3.3.18",
   "description": "Omikit Plugin by ViHAT",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
