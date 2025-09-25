@@ -25,6 +25,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import vn.vihat.omicall.omisdk.OmiAccountListener
 import vn.vihat.omicall.omisdk.OmiClient
 import vn.vihat.omicall.omisdk.OmiListener
@@ -125,6 +127,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   private var lastCallTime: Long = 0
   private val callCooldownMs: Long = 2000 // 2 seconds cooldown between calls
   private val callStateLock = Any()
+  
+  // Mutex for thread-safe OmiClient operations
+  private val omiClientMutex = Mutex()
 
   override fun getName(): String {
     return NAME
@@ -760,6 +765,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun initCallWithApiKey(data: ReadableMap, promise: Promise) {
+    Log.d("OmikitPlugin", "🔑 initCallWithApiKey called")
     mainScope.launch {
       var loginResult = false
       val usrName = data.getString("fullName") ?: ""
@@ -769,47 +775,78 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val phone = data.getString("phone")
       val firebaseToken = data.getString("fcmToken") ?: ""
       val projectId = data.getString("projectId") ?: ""
+      
+      Log.d("OmikitPlugin", "🔑 Parameters - usrName: $usrName, usrUuid: $usrUuid, isVideo: $isVideo")
 
       withContext(Dispatchers.Default) {
         try {
+          Log.d("OmikitPlugin", "🔑 Starting validation")
           // Validate required parameters
           if (!ValidationHelper.validateRequired(mapOf(
               "fullName" to usrName,
               "usrUuid" to usrUuid,
               "apiKey" to apiKey,
               "fcmToken" to firebaseToken
-            ), promise)) return@withContext
+            ), promise)) {
+            Log.e("OmikitPlugin", "❌ Validation failed")
+            return@withContext
+          }
 
-          // ✅ Cleanup trước khi register
+          Log.d("OmikitPlugin", "✅ Validation passed")
+
+          // Check RECORD_AUDIO permission for Android 14+
+          val hasRecordAudio = ContextCompat.checkSelfPermission(
+            reactApplicationContext, 
+            Manifest.permission.RECORD_AUDIO
+          ) == PackageManager.PERMISSION_GRANTED
+
+          if (!hasRecordAudio) {
+            Log.e("OmikitPlugin", "❌ RECORD_AUDIO permission is required for Android 14+")
+            promise.resolve(false)
+            return@withContext
+          }
+
+          Log.d("OmikitPlugin", "✅ RECORD_AUDIO permission granted")
+
+          // ✅ Cleanup trước khi register với mutex
           try {
-            OmiClient.getInstance(reactApplicationContext!!).logout()
-            delay(500) // Chờ cleanup hoàn tất
+            Log.d("OmikitPlugin", "🧹 Starting cleanup")
+            omiClientMutex.withLock {
+              OmiClient.getInstance(reactApplicationContext!!).logout()
+            }
+            delay(1000) // Chờ cleanup hoàn tất
+            Log.d("OmikitPlugin", "✅ Cleanup completed")
           } catch (e: Exception) {
             Log.w("OmikitPlugin", "⚠️ Cleanup warning (expected): ${e.message}")
           }
 
           Log.d("OmikitPlugin", "🔑 Using API key registration for user: $usrName")
 
-          loginResult = OmiClient.registerWithApiKey(
-            apiKey ?: "",
-            usrName ?: "",
-            usrUuid ?: "",
-            phone ?: "",
-            isVideo,
-            firebaseToken,
-            projectId
-          )
+          Log.d("OmikitPlugin", "🔑 Calling OmiClient.registerWithApiKey...")
+          omiClientMutex.withLock {
+            loginResult = OmiClient.registerWithApiKey(
+              apiKey ?: "",
+              usrName ?: "",
+              usrUuid ?: "",
+              phone ?: "",
+              isVideo,
+              firebaseToken,
+              projectId
+            )
+          }
+          
+          Log.d("OmikitPlugin", "🔑 OmiClient.registerWithApiKey returned: $loginResult")
           
           if (loginResult) {
             Log.d("OmikitPlugin", "✅ API key registration successful")
             promise.resolve(true)
           } else {
             Log.e("OmikitPlugin", "❌ API key registration failed")
-            promise.reject("ERROR_API_KEY_REGISTRATION_FAILED", "OMICALL API key initialization failed. Please check your API key, UUID, and network connection.")
+            promise.resolve(false)
           }
         } catch (e: Exception) {
           Log.e("OmikitPlugin", "❌ Error during API key registration: ${e.message}", e)
-          promise.reject("ERROR_API_KEY_INITIALIZATION_EXCEPTION", "OMICALL API key initialization failed due to an unexpected error: ${e.message}. Please check your configuration and network connection.", e)
+          promise.resolve(false)
         }
       }
     }
