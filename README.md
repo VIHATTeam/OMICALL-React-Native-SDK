@@ -235,13 +235,20 @@ public class MainActivity extends ReactActivity {
 
 ### ✅ For React Native > 0.74
 
-
 ```kotlin
 class MainActivity : ReactActivity() {
     // your config ....
     private var reactApplicationContext: ReactApplicationContext? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        intent?.let { intentData ->
+            try {
+                OmikitPluginModule.Companion.handlePickupIntentEarly(this, intentData)
+            } catch (e: Exception) {
+                Log.e("MainActivity", "⚠️ PICKUP-FIX: Error handling early intent: ${e.message}")
+            }
+        }
 
         val reactInstanceManager: ReactInstanceManager = reactNativeHost.reactInstanceManager
         val currentContext = reactInstanceManager.currentReactContext
@@ -263,21 +270,31 @@ class MainActivity : ReactActivity() {
     }
 
     override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        if (intent != null) {
-            reactApplicationContext?.let {
-                OmikitPluginModule.Companion.onGetIntentFromNotification(it, intent, this)
-            } ?: Log.e("MainActivity", "ReactApplicationContext has not been initialized in onNewIntent.")
-        } else {
-            Log.e("MainActivity", "Intent in onNewIntent is null.")
-        }
+       super.onNewIntent(intent)
+        intent?.let { newIntent ->
+            Log.d("MainActivity", "🚀 PICKUP-FIX: New intent received (warm start)")
+            // IMPORTANT: Update the activity's intent to the new one
+            setIntent(newIntent)
+            try {
+                // Try to handle immediately if React context is ready
+                reactApplicationContext?.let {
+                    OmikitPluginModule.Companion.onGetIntentFromNotification(it, newIntent, this)
+                } ?: run {
+                    OmikitPluginModule.Companion.handlePickupIntentEarly(this, newIntent)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "❌ PICKUP-FIX: Error in onNewIntent: ${e.message}")
+            }
+        } ?: Log.e("MainActivity", "Intent in onNewIntent is null.")
     }
+
     override fun onResume() {
         super.onResume()
-        reactApplicationContext?.let {
+        reactApplicationContext?.let { context ->
             OmikitPluginModule.Companion.onResume(this)
-            intent?.let { intent ->
-                OmikitPluginModule.Companion.onGetIntentFromNotification(it, intent, this)
+            // Handle intent if exists (already updated by onNewIntent or from onCreate)
+            intent?.let { intentData ->
+                OmikitPluginModule.Companion.onGetIntentFromNotification(context, intentData, this)
             }
         } ?: Log.e("MainActivity", "ReactApplicationContext has not been initialized in onResume.")
     }
