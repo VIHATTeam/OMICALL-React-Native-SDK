@@ -869,8 +869,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           } else {
               mainScope.launch {
                   Log.d("getInitialCall RN", "🔄 Retrying in 2s... (Attempts left: $counter)")
-                  delay(1000) // Chờ 2 giây
-                  getInitialCall(counter - 1, promise) // Gọi lại hàm đệ quy
+                  delay(1000) // Wait 2 seconds
+                  getInitialCall(counter - 1, promise) // Retry recursively
               }
           }
           return
@@ -883,6 +883,26 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       }
 
       val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
+      val statusPendingCall = OmiKitUtils().getStatusPendingCall(context)
+
+      // 🔥 CRITICAL FIX: Auto-answer if user already clicked pickup button
+      // statusPendingCall: 0 = no action, 2 = incoming (opened notification), 5 = accepted (clicked pickup)
+      val shouldAutoAnswer = call.direction == "inbound" &&
+                             !call.isAccepted &&
+                             call.state == 3 &&
+                             statusPendingCall == 5 // 5 = User clicked pickup (CONFIRMED)
+
+      if (shouldAutoAnswer) {
+          Log.d("getInitialCall RN", "🚀 AUTO-ANSWER: User clicked pickup (statusPendingCall=$statusPendingCall), answering call immediately")
+          try {
+              OmiClient.getInstance(context).pickUp()
+              Log.d("getInitialCall RN", "✅ AUTO-ANSWER: Call answered successfully")
+
+              // Status already cleared by getStatusPendingCall()
+          } catch (e: Exception) {
+              Log.e("getInitialCall RN", "❌ AUTO-ANSWER: Failed to answer call: ${e.message}", e)
+          }
+      }
 
       val map: WritableMap = WritableNativeMap().apply {
           putString("callerNumber", phoneNumber)
@@ -892,9 +912,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           putBoolean("muted", false)
           putBoolean("isVideo", call.isVideo ?: false)
           putString("typeNumber", typeNumber)
+          putBoolean("autoAnswered", shouldAutoAnswer) // Add flag for RN side
       }
 
-      val statusPendingCall = OmiKitUtils().getStatusPendingCall(context)
       if (call.state == 3 && statusPendingCall != 0) {
           call.state = statusPendingCall
       }
@@ -903,7 +923,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
       if (statusPendingCall == 2 && call.state != 5) {
           Log.d("getInitialCall RN", "🚀 Incoming Receive Triggered ($statusPendingCall)")
-
 
           val eventMap: WritableMap = WritableNativeMap().apply {
               putBoolean("isVideo", call.isVideo ?: false)
@@ -1361,6 +1380,47 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         
       } catch (e: Exception) {
         Log.e("OmikitPlugin", "❌ Error handling permission results: ${e.message}", e)
+      }
+    }
+
+    /**
+     * 🔥 CRITICAL FIX: Handle pickup intent EARLY (before React Native ready)
+     * This method can be called from onCreate/onNewIntent when React context is not ready yet
+     * It will save the pickup state to SharedPreferences for later processing in getInitialCall()
+     */
+    fun handlePickupIntentEarly(act: Activity, intent: Intent) {
+      try {
+        val isIncoming = intent.getBooleanExtra(SipServiceConstants.ACTION_IS_INCOMING_CALL, false)
+        if (!isIncoming) {
+          Log.d("PICKUP-FIX", "Not an incoming call intent, skipping")
+          return
+        }
+
+        val isAcceptedCall = intent.getBooleanExtra(
+          SipServiceConstants.ACTION_ACCEPT_INCOMING_CALL, false
+        )
+
+        Log.d("PICKUP-FIX", "🚀 Early intent handler - isIncoming: $isIncoming, isAccepted: $isAcceptedCall")
+
+        // Save to SharedPreferences so getInitialCall() can detect it later
+        // setStatusPendingCall(true) → saves status=5 (CONFIRMED)
+        // setStatusPendingCall(false) → saves status=2 (INCOMING)
+        OmiKitUtils().setStatusPendingCall(act, isAcceptedCall)
+        Log.d("PICKUP-FIX", "✅ Saved pickup state to SharedPreferences (isAccepted=$isAcceptedCall)")
+
+        if (isAcceptedCall) {
+          // Try to answer immediately if possible (may fail if SDK not ready)
+          try {
+            OmiClient.getInstance(act, true)?.let { client ->
+              client.pickUp()
+              Log.d("PICKUP-FIX", "✅ Successfully answered call immediately")
+            } ?: Log.w("PICKUP-FIX", "⚠️ OmiClient not ready, will auto-answer in getInitialCall()")
+          } catch (e: Exception) {
+            Log.w("PICKUP-FIX", "⚠️ Cannot answer immediately (SDK not ready): ${e.message}. Will auto-answer in getInitialCall()")
+          }
+        }
+      } catch (e: Exception) {
+        Log.e("PICKUP-FIX", "❌ Error in handlePickupIntentEarly: ${e.message}", e)
       }
     }
 
