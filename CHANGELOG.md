@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## 3.3.22 [08/10/2025]
+- Update OMIKIT android to version 2.4.15
+- Update OMIKIT iOS to version 1.8.47
+
+
 ## 3.3.21 [02/10/2025]
 - Update OMIKIT android to version 2.4.14
 - Fix ARN android
