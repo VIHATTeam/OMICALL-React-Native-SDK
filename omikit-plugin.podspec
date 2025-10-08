@@ -35,7 +35,7 @@ Pod::Spec.new do |s|
   # Thêm dependency bắt buộc
   s.dependency "React-Core"
  
-  s.dependency "OmiKit", "1.8.45"
+  s.dependency "OmiKit", "1.8.47"
 
 
   s.requires_arc = true
