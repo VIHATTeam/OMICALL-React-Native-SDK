@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 
 
+
+## 3.3.25 [17/10/2025]
+- Update OMIKIT android to version 2.4.25
+- Update OMIKIT iOS to version 1.8.53
+- Add API check login devices
+- Fix issues incoming call in android 15-16
+
+
+## 3.3.24 [10/10/2025]
+- Update OMIKIT android to version 2.4.16
+- Fix 
+
 ## 3.3.22 [08/10/2025]
 - Update OMIKIT android to version 2.4.15
 - Update OMIKIT iOS to version 1.8.47
