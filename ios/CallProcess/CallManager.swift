@@ -13,9 +13,12 @@ import OmiKit
 import AVFoundation
 
 class CallManager {
-  
+
   static private var instance: CallManager? = nil // Instance
-  private let omiLib = OMISIPLib.sharedInstance()
+  // Use lazy initialization to avoid crash during New Architecture module loading
+  private lazy var omiLib: OMISIPLib = {
+    return OMISIPLib.sharedInstance()
+  }()
   var videoManager: OMIVideoViewManager?
   var isSpeaker = false
   private var guestPhone : String = ""
@@ -249,25 +252,25 @@ class CallManager {
   
   func registerNotificationCenter(showMissedCall: Bool) {
     DispatchQueue.main.async { [weak self] in
-      guard let self = self else { return }
-      NotificationCenter.default.removeObserver(CallManager.instance!)
-      NotificationCenter.default.addObserver(CallManager.instance!,
+      guard let self = self, let instance = CallManager.instance else { return }
+      NotificationCenter.default.removeObserver(instance)
+      NotificationCenter.default.addObserver(instance,
                                              selector: #selector(self.callStateChanged(_:)),
                                              name: NSNotification.Name.OMICallStateChanged,
                                              object: nil
       )
-      NotificationCenter.default.addObserver(CallManager.instance!,
+      NotificationCenter.default.addObserver(instance,
                                              selector: #selector(self.callDealloc(_:)),
                                              name: NSNotification.Name.OMICallDealloc,
                                              object: nil
       )
-      NotificationCenter.default.addObserver(CallManager.instance!,
+      NotificationCenter.default.addObserver(instance,
                                              selector: #selector(self.switchBoardAnswer(_:)),
                                              name: NSNotification.Name.OMICallSwitchBoardAnswer,
                                              object: nil
       )
-      NotificationCenter.default.addObserver(CallManager.instance!, selector: #selector(self.updateNetworkHealth(_:)), name: NSNotification.Name.OMICallNetworkQuality, object: nil)
-      NotificationCenter.default.addObserver(CallManager.instance!, selector: #selector(self.audioChanged(_:)), name: NSNotification.Name.OMICallAudioRouteChange, object: nil)
+      NotificationCenter.default.addObserver(instance, selector: #selector(self.updateNetworkHealth(_:)), name: NSNotification.Name.OMICallNetworkQuality, object: nil)
+      NotificationCenter.default.addObserver(instance, selector: #selector(self.audioChanged(_:)), name: NSNotification.Name.OMICallAudioRouteChange, object: nil)
       if (showMissedCall) {
         self.showMissedCall()
       }
@@ -275,8 +278,9 @@ class CallManager {
   }
   
   func registerVideoEvent() {
-    DispatchQueue.main.async { 
-      NotificationCenter.default.addObserver(CallManager.instance!,
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self, let instance = CallManager.instance else { return }
+      NotificationCenter.default.addObserver(instance,
                                              selector: #selector(self.videoUpdate(_:)),
                                              name: NSNotification.Name.OMICallVideoInfo,
                                              object: nil
@@ -286,7 +290,8 @@ class CallManager {
   
   func removeVideoEvent() {
     DispatchQueue.main.async {
-      NotificationCenter.default.removeObserver(CallManager.instance!, name: NSNotification.Name.OMICallVideoInfo, object: nil)
+      guard let instance = CallManager.instance else { return }
+      NotificationCenter.default.removeObserver(instance, name: NSNotification.Name.OMICallVideoInfo, object: nil)
     }
   }
   
@@ -306,7 +311,7 @@ class CallManager {
           let state     = userInfo[OMINotificationNetworkStatusKey] as? Int else {
       return;
     }
-    OmikitPlugin.instance.sendEvent(withName: CALL_QUALITY, body: ["quality": state])
+    OmikitPlugin.instance?.sendEvent(withName: CALL_QUALITY, body: ["quality": state])
   }
   
   @objc func videoUpdate(_ notification: NSNotification) {
@@ -316,7 +321,7 @@ class CallManager {
     }
     switch (state) {
     case 1:
-      OmikitPlugin.instance.sendEvent(withName: REMOTE_VIDEO_READY, body: nil)
+      OmikitPlugin.instance?.sendEvent(withName: REMOTE_VIDEO_READY, body: nil)
       break
     default:
       break
@@ -329,13 +334,13 @@ class CallManager {
       return;
     }
     guestPhone = sip
-    OmikitPlugin.instance.sendEvent(withName: SWITCHBOARD_ANSWER, body: ["sip": sip])
+    OmikitPlugin.instance?.sendEvent(withName: SWITCHBOARD_ANSWER, body: ["sip": sip])
   }
   
   @objc func callDealloc(_ notification: NSNotification) {
     if (tempCallInfo != nil) {
       tempCallInfo!["status"] = OMICallState.disconnected.rawValue
-      OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: tempCallInfo!)
+      OmikitPlugin.instance?.sendEvent(withName: CALL_STATE_CHANGED, body: tempCallInfo!)
     }
   }
   
@@ -380,7 +385,7 @@ class CallManager {
       }
       isSpeaker = call.speaker
       lastStatusCall = "answered"
-      OmikitPlugin.instance.sendMuteStatus()
+      OmikitPlugin.instance?.sendMuteStatus()
       break
     case OMICallState.incoming.rawValue:
       guestPhone = call.callerNumber ?? ""
@@ -518,7 +523,7 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
       let callInfo = [
         "status": OMICallState.disconnected.rawValue,
       ]
-      OmikitPlugin.instance.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
+      OmikitPlugin.instance?.sendEvent(withName: CALL_STATE_CHANGED, body: callInfo)
       return [:]
     }
     tempCallInfo = getCallInfo(call: call)
@@ -571,7 +576,7 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
   func toogleSpeaker() {
     let result = omiLib.callManager.audioController.toggleSpeaker();
     isSpeaker = result
-    OmikitPlugin.instance.sendSpeakerStatus()
+    OmikitPlugin.instance?.sendSpeakerStatus()
   }
   
   func getAudioOutputs() -> [[String: String]] {

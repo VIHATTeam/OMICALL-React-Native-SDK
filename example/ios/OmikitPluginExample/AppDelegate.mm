@@ -99,4 +99,11 @@
 #endif
 }
 
+// Disable Bridgeless mode - OmiKit SDK is not compatible with it yet
+// This keeps Fabric + TurboModules enabled but uses the legacy bridge
+- (BOOL)bridgelessEnabled
+{
+  return NO;
+}
+
 @end
