@@ -6,7 +6,13 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet, TextInput, View, Linking } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  View,
+  Linking,
+  Alert,
+} from 'react-native';
 
 import { initCallWithUserPassword, getCurrentUser, logout } from 'omikit-plugin';
 
@@ -21,250 +27,347 @@ import {
 } from './components';
 import { CustomLoading } from './components/custom_view/custom_loading';
 
-// HUNGTH
-const REALM = 'dathq';
-const USER_NAME = '121';
-const PASS_WORD = '1jJKD4Ps6X';
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+// Default credentials for testing
+const DEFAULT_CREDENTIALS = {
+  realm: '',
+  userName: '100',
+  password: 'iT2OjDYA0H',
+  host: '',
+  projectId: '',
+};
+
+// Error messages mapping for user-friendly display
+const ERROR_MESSAGES: Record<number, string> = {
+  400: 'Missing required parameters. Please check your configuration.',
+  401: 'Invalid credentials. Please check username/password.',
+  450: 'Microphone permission required. Please grant RECORD_AUDIO permission.',
+  451: 'Foreground service permission required.',
+  452: 'Notification permission required. Please enable notifications.',
+  500: 'Failed to start SIP service. Please try again.',
+  501: 'SIP service not available.',
+  600: 'Network unavailable. Please check your connection.',
+  601: 'Connection timeout. Please try again.',
+};
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface LoginInfo {
+  userName: string;
+  password: string;
+  realm: string;
+  isVideo: boolean;
+  fcmToken: string;
+  host: string;
+  projectId: string;
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Parse error message from initCallWithUserPassword error
+ * Example error: [Error: RECORD_AUDIO permission required for Android 14+ (Status: 450)]
+ */
+const parseErrorMessage = (error: any): string => {
+  const errorString = error?.message || error?.toString() || 'Unknown error';
+
+  // Try to extract status code from error message
+  const statusMatch = errorString.match(/Status:\s*(\d+)/);
+  if (statusMatch) {
+    const statusCode = parseInt(statusMatch[1], 10);
+    if (ERROR_MESSAGES[statusCode]) {
+      return ERROR_MESSAGES[statusCode];
+    }
+  }
+
+  // Return the original error message if no mapping found
+  return errorString;
+};
+
+/**
+ * Show error alert to user
+ */
+const showErrorAlert = (title: string, message: string) => {
+  Alert.alert(
+    title,
+    message,
+    [{ text: 'OK', style: 'default' }],
+    { cancelable: true }
+  );
+};
+
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 export const LoginScreen = () => {
-  const [isVideo, setIsVideo] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const phoneFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  const passwordFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  const realmFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  const hostFocus = useRef<TextInput>() as MutableRefObject<TextInput>;
-  const [userName, setUserNumber] = useState(USER_NAME);
-  const [password, setPassword] = useState(PASS_WORD);
-  const [realm, setRealm] = useState(REALM);
-  const [host, setHost] = useState('vh.omicrm.com');
-  const navigation = useNavigation();
+  // Navigation
+  const navigation: any = useNavigation();
 
+  // Form state
+  const [userName, setUserName] = useState(DEFAULT_CREDENTIALS.userName);
+  const [password, setPassword] = useState(DEFAULT_CREDENTIALS.password);
+  const [realm, setRealm] = useState(DEFAULT_CREDENTIALS.realm);
+  const [host, setHost] = useState(DEFAULT_CREDENTIALS.host);
+  const [isVideo, setIsVideo] = useState(false);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+
+  // Input refs for focus management
+  const userNameRef = useRef<TextInput>() as MutableRefObject<TextInput>;
+  const passwordRef = useRef<TextInput>() as MutableRefObject<TextInput>;
+  const realmRef = useRef<TextInput>() as MutableRefObject<TextInput>;
+  const hostRef = useRef<TextInput>() as MutableRefObject<TextInput>;
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
+  // Request notification permission on mount
   useEffect(() => {
     requestNotification();
   }, []);
 
-  const loginUser = async () => {
-    console.log(userName);
-    console.log(password);
-
-    setLoading(true);
-    const fcmToken = await token;
-    console.log(fcmToken);
-
-    // const loginInfo = {
-    //   userName: userName,
-    //   password: password,
-    //   realm: realm,
-    //   isVideo: isVideo,
-    //   fcmToken: fcmToken,
-    //   host: host,
-    //   projectId: ""
-    // };
-
-    await logout()
-    const loginInfo = {
-      userName: "100",
-      password: "aRCMrnPODG",
-      realm: "namplh",
-      isVideo: isVideo,
-      fcmToken: fcmToken,
-      host: host,
-      projectId: "omicrm-6558a"
-    };
-    const result11 = await getCurrentUser()
-
-    console.log('result initCallWithUserPassword: ', result11);
-
-
-    // const loginInfo = {
-    //     userName: "100",
-    //     password: "Z5N6IGNa8s",
-    //     realm: "truongphannguyenan",
-    //     isVideo: isVideo,
-    //     fcmToken: fcmToken,
-    //     host: host,
-    //     projectId: "omicrm-6558a"
-    // };
-
-    //  const loginInfoApiKey = {
-    //   fullName: "thanh mơis",
-    //   usrUuid: "0358380646",
-    //   apiKey: "E7AF81703203FC31F5658FAF3B875149CD57368ED07DB4AF414D93D3D2EBC76E",
-    //   isVideo: false,
-    //   phone: "0358380646",
-    //   fcmToken: fcmToken
-    // };
-
-    //  const loginInfoApiKey = {
-    //   usrUuid:"094d4f52-255c-4cdb-ad24-5adff34c3c87",
-    //   fullName:"Lê Hồng Thái",
-    //   apiKey:"687CB3BF9703A7F434964CC64EE72213962AB18812D7EB2FC9C83B89D917E6",
-    //   isVideo: true,
-    //   phone: "0963256096",
-    //   fcmToken: fcmToken
-    // };
-
-    // console.log("loginInfo ", loginInfo);
-
-    const result = await initCallWithUserPassword(loginInfo);
-    // const result = await initCallWithApiKey(loginInfoApiKey);
-    //save login info
-
-    console.log('result initCallWithUserPassword: ', result);
-
-    setLoading(false);
-    if (result) {
-      const result2 = await getCurrentUser()
-      console.log("result2 22 --> ", result2)
-      const loginInfoString = JSON.stringify(loginInfo);
-      LocalStorage.set('login_info', loginInfoString);
-      // navigation to home
-      navigation.reset({ index: 0, routes: [{ name: 'Home' as never }] });
-    }
-  };
-
-  const _videoTrigger = useCallback(() => {
-    setIsVideo(!isVideo);
-  }, [isVideo]);
-
-
+  // Handle deep links
   useEffect(() => {
-    // Hàm xử lý khi nhận deeplink
-    const handleDeepLink = (event) => {
-      const url = event.url;
-      // Xử lý URL ở đây
-      console.log('Received deep link: ', url);
-      // Ví dụ: Điều hướng đến một màn hình cụ thể
+    const handleDeepLink = (event: { url: string }) => {
+      console.log('Received deep link:', event.url);
+      // TODO: Handle navigation based on deep link
     };
 
-    // Lấy URL nếu ứng dụng được mở từ trạng thái bị tắt hoàn toàn
+    // Check if app was opened from a deep link (cold start)
     Linking.getInitialURL()
       .then((url) => {
         if (url) {
-          // Xử lý URL ở đây
-          console.log('App opened with URL: ', url);
+          console.log('App opened with URL:', url);
         }
       })
-      .catch((err) => console.error('An error occurred', err));
+      .catch((err) => console.error('Deep link error:', err));
 
-    // Lắng nghe sự kiện URL
-    Linking.addEventListener('url', handleDeepLink);
+    // Listen for deep link events (warm start)
+    const subscription = Linking.addEventListener('url', handleDeepLink);
 
-
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
 
-  const openCallWithOMI = async () => {
+  /**
+   * Handle user login with OmiKit
+   */
+  const handleLogin = async () => {
+    // Validate required fields
+    if (!userName.trim()) {
+      showErrorAlert('Validation Error', 'Please enter your username.');
+      return;
+    }
+    if (!password.trim()) {
+      showErrorAlert('Validation Error', 'Please enter your password.');
+      return;
+    }
+    if (!realm.trim()) {
+      showErrorAlert('Validation Error', 'Please enter your realm.');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      // let omiLink = "omicall-call:0346066476&param1=123456789"
-      let omiLink = "omicall-call:0346066476&deeplink=tasetco-delivery&param1=MKP-KH19-000028&param2=ITVINATESTTONGDAI1"
+      // Get FCM token for push notifications
+      const fcmToken = await token;
+      console.log('FCM Token:', fcmToken);
+
+      // Prepare login info
+      const loginInfo: LoginInfo = {
+        userName: userName.trim(),
+        password: password.trim(),
+        realm: realm.trim(),
+        host: host.trim(),
+        isVideo,
+        fcmToken: fcmToken || '',
+        projectId: DEFAULT_CREDENTIALS.projectId,
+      };
+
+      // Logout any existing session first
+      await logout();
+      console.log('Previous session cleared');
+
+      // Check current user state
+      const currentUser = await getCurrentUser();
+      console.log('Current user before login:', currentUser);
+
+      // Attempt login
+      const result = await initCallWithUserPassword(loginInfo);
+      console.log('Login result:', result);
+
+      if (result) {
+        // Verify login was successful
+        const verifiedUser = await getCurrentUser();
+        console.log('Verified user after login:', verifiedUser);
+
+        // Save login info for auto-login
+        LocalStorage.set('login_info', JSON.stringify(loginInfo));
+
+        // Navigate to home screen
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      } else {
+        showErrorAlert(
+          'Login Failed',
+          'Unable to initialize call service. Please check your credentials and try again.'
+        );
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+
+      // Parse and display user-friendly error message
+      const errorMessage = parseErrorMessage(error);
+      showErrorAlert('Login Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Toggle video call option
+   */
+  const handleVideoToggle = useCallback(() => {
+    setIsVideo((prev) => !prev);
+  }, []);
+
+  /**
+   * Test universal link / deep link functionality
+   */
+  const handleTestUniversalLink = async () => {
+    try {
+      const omiLink =
+        'omicall-call:0346066476&deeplink=tasetco-delivery&param1=MKP-KH19-000028&param2=ITVINATESTTONGDAI1';
+
       const canOpen = await Linking.canOpenURL(omiLink);
       if (canOpen) {
         await Linking.openURL(omiLink);
       } else {
-        console.log("Cannot open URL: $omiLink");
+        showErrorAlert('Cannot Open Link', `Unable to open: ${omiLink}`);
       }
     } catch (error) {
-      console.error("An error occurred while trying to open the URL:", error);
+      console.error('Universal link error:', error);
+      showErrorAlert('Error', 'An error occurred while opening the link.');
     }
   };
 
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
   return (
-    <>
-      <KeyboardAvoid>
-        <View style={styles.background}>
-          <CustomTextField
-            placeHolder="User name"
-            // keyboardType="phone-pad"
-            value={userName}
-            label="User name"
-            returnKey={'next'}
-            currentFocus={phoneFocus}
-            nextFocus={passwordFocus}
-            onChange={(text: string) => {
-              setUserNumber(text);
-            }}
-          />
-          <CustomTextField
-            placeHolder="Password"
-            label="Password"
-            style={styles.passwordInput}
-            value={password}
-            isPassword={false}
-            currentFocus={passwordFocus}
-            nextFocus={realmFocus}
-            onChange={(text: string) => {
-              setPassword(text);
-            }}
-          />
-          <CustomTextField
-            placeHolder="Realm"
-            label="Realm"
-            style={styles.passwordInput}
-            value={realm}
-            isPassword={false}
-            currentFocus={realmFocus}
-            nextFocus={hostFocus}
-            onChange={(text: string) => {
-              setRealm(text);
-            }}
-          />
-          <CustomTextField
-            label="Host"
-            placeHolder="vh.omicrm.com"
-            style={styles.passwordInput}
-            value={host}
-            isPassword={false}
-            currentFocus={hostFocus}
-            onChange={(text: string) => {
-              setHost(text);
-            }}
-          />
-          <CustomCheckBox
-            title="Video call"
-            checked={isVideo}
-            callback={_videoTrigger}
-            style={styles.checkbox}
-          />
-          <CustomButton
-            title="LOGIN"
-            callback={() => {
-              loginUser();
-            }}
-            style={styles.button}
-          />
+    <KeyboardAvoid>
+      <View style={styles.container}>
+        {/* Username Input */}
+        <CustomTextField
+          label="User name"
+          placeHolder="Enter username"
+          value={userName}
+          returnKey="next"
+          currentFocus={userNameRef}
+          nextFocus={passwordRef}
+          onChange={setUserName}
+        />
 
+        {/* Password Input */}
+        <CustomTextField
+          label="Password"
+          placeHolder="Enter password"
+          style={styles.inputSpacing}
+          value={password}
+          isPassword={false}
+          currentFocus={passwordRef}
+          nextFocus={realmRef}
+          onChange={setPassword}
+        />
 
-          <CustomButton
-            title="Test Universal"
-            callback={() => {
-              openCallWithOMI();
-            }}
-            style={styles.button}
-          />
-          {loading ? <CustomLoading /> : null}
-        </View>
-      </KeyboardAvoid>
-    </>
+        {/* Realm Input */}
+        <CustomTextField
+          label="Realm"
+          placeHolder="Enter realm"
+          style={styles.inputSpacing}
+          value={realm}
+          isPassword={false}
+          currentFocus={realmRef}
+          nextFocus={hostRef}
+          onChange={setRealm}
+        />
+
+        {/* Host Input */}
+        <CustomTextField
+          label="Host"
+          placeHolder="vh.omicrm.com"
+          style={styles.inputSpacing}
+          value={host}
+          isPassword={false}
+          currentFocus={hostRef}
+          onChange={setHost}
+        />
+
+        {/* Video Call Checkbox */}
+        <CustomCheckBox
+          title="Video call"
+          checked={isVideo}
+          callback={handleVideoToggle}
+          style={styles.checkbox}
+        />
+
+        {/* Login Button */}
+        <CustomButton
+          title="LOGIN"
+          callback={handleLogin}
+          style={styles.button}
+        />
+
+        {/* Test Universal Link Button */}
+        <CustomButton
+          title="Test Universal Link"
+          callback={handleTestUniversalLink}
+          style={styles.button}
+        />
+
+        {/* Loading Indicator */}
+        {loading && <CustomLoading />}
+      </View>
+    </KeyboardAvoid>
   );
 };
 
+// ============================================================================
+// STYLES
+// ============================================================================
+
 const styles = StyleSheet.create({
-  background: {
-    padding: 24,
+  container: {
     flex: 1,
+    padding: 24,
   },
-  passwordInput: {
+  inputSpacing: {
     marginTop: 16,
-  },
-  button: {
-    marginTop: 24,
   },
   checkbox: {
     marginTop: 24,
   },
-  lottie: {
-    width: 100,
-    height: 100,
+  button: {
+    marginTop: 24,
   },
 });

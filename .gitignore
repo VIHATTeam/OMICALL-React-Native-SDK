@@ -77,3 +77,14 @@ example/android/gradle.properties
 
 /dev
 /dev/*
+
+# Prevent nested directory loop (symlink artifacts)
+OMICALL-React-Native-SDK
+/OMICALL-React-Native-SDK/
+
+/docs/
+
+/GoogleService-Info.plist
+/example/ios/GoogleService-Info.plist   
+/.claude/
+.claude/

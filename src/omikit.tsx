@@ -1,4 +1,5 @@
-import { NativeModules, Platform, NativeEventEmitter, DeviceEventEmitter } from 'react-native';
+import { NativeModules, Platform, NativeEventEmitter, DeviceEventEmitter, TurboModuleRegistry } from 'react-native';
+import type { Spec } from './NativeOmikitPlugin';
 
 const LINKING_ERROR =
   `The package 'omikit-plugin' doesn't seem to be linked. Make sure: \n\n` +
@@ -6,10 +7,20 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-// ✅ Khai báo chính xác Native Module
-const OmikitPlugin = NativeModules.OmikitPlugin
-  ? NativeModules.OmikitPlugin
-  : new Proxy(
+// Runtime detection: Try TurboModule first, fallback to NativeModule
+const isTurboModuleEnabled = (global as any).__turboModuleProxy != null;
+
+const OmikitPlugin: Spec = (() => {
+  if (isTurboModuleEnabled) {
+    // New Architecture - use TurboModule
+    const turboModule = TurboModuleRegistry.get<Spec>('OmikitPlugin');
+    if (turboModule) {
+      return turboModule;
+    }
+  }
+
+  // Old Architecture - fallback to NativeModule
+  return NativeModules.OmikitPlugin || new Proxy(
     {},
     {
       get() {
@@ -17,10 +28,11 @@ const OmikitPlugin = NativeModules.OmikitPlugin
       },
     }
   );
+})();
 
 // ✅ Setup omiEmitter cho iOS và Android
 const omiEmitter = Platform.OS === 'ios'
-  ? new NativeEventEmitter(OmikitPlugin)
+  ? new NativeEventEmitter(NativeModules.OmikitPlugin || OmikitPlugin)
   : DeviceEventEmitter;
 
 /**
@@ -41,14 +53,14 @@ export function configPushNotification(data: any): Promise<any> {
 }
 
 /**
- * Retrieves the initial call details when start call 
+ * Retrieves the initial call details when start call
  * @returns {Promise<any>} A promise containing the initial call details.
  */
 export function getInitialCall(): Promise<any> {
   if (Platform.OS == "ios") {
-    return OmikitPlugin.getInitialCall();
+    return OmikitPlugin.getInitialCall({ counter: 0 });
   } else {
-    return OmikitPlugin.getInitialCall(4);
+    return OmikitPlugin.getInitialCall({ counter: 4 });
   }
 }
 
@@ -73,9 +85,9 @@ export function initCallWithApiKey(data: any): Promise<boolean> {
 /**
  * Starts a new call with the given data.
  * @param {any} data - Call configuration data.
- * @returns {Promise<boolean>} A promise that resolves to `true` if the call starts successfully.
+ * @returns {Promise<any>} A promise that resolves with call details if successful.
  */
-export function startCall(data: any): Promise<boolean> {
+export function startCall(data: any): Promise<any> {
   return OmikitPlugin.startCall(data);
 }
 
@@ -106,9 +118,9 @@ export function endCall(): Promise<any> {
 
 /**
  * Toggles the mute status of the microphone.
- * @returns {Promise<boolean>} A promise that resolves to `true` if the microphone is muted, `false` otherwise.
+ * @returns {Promise<boolean | null>} A promise that resolves to `true` if the microphone is muted, `false` otherwise, or `null` if unavailable.
  */
-export function toggleMute(): Promise<boolean> {
+export function toggleMute(): Promise<boolean | null> {
   return OmikitPlugin.toggleMute();
 }
 
@@ -122,9 +134,9 @@ export function toggleSpeaker(): Promise<boolean> {
 
 /**
  * Toggles the hold call.
- * @returns {Promise<boolean>} A promise that resolves to `true` if when hold call success, `false` otherwise.
+ * @returns {Promise<void>} A promise that resolves when hold call is toggled.
  */
-export function toggleHold(): Promise<boolean> {
+export function toggleHold(): Promise<void> {
   return OmikitPlugin.toggleHold();
 }
 
@@ -282,7 +294,7 @@ export function hideSystemNotificationOnly(): Promise<boolean> {
 }
 
 export function hideSystemNotificationAndUnregister(reason: string): Promise<boolean> {
-  return OmikitPlugin.hideSystemNotificationAndUnregister(reason);
+  return OmikitPlugin.hideSystemNotificationAndUnregister({ reason });
 }
 
 export const OmiCallEvent = {
@@ -338,7 +350,7 @@ export function checkAndRequestPermissions(isVideo: boolean = false): Promise<bo
   if (Platform.OS !== 'android') {
     return Promise.resolve(true);
   }
-  return OmikitPlugin.checkAndRequestPermissions(isVideo);
+  return OmikitPlugin.checkAndRequestPermissions({ isVideo });
 }
 
 /**
@@ -362,6 +374,6 @@ export function requestPermissionsByCodes(codes: number[]): Promise<boolean> {
   if (Platform.OS !== 'android') {
     return Promise.resolve(true);
   }
-  return OmikitPlugin.requestPermissionsByCodes(codes);
+  return OmikitPlugin.requestPermissionsByCodes({ codes });
 }
 

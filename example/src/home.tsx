@@ -2,18 +2,19 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, StyleSheet, View, DeviceEventEmitter } from 'react-native';
 import {
-  checkMultiple,
+  check,
+  request,
   PERMISSIONS,
-  requestMultiple,
   RESULTS,
+  Permission,
 } from 'react-native-permissions';
 
 import {
   getInitialCall,
   logout,
-  // getInitialCall,
   OmiCallEvent,
   OmiCallState,
+  OmiStartCallStatus,
   omiEmitter,
   startCall,
 } from 'omikit-plugin';
@@ -28,232 +29,200 @@ import {
   KeyboardAvoid,
 } from './components';
 
+// Permission constants based on platform
+const MICROPHONE_PERMISSION: Permission = Platform.select({
+  ios: PERMISSIONS.IOS.MICROPHONE,
+  android: PERMISSIONS.ANDROID.RECORD_AUDIO,
+}) as Permission;
+
 export const HomeScreen = () => {
-  const navigation = useNavigation();
+  const navigation: any = useNavigation();
 
   const [phone, setPhone] = useState('101');
-  const [callVideo, setCallVideo] = useState(false);
+  const [isVideoCall, setIsVideoCall] = useState(false);
 
+  // Check for initial call when app opens from killed state
   const checkInitCall = useCallback(async () => {
     const callingInfo = await getInitialCall();
-    console.log('callerNumber getInitialCall =>>>> ', callingInfo);
-    if (callingInfo !== null && callingInfo !== false) {
-      const { callerNumber } = callingInfo;
-      console.log(callerNumber);
+    console.log('getInitialCall:', callingInfo);
+
+    if (callingInfo && callingInfo !== false) {
+      const { callerNumber } = callingInfo as any;
+      console.log('Initial call from:', callerNumber);
     }
   }, []);
 
-  useEffect(() => {
-    checkInitCall();
-    checkPermission();
-  }, [checkInitCall]);
+  // Check and request microphone permission
+  const checkPermission = useCallback(async () => {
+    try {
+      const result = await check(MICROPHONE_PERMISSION);
+      console.log('Permission check result:', result);
 
-  const checkPermission = () => {
-    checkMultiple([
-      PERMISSIONS.IOS.MICROPHONE,
-      PERMISSIONS.ANDROID.RECORD_AUDIO,
-      PERMISSIONS.ANDROID.CALL_PHONE,
-    ])
-      .then((result) => {
-        switch (result) {
-          case RESULTS.UNAVAILABLE:
-            requestPermission();
-            console.log(
-              'This feature is not available (on this device / in this context)'
-            );
-            break;
-          case RESULTS.DENIED:
-            requestPermission();
-            console.log(
-              'The permission has not been requested / is denied but requestable'
-            );
-            break;
-          case RESULTS.LIMITED:
-            console.log('The permission is limited: some actions are possible');
-            break;
-          case RESULTS.GRANTED:
-            console.log('The permission is granted');
-            break;
-          case RESULTS.BLOCKED:
-            requestPermission();
-            console.log('The permission is denied and not requestable anymore');
-            break;
-        }
-      })
-      .catch((error) => {
-        // …
-      });
+      if (result === RESULTS.DENIED || result === RESULTS.BLOCKED) {
+        await requestPermission();
+      }
+    } catch (error) {
+      console.log('Permission check error:', error);
+    }
+  }, []);
+
+  const requestPermission = async () => {
+    try {
+      const result = await request(MICROPHONE_PERMISSION);
+      console.log('Permission request result:', result);
+
+      switch (result) {
+        case RESULTS.UNAVAILABLE:
+          console.log('This feature is not available on this device');
+          break;
+        case RESULTS.DENIED:
+          console.log('The permission has been denied');
+          break;
+        case RESULTS.LIMITED:
+          console.log('The permission is limited');
+          break;
+        case RESULTS.GRANTED:
+          console.log('The permission is granted');
+          break;
+        case RESULTS.BLOCKED:
+          console.log('The permission is blocked');
+          break;
+      }
+    } catch (error) {
+      console.log('Permission request error:', error);
+    }
   };
 
-  const requestPermission = () => {
-    requestMultiple([
-      PERMISSIONS.IOS.MICROPHONE,
-      PERMISSIONS.ANDROID.RECORD_AUDIO,
-      PERMISSIONS.ANDROID.CALL_PHONE,
-    ])
-      .then((result) => {
-        switch (result) {
-          case RESULTS.UNAVAILABLE:
-            console.log(
-              'This feature is not available (on this device / in this context)'
-            );
-            break;
-          case RESULTS.DENIED:
-            console.log(
-              'The permission has not been requested / is denied but requestable'
-            );
-            break;
-          case RESULTS.LIMITED:
-            console.log('The permission is limited: some actions are possible');
-            break;
-          case RESULTS.GRANTED:
-            console.log('The permission is granted');
-            break;
-          case RESULTS.BLOCKED:
-            console.log('The permission is denied and not requestable anymore');
-            break;
-        }
-      })
-      .catch();
-  };
-
-  const _videoTrigger = useCallback(() => {
-    setCallVideo(!callVideo);
-  }, [callVideo]);
-
-  const onCallStateChanged = useCallback(
-    (data: any) => {
-      console.log('data onCallStateChanged:  ', data);
-      const { status, callerNumber, isVideo } = data;
-      console.log('status call: ', status);
-      if (status == OmiCallState.incoming) {
-        const input = {
-          callerNumber: callerNumber,
-          status: status,
-          isOutGoingCall: false,
-        };
-        console.log(isVideo);
-        if (isVideo === true) {
-          navigation.navigate('VideoCall' as never, input as never);
-        } else {
-          navigation.navigate('DialCall' as never, input as never);
-        }
-      }
-      if (status === OmiCallState.confirmed) {
-        if (LiveData.isOpenedCall === true) {
-          return;
-        }
-        const input = {
-          callerNumber: callerNumber,
-          status: status,
-          isOutGoingCall: false,
-        };
-        if (isVideo === true) {
-          navigation.navigate('VideoCall' as never, input as never);
-        } else {
-          navigation.navigate('DialCall' as never, input as never);
-        }
-      }
-      if (status === OmiCallState.disconnected) {
-        navigation.goBack();
-      }
+  // Navigate to call screen based on call type
+  const navigateToCallScreen = useCallback(
+    (callerNumber: string, status: number, isOutgoing: boolean, isVideo: boolean) => {
+      const params = { callerNumber, status, isOutGoingCall: isOutgoing };
+      const screen = isVideo ? 'VideoCall' : 'DialCall';
+      navigation.navigate(screen, params);
     },
     [navigation]
   );
 
-  const callWithParam = useCallback(
+  // Handle call state changes from native SDK
+  const onCallStateChanged = useCallback(
+    (data: any) => {
+      console.log('onCallStateChanged:', data);
+      const { status, callerNumber, isVideo } = data;
+
+      if (status === OmiCallState.incoming) {
+        navigateToCallScreen(callerNumber, status, false, isVideo === true);
+      }
+
+      if (status === OmiCallState.confirmed && !LiveData.isOpenedCall) {
+        navigateToCallScreen(callerNumber, status, false, isVideo === true);
+      }
+
+      if (status === OmiCallState.disconnected) {
+        navigation.goBack();
+      }
+    },
+    [navigation, navigateToCallScreen]
+  );
+
+  // Handle missed call click from notification
+  const onClickMissedCall = useCallback(
     async (data: any) => {
+      if (LiveData.isOpenedCall) {
+        return;
+      }
+
       const { callerNumber, isVideo } = data;
       const result = await startCall({
         phoneNumber: callerNumber,
         isVideo: isVideo,
       });
-      console.log('result callWithParam', result);
+      console.log('Call from missed notification result:', result);
     },
-    [navigation]
+    []
   );
 
-  const clickMissedCall = useCallback((data: any) => {
-    if (LiveData.isOpenedCall === true) {
-      return;
-    }
-    callWithParam(data);
-  }, []);
-
+  // Initialize screen
   useEffect(() => {
+    checkInitCall();
+    checkPermission();
+  }, [checkInitCall, checkPermission]);
 
+  // Register event listeners
+  useEffect(() => {
+    console.log('Registering call event listeners');
 
-    console.log('✅ onCallStateChanged listener registered:', OmiCallEvent.onCallStateChanged);
     DeviceEventEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
-    omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
+    omiEmitter.addListener(OmiCallEvent.onClickMissedCall, onClickMissedCall);
+
     return () => {
       omiEmitter.removeAllListeners(OmiCallEvent.onClickMissedCall);
       DeviceEventEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
     };
-  }, []);
+  }, [onCallStateChanged, onClickMissedCall]);
 
-  const call = async () => {
-    if (phone.trim().length === 0) {
+  // Handle call button press
+  const handleCall = async () => {
+    const phoneNumber = phone.trim();
+    if (phoneNumber.length === 0) {
       return;
     }
-    let result = await startCall({ phoneNumber: phone, isVideo: callVideo });
-    console.log(':result startCall: ==>>> ', result?.status, result);
-    if (Platform.OS == 'ios') {
+
+    let result: any = await startCall({ phoneNumber, isVideo: isVideoCall });
+    console.log('startCall result:', result);
+
+    // Parse JSON string response on iOS
+    if (Platform.OS === 'ios' && typeof result === 'string') {
       result = JSON.parse(result);
     }
-    console.log(':result startCall: ==>>> ', result?.status);
-    if (result?.status == '4') {
+
+    const status = Number(result?.status);
+
+    // Handle permission denied
+    if (status === OmiStartCallStatus.permissionDenied) {
       requestPermission();
+      return;
     }
 
-    if (result?.status == '8' || result?.status == 8 || result?.status == 407) {
-      const data = {
-        callerNumber: phone,
-        status: OmiCallState.calling,
-        isOutGoingCall: true,
-      };
-      console.log('zô zzzzz: ==>>> ');
-      navigation.navigate('DialCall' as never, data as never);
+    // Handle call initiated successfully
+    if (status === OmiStartCallStatus.startCallSuccess || status === OmiStartCallStatus.startCallSuccessIOS) {
+      navigateToCallScreen(phoneNumber, OmiCallState.calling, true, isVideoCall);
     } else {
-      console.log('call error ==> ', result);
+      console.log('Call failed with status:', status, result);
     }
   };
 
-  const logoutCB = async () => {
+  // Handle logout
+  const handleLogout = async () => {
     await logout();
     LocalStorage.clearAll();
-    navigation.reset({ index: 0, routes: [{ name: 'Login' as never }] });
+    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   };
 
   return (
     <KeyboardAvoid>
-      <View style={styles.background}>
+      <View style={styles.container}>
         <CustomTextField
           placeHolder="Phone number/Usr Uuid"
-          ///need add call phone
           value={phone}
-          returnKey={'done'}
-          onChange={(text: string) => {
-            setPhone(text);
-          }}
-          keyboardType={'phone-pad'}
+          returnKey="done"
+          onChange={setPhone}
+          keyboardType="phone-pad"
         />
         <CustomCheckBox
           title="Video call"
-          checked={callVideo}
-          callback={_videoTrigger}
+          checked={isVideoCall}
+          callback={() => setIsVideoCall(!isVideoCall)}
           style={styles.checkbox}
         />
-        <CustomButton title="CALL" callback={call} style={styles.button} />
         <CustomButton
-          title="LOG OUT"
-          callback={logoutCB}
+          title="CALL"
+          callback={handleCall}
           style={styles.button}
         />
         <CustomButton
-          title="TEST EVENTS"
-          callback={() => navigation.navigate('TestEvents' as never)}
-          style={[styles.button, { backgroundColor: '#FF9500' }]}
+          title="LOG OUT"
+          callback={handleLogout}
+          style={styles.button}
         />
       </View>
     </KeyboardAvoid>
@@ -261,7 +230,7 @@ export const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     padding: 24,
     flex: 1,
   },
