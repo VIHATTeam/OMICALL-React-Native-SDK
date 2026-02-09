@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
 
   # Dependencies
   s.dependency "React-Core"
-  s.dependency "OmiKit", "~> 1.10"
+  s.dependency "OmiKit", "1.10.11"
 
   # Base build settings (for both Old and New Architecture)
   base_xcconfig = {
