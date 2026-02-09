@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 
+## 3.3.28 [09/02/2025]
+- Increase version 
+
+
+## 3.3.27 [09/02/2025]
+- Update OMIKIT android to version 2.5.17
+- Update OMIKIT iOS to version 1.10.11
+- Support 16 Kb Policy off Google  
+ 
 
 ## 3.3.25 [17/10/2025]
 - Update OMIKIT android to version 2.4.25
