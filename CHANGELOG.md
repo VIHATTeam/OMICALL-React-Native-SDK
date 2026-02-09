@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## 4.0.0 [20/01/2026]
+## 4.0.0 [09/02/2026]
+- Update OMIKIT iOS to version 1.10.11
+- Update OMIKIT Android to version 2.5.17
 
 ### 🚀 Major Features
 - **New Architecture Support**: Full TurboModule + Fabric implementation for React Native 0.74+
