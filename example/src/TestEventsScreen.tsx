@@ -11,14 +11,8 @@ import {
 import {
     omiEmitter,
     OmiCallEvent,
-    testEventEmission,
     startServices,
-    hideSystemNotificationOnly,
-    hideSystemNotificationAndUnregister,
-    hideSystemNotificationSafely,
     initCallWithUserPassword,
-    checkCredentials,
-    registerWithOptions,
 } from 'omikit-plugin';
 
 export const TestEventsScreen = () => {
@@ -89,46 +83,6 @@ export const TestEventsScreen = () => {
             console.log('✅ Test event listeners cleaned up');
         };
     }, []);
-
-    const handleTestEvent = async () => {
-        try {
-            console.log('🧪 Testing event emission...');
-
-            // ✅ Test 1: Kiểm tra module tồn tại
-            console.log('🔍 Testing module existence...');
-            const result = await testEventEmission();
-            console.log('🧪 Test event result:', result);
-
-            // ✅ Test 2: Test DeviceEventEmitter trực tiếp
-            console.log('🔍 Testing DeviceEventEmitter directly...');
-
-            // ✅ Add a direct listener
-            const directListener = DeviceEventEmitter.addListener('test', (data: any) => {
-                console.log('🎯 DIRECT DeviceEventEmitter received test event:', data);
-                addEvent('DIRECT_TEST');
-            });
-
-            // ✅ Test 3: Gọi native function khác để test
-            console.log('🔍 Testing other native functions...');
-            try {
-                const audioDevices = await require('omikit-plugin').getAudio();
-                console.log('🔊 Audio devices:', audioDevices);
-            } catch (audioError) {
-                console.log('❌ Audio test failed:', audioError);
-            }
-
-            // ✅ Cleanup direct listener after 10 seconds
-            setTimeout(() => {
-                directListener.remove();
-                console.log('🧹 Direct listener removed');
-            }, 10000);
-
-            Alert.alert('Test Result', `Event emission result: ${result}`);
-        } catch (e) {
-            console.log('❌ Test event error:', e);
-            Alert.alert('Test Error', `Error: ${e}`);
-        }
-    };
 
     const handleStartServices = async () => {
         try {
@@ -343,10 +297,6 @@ export const TestEventsScreen = () => {
             </View>
 
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={handleTestEvent}>
-                    <Text style={styles.buttonText}>Test Event Emission</Text>
-                </TouchableOpacity>
-
                 <TouchableOpacity style={styles.button} onPress={handleStartServices}>
                     <Text style={styles.buttonText}>Start Services</Text>
                 </TouchableOpacity>

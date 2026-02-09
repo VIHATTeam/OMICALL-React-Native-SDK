@@ -134,7 +134,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   override fun getName(): String {
     return NAME
   }
-  
+
+  override fun getConstants(): MutableMap<String, Any> {
+    return mutableMapOf(
+      "CALL_STATE_CHANGED" to CALL_STATE_CHANGED,
+      "MUTED" to MUTED,
+      "HOLD" to HOLD,
+      "SPEAKER" to SPEAKER,
+      "REMOTE_VIDEO_READY" to REMOTE_VIDEO_READY,
+      "CLICK_MISSED_CALL" to CLICK_MISSED_CALL,
+      "SWITCHBOARD_ANSWER" to SWITCHBOARD_ANSWER,
+      "CALL_QUALITY" to CALL_QUALITY,
+      "AUDIO_CHANGE" to AUDIO_CHANGE,
+      "REQUEST_PERMISSION" to REQUEST_PERMISSION
+    )
+  }
+
   /**
    * Check if we can start a new call (no concurrent calls, cooldown passed)
    */
@@ -145,12 +160,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       
       // Check if call is in progress or cooldown not passed
       if (isCallInProgress) {
-        Log.d("OMISDK", "🚫 Call blocked: Call already in progress")
+
         return false
       }
       
       if (timeSinceLastCall < callCooldownMs) {
-        Log.d("OMISDK", "🚫 Call blocked: Cooldown period (${callCooldownMs - timeSinceLastCall}ms remaining)")
         return false
       }
       
@@ -165,7 +179,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     synchronized(callStateLock) {
       isCallInProgress = true
       lastCallTime = System.currentTimeMillis()
-      Log.d("OMISDK", "📞 Call started, marking in progress")
     }
   }
   
@@ -175,7 +188,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   private fun markCallEnded() {
     synchronized(callStateLock) {
       isCallInProgress = false
-      Log.d("OMISDK", "📴 Call ended, clearing in progress flag")
     }
   }
 
@@ -183,11 +195,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     private val handler = Handler(Looper.getMainLooper())
 
   override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
-    Log.d("OMISDK", "=>> incomingReceived CALLED - BEFORE: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
     isIncoming = true;
     isAnswerCall = false; // Reset answer state for new incoming call
-    Log.d("OMISDK", "=>> incomingReceived AFTER SET - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall, phoneNumber: $phoneNumber")
-
     val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
     val map: WritableMap = WritableNativeMap().apply {
@@ -210,11 +219,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       transactionId: String?,
   ) {
       isAnswerCall = true
-      Log.d("OMISDK", "=>> ON CALL ESTABLISHED => ")
 
       Handler(Looper.getMainLooper()).postDelayed({
-          Log.d("OmikitReactNative", "onCallEstablished")
-
           val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
           // ✅ Sử dụng safe WritableMap creation
@@ -233,16 +239,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
-      Log.d("OMISDK RN", "=>> onCallEnd CALLED - BEFORE RESET: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
-      Log.d("OMISDK RN", "=>> onCallEnd callInfo => $callInfo")
-
       // Reset call state variables
       isIncoming = false
       isAnswerCall = false
       // Clear call progress state when remote party ends call
       markCallEnded()
-      Log.d("OMISDK", "=>> onCallEnd AFTER RESET - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
-
       // Kiểm tra kiểu dữ liệu trước khi ép kiểu để tránh lỗi
       val call = callInfo ?: mutableMapOf()
 
@@ -267,14 +268,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       )
       
       val map = createSafeWritableMap(eventData)
-
-      Log.d("OMISDK RN", "=>> onCallEnd  => ")
       sendEvent(CALL_STATE_CHANGED, map)
   }
 
   override fun onConnecting() {
-      Log.d("OMISDK", "=>> ON CONNECTING CALL => ")
-
       val map: WritableMap = WritableNativeMap().apply {
           putString("callerNumber", "")
           putBoolean("isVideo", NotificationService.isVideo)
@@ -299,17 +296,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val prePhoneNumber = OmiClient.prePhoneNumber ?: ""
       val typeNumber = OmiKitUtils().checkTypeNumber(prePhoneNumber)
 
-      Log.d("OMISDK", "=>> onRinging CALLED - BEFORE: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall, callDirection: $callDirection")
-
       if (callDirection == "inbound") {
         isIncoming = true;
-        Log.d("OMISDK", "=>> onRinging SET isIncoming = true for inbound call")
       } else if (callDirection == "outbound") {
         isIncoming = false;
-        Log.d("OMISDK", "=>> onRinging SET isIncoming = false for outbound call")
       }
-
-      Log.d("OMISDK", "=>> onRinging AFTER: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
 
       // ✅ Sử dụng safe WritableMap creation
       val eventData = mapOf(
@@ -322,8 +313,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       )
       
       val map = createSafeWritableMap(eventData)
-
-      Log.d("OMISDK", if (callDirection == "inbound") "=>> ON INCOMING CALL => " else "=>> ON RINGING CALL => ")
       sendEvent(CALL_STATE_CHANGED, map)
   }
 
@@ -355,13 +344,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
-      Log.d("OMISDK", "=>> onOutgoingStarted CALLED - BEFORE: isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
-      
       // For outgoing calls, set states appropriately
       isIncoming = false;
       isAnswerCall = false;
-      Log.d("OMISDK", "=>> onOutgoingStarted AFTER SET - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
-
       val typeNumber = OmiKitUtils().checkTypeNumber(phoneNumber ?: "")
 
       val map: WritableMap = WritableNativeMap().apply {
@@ -384,8 +369,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onRegisterCompleted(statusCode: Int) {
-    Log.d("OMISDK", "=> ON REGISTER COMPLETED => status code: $statusCode")
-
     if (statusCode != 200) {
       val normalizedStatusCode = if (statusCode == 403) 853 else statusCode
       val typeNumber = ""
@@ -413,7 +396,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         }
       })
     }
-    Log.d("OMISDK", "=>> onRequestPermission => $map")
     sendEvent(REQUEST_PERMISSION, map)
 
   }
@@ -482,7 +464,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       OmiClient.getInstance(reactApplicationContext!!).setDebug(false)
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Error in startServices: ${e.message}", e)
       promise.resolve(false)
     }
   }
@@ -493,7 +474,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   // ✅ Method để check status AUTO-UNREGISTER (DEPRECATED)
   @ReactMethod
   fun getAutoUnregisterStatus(promise: Promise) {
-    Log.w("OmikitPlugin", "⚠️ DEPRECATED: getAutoUnregisterStatus() - Use Silent Registration API instead")
+
     try {
       OmiClient.getInstance(reactApplicationContext!!).getAutoUnregisterStatus { isScheduled, timeUntilExecution ->
         try {
@@ -504,12 +485,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           )
           promise.resolve(Arguments.makeNativeMap(status))
         } catch (e: Exception) {
-          Log.e("OmikitPlugin", "❌ Error in getAutoUnregisterStatus callback: ${e.message}", e)
           promise.resolve(null)
         }
       }
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Error calling getAutoUnregisterStatus: ${e.message}", e)
       promise.resolve(null)
     }
   }
@@ -517,7 +496,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   // ✅ Method để manually prevent AUTO-UNREGISTER (DEPRECATED)
   @ReactMethod
   fun preventAutoUnregister(reason: String, promise: Promise) {
-    Log.w("OmikitPlugin", "⚠️ DEPRECATED: preventAutoUnregister() - No longer supported in new SDK version")
+
     // Function removed - no longer supported
     promise.resolve(false)
   }
@@ -525,24 +504,20 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   // ✅ Convenience methods cho các scenario phổ biến (DEPRECATED)
   @ReactMethod
   fun prepareForIncomingCall(promise: Promise) {
-    Log.w("OmikitPlugin", "⚠️ DEPRECATED: prepareForIncomingCall() - Use Silent Registration API instead")
     try {
       OmiClient.getInstance(reactApplicationContext!!).prepareForIncomingCall()
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Prepare for incoming call failed: ${e.message}", e)
       promise.resolve(false)
     }
   }
 
   @ReactMethod
   fun prepareForOutgoingCall(promise: Promise) {
-    Log.w("OmikitPlugin", "⚠️ DEPRECATED: prepareForOutgoingCall() - Use Silent Registration API instead")
     try {
       OmiClient.getInstance(reactApplicationContext!!).prepareForOutgoingCall()
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Prepare for outgoing call failed: ${e.message}", e)
       promise.resolve(false)
     }
   }
@@ -681,15 +656,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
                 // Configure decline call behavior
                 OmiClient.getInstance(context).configureDeclineCallBehavior(isUserBusy)
-
-                Log.d("OmikitPlugin", "✅ Push notification configured successfully")
                 promise.resolve(true)
             } catch (e: Exception) {
-                Log.e("OmikitPlugin", "❌ Error configuring push notification: ${e.message}", e)
                 promise.reject("E_CONFIG_FAILED", "Failed to configure push notification", e)
             }
         } ?: run {
-            Log.e("OmikitPlugin", "❌ Current activity is null")
             promise.reject("E_NULL_ACTIVITY", "Current activity is null")
         }
     } catch (e: Exception) {
@@ -726,9 +697,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           } catch (e: Exception) {
             Log.w("OmikitPlugin", "⚠️ Cleanup warning (expected): ${e.message}")
           }
-          
-          // ✅ Sử dụng Silent Registration API mới từ OmiSDK 2.3.67
-          Log.d("OmikitPlugin", "🔇 Using Silent Registration API for user: $userName")
+        
           
           OmiClient.getInstance(reactApplicationContext!!).silentRegister(
             userName = userName ?: "",
@@ -739,13 +708,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             host = host,
             projectId = projectId
           ) { success, statusCode, message ->
-            Log.d("OmikitPlugin", "🔇 Silent registration callback - success: $success, status: $statusCode, message: $message")
             if (success) {
-              Log.d("OmikitPlugin", "✅ Silent registration successful - no notification, no auto-unregister")
               // ✅ Resolve promise với kết quả từ callback
               promise.resolve(success)
             } else {
-              Log.e("OmikitPlugin", "❌ Silent registration failed: $message")
               if (statusCode == 200) {
                 promise.resolve(true)
               } else {
@@ -756,7 +722,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           }
           
         } catch (e: Exception) {
-          Log.e("OmikitPlugin", "❌ Error during silent registration: ${e.message}", e)
           promise.reject("ERROR_INITIALIZATION_EXCEPTION", "OMICALL initialization failed due to an unexpected error: ${e.message}. Please check your network connection and configuration.", e)
         }
       }
@@ -765,7 +730,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun initCallWithApiKey(data: ReadableMap, promise: Promise) {
-    Log.d("OmikitPlugin", "🔑 initCallWithApiKey called")
     mainScope.launch {
       var loginResult = false
       val usrName = data.getString("fullName") ?: ""
@@ -776,11 +740,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val firebaseToken = data.getString("fcmToken") ?: ""
       val projectId = data.getString("projectId") ?: ""
       
-      Log.d("OmikitPlugin", "🔑 Parameters - usrName: $usrName, usrUuid: $usrUuid, isVideo: $isVideo")
-
       withContext(Dispatchers.Default) {
         try {
-          Log.d("OmikitPlugin", "🔑 Starting validation")
           // Validate required parameters
           if (!ValidationHelper.validateRequired(mapOf(
               "fullName" to usrName,
@@ -792,8 +753,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             return@withContext
           }
 
-          Log.d("OmikitPlugin", "✅ Validation passed")
-
           // Check RECORD_AUDIO permission for Android 14+
           val hasRecordAudio = ContextCompat.checkSelfPermission(
             reactApplicationContext, 
@@ -801,28 +760,19 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           ) == PackageManager.PERMISSION_GRANTED
 
           if (!hasRecordAudio) {
-            Log.e("OmikitPlugin", "❌ RECORD_AUDIO permission is required for Android 14+")
             promise.resolve(false)
             return@withContext
           }
-
-          Log.d("OmikitPlugin", "✅ RECORD_AUDIO permission granted")
-
           // ✅ Cleanup trước khi register với mutex
           try {
-            Log.d("OmikitPlugin", "🧹 Starting cleanup")
             omiClientMutex.withLock {
               OmiClient.getInstance(reactApplicationContext!!).logout()
             }
             delay(1000) // Chờ cleanup hoàn tất
-            Log.d("OmikitPlugin", "✅ Cleanup completed")
           } catch (e: Exception) {
             Log.w("OmikitPlugin", "⚠️ Cleanup warning (expected): ${e.message}")
           }
 
-          Log.d("OmikitPlugin", "🔑 Using API key registration for user: $usrName")
-
-          Log.d("OmikitPlugin", "🔑 Calling OmiClient.registerWithApiKey...")
           omiClientMutex.withLock {
             loginResult = OmiClient.registerWithApiKey(
               apiKey ?: "",
@@ -834,16 +784,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
               projectId
             )
           }
-          
-          Log.d("OmikitPlugin", "🔑 OmiClient.registerWithApiKey returned: $loginResult")
-          
-          if (loginResult) {
-            Log.d("OmikitPlugin", "✅ API key registration successful")
-            promise.resolve(true)
-          } else {
-            Log.e("OmikitPlugin", "❌ API key registration failed")
-            promise.resolve(false)
-          }
+           promise.resolve(loginResult)
         } catch (e: Exception) {
           Log.e("OmikitPlugin", "❌ Error during API key registration: ${e.message}", e)
           promise.resolve(false)
@@ -855,20 +796,16 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun getInitialCall(counter: Int = 1, promise: Promise) {
       val context = reactApplicationContext ?: run {
-          Log.e("getInitialCall", "❌ React context is null")
           promise.resolve(false)
           return
       }
 
       val call = Utils.getActiveCall(context)
-      Log.d("getInitialCall RN", "📞 Active call: $call")
-
       if (call == null) {
           if (counter <= 0) {
               promise.resolve(false)
           } else {
               mainScope.launch {
-                  Log.d("getInitialCall RN", "🔄 Retrying in 2s... (Attempts left: $counter)")
                   delay(1000) // Wait 2 seconds
                   getInitialCall(counter - 1, promise) // Retry recursively
               }
@@ -893,11 +830,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
                              statusPendingCall == 5 // 5 = User clicked pickup (CONFIRMED)
 
       if (shouldAutoAnswer) {
-          Log.d("getInitialCall RN", "🚀 AUTO-ANSWER: User clicked pickup (statusPendingCall=$statusPendingCall), answering call immediately")
           try {
               OmiClient.getInstance(context).pickUp()
-              Log.d("getInitialCall RN", "✅ AUTO-ANSWER: Call answered successfully")
-
               // Status already cleared by getStatusPendingCall()
           } catch (e: Exception) {
               Log.e("getInitialCall RN", "❌ AUTO-ANSWER: Failed to answer call: ${e.message}", e)
@@ -922,8 +856,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       promise.resolve(map)
 
       if (statusPendingCall == 2 && call.state != 5) {
-          Log.d("getInitialCall RN", "🚀 Incoming Receive Triggered ($statusPendingCall)")
-
           val eventMap: WritableMap = WritableNativeMap().apply {
               putBoolean("isVideo", call.isVideo ?: false)
               putBoolean("incoming", true)
@@ -976,7 +908,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         reactApplicationContext!!,
         Manifest.permission.RECORD_AUDIO
       )
-    Log.d("OMISDK", "📤 Start Call With UUID")
     val map: WritableMap = WritableNativeMap()
     if (audio == PackageManager.PERMISSION_GRANTED) {
       mainScope.launch {
@@ -1008,7 +939,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val appContext = reactApplicationContext.applicationContext
       val activity = currentActivity
 
-      if (appContext == null) {
+      if (appContext == null) { 
           promise.reject("E_NULL_CONTEXT", "Application context is null")
           return
       }
@@ -1044,15 +975,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
  @ReactMethod
   fun rejectCall(promise: Promise) {
-      Log.d("OMISDK", "➡️ rejectCall called - isIncoming: $isIncoming, isAnswerCall: $isAnswerCall")
       if (isIncoming) {
-          Log.d("OMISDK", "📞 Incoming call")
           ValidationHelper.safeOmiClientAccess(reactApplicationContext!!) { omiClient ->
               if (!isAnswerCall) {
-                  Log.d("OMISDK", "🚫 Declining call with declineWithCode(true)")
                   omiClient.declineWithCode(true) // 486 Busy Here
               } else {
-                  Log.d("OMISDK", "📴 Call already answered, hanging up")
                   omiClient.hangUp()
               }
           }
@@ -1060,7 +987,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           markCallEnded()
           promise.resolve(true)
       } else {
-          Log.d("OMISDK", "📤 Not incoming call, skipping reject")
           promise.resolve(false)
       }
   }
@@ -1296,9 +1222,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun transferCall(data: ReadableMap, promise: Promise) {
     currentActivity?.runOnUiThread {
       val phone = data.getString("phoneNumber")
-      Log.d("phone", "phone transferCall  ==>> ${phone} ")
       if (reactApplicationContext != null) {
-        Log.d("phone", "phone transferCall  reactApplicationContext ==>> ${phone} ")
         OmiClient.getInstance(reactApplicationContext!!).forwardCallTo(phone as String)
         promise.resolve(true)
       }
@@ -1320,7 +1244,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
     fun onResume(act: ReactActivity) {
       act.let { context ->
-        Log.d("OMISDK_REACT", "=>> onResume => ")
         OmiClient.getInstance(context, true)
         OmiClient.isAppReady = true;
       }
@@ -1360,10 +1283,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           }
         }
         
-        Log.d("OmikitPlugin", "✅ Granted: ${grantedPermissions.joinToString()}")
-        if (deniedPermissions.isNotEmpty()) {
-          Log.w("OmikitPlugin", "❌ Denied: ${deniedPermissions.joinToString()}")
-        }
         
         // Check if we have essential permissions for VoIP
         val hasRecordAudio = grantedPermissions.contains(Manifest.permission.RECORD_AUDIO)
@@ -1372,11 +1291,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         
         val canProceed = hasRecordAudio && hasCallPhone && hasModifyAudio
         
-        if (canProceed) {
-          Log.d("OmikitPlugin", "🎉 Essential VoIP permissions granted!")
-        } else {
-          Log.e("OmikitPlugin", "⚠️ Missing essential VoIP permissions - app may not work properly")
-        }
         
       } catch (e: Exception) {
         Log.e("OmikitPlugin", "❌ Error handling permission results: ${e.message}", e)
@@ -1392,7 +1306,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       try {
         val isIncoming = intent.getBooleanExtra(SipServiceConstants.ACTION_IS_INCOMING_CALL, false)
         if (!isIncoming) {
-          Log.d("PICKUP-FIX", "Not an incoming call intent, skipping")
           return
         }
 
@@ -1400,20 +1313,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           SipServiceConstants.ACTION_ACCEPT_INCOMING_CALL, false
         )
 
-        Log.d("PICKUP-FIX", "🚀 Early intent handler - isIncoming: $isIncoming, isAccepted: $isAcceptedCall")
 
         // Save to SharedPreferences so getInitialCall() can detect it later
         // setStatusPendingCall(true) → saves status=5 (CONFIRMED)
         // setStatusPendingCall(false) → saves status=2 (INCOMING)
         OmiKitUtils().setStatusPendingCall(act, isAcceptedCall)
-        Log.d("PICKUP-FIX", "✅ Saved pickup state to SharedPreferences (isAccepted=$isAcceptedCall)")
 
         if (isAcceptedCall) {
           // Try to answer immediately if possible (may fail if SDK not ready)
           try {
             OmiClient.getInstance(act, true)?.let { client ->
               client.pickUp()
-              Log.d("PICKUP-FIX", "✅ Successfully answered call immediately")
             } ?: Log.w("PICKUP-FIX", "⚠️ OmiClient not ready, will auto-answer in getInitialCall()")
           } catch (e: Exception) {
             Log.w("PICKUP-FIX", "⚠️ Cannot answer immediately (SDK not ready): ${e.message}. Will auto-answer in getInitialCall()")
@@ -1461,19 +1371,16 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   // ✅ Di chuyển sendEvent vào trong class để có thể access reactApplicationContext
   private fun sendEvent(eventName: String?, params: Any?) {
     if (eventName == null) {
-      Log.e("OmikitPlugin", "❌ eventName is null or empty. Không thể gửi event.")
       return
     }
     
     try {
       // ✅ Kiểm tra reactApplicationContext
       if (reactApplicationContext == null) {
-        Log.e("OmikitPlugin", "❌ reactApplicationContext is null")
         return
       }
       
       if (!reactApplicationContext.hasActiveReactInstance()) {
-        Log.w("OmikitPlugin", "⚠️ ReactApplicationContext không có active React instance")
         return
       }
       
@@ -1498,34 +1405,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
-  // ✅ Thêm method để React Native biết các event được hỗ trợ
-  override fun getConstants(): MutableMap<String, Any> {
-    return hashMapOf(
-      "CALL_STATE_CHANGED" to CALL_STATE_CHANGED,
-      "MUTED" to MUTED,
-      "HOLD" to HOLD,
-      "SPEAKER" to SPEAKER,
-      "CALL_QUALITY" to CALL_QUALITY,
-      "AUDIO_CHANGE" to AUDIO_CHANGE,
-      "SWITCHBOARD_ANSWER" to SWITCHBOARD_ANSWER,
-      "REQUEST_PERMISSION" to REQUEST_PERMISSION,
-      "CLICK_MISSED_CALL" to CLICK_MISSED_CALL,
-      "AUTO_UNREGISTER_STATUS" to "AUTO_UNREGISTER_STATUS"
-    )
-  }
-
   @ReactMethod
   fun checkAndRequestPermissions(isVideo: Boolean, promise: Promise) {
     try {
       val missingPermissions = getMissingPermissions(isVideo)
       
       if (missingPermissions.isEmpty()) {
-        Log.d("OmikitPlugin", "✅ All permissions already granted")
         promise.resolve(true)
         return
       }
-      
-      Log.d("OmikitPlugin", "📋 Missing permissions: ${missingPermissions.joinToString()}")
       
       // Store promise for callback
       permissionPromise = promise
@@ -1536,7 +1424,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         REQUEST_PERMISSIONS_CODE,
       )
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Error checking permissions: ${e.message}", e)
       promise.resolve(false)
     }
   }
@@ -1704,8 +1591,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       // Store promise for callback
       permissionPromise = promise
       
-      Log.d("OmikitPlugin", "🔐 Requesting permissions for codes ${permissionCodes.joinToString()}: ${permissionsToRequest.joinToString()}")
-      
       ActivityCompat.requestPermissions(
         reactApplicationContext.currentActivity!!,
         permissionsToRequest.toTypedArray(),
@@ -1713,7 +1598,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       )
       
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Error requesting permissions by codes: ${e.message}", e)
       promise.reject("ERROR_PERMISSION_REQUEST", "Failed to request permissions: ${e.message}")
     }
   }
@@ -1722,11 +1606,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     val missingPermissions = getMissingPermissions(isVideo)
     
     if (missingPermissions.isEmpty()) {
-      Log.d("OmikitPlugin", "✅ All permissions already granted")
       return
     }
-    
-    Log.d("OmikitPlugin", "📋 Requesting missing permissions for Android ${Build.VERSION.SDK_INT}: ${missingPermissions.joinToString()}")
     
     ActivityCompat.requestPermissions(
       reactApplicationContext.currentActivity!!,
@@ -1858,15 +1739,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         try {
           // ✅ Gọi function hide notification với error handling
           OmiClient.getInstance(reactApplicationContext!!).hideSystemNotificationAndUnregister("Registration check completed")
-          Log.d("OmikitPlugin", "✅ Successfully hidden system notification and unregistered")
           promise.resolve(true)
         } catch (e: Exception) {
-          Log.e("OmikitPlugin", "❌ Failed to hide system notification: ${e.message}", e)
           promise.resolve(false)
         }
       }, 2000) // Delay 2 giây
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Error in hideSystemNotificationSafely: ${e.message}", e)
       promise.resolve(false)
     }
   }
@@ -1876,10 +1754,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun hideSystemNotificationOnly(promise: Promise) {
     try {
       OmiClient.getInstance(reactApplicationContext!!).hideSystemNotification()
-      Log.d("OmikitPlugin", "✅ Successfully hidden system notification (keeping registration)")
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Failed to hide system notification only: ${e.message}", e)
       promise.resolve(false)
     }
   }
@@ -1889,10 +1765,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun hideSystemNotificationAndUnregister(reason: String, promise: Promise) {
     try {
       OmiClient.getInstance(reactApplicationContext!!).hideSystemNotificationAndUnregister(reason)
-      Log.d("OmikitPlugin", "✅ Successfully hidden notification and unregistered: $reason")
       promise.resolve(true)
     } catch (e: Exception) {
-      Log.e("OmikitPlugin", "❌ Failed to hide notification and unregister: ${e.message}", e)
       promise.resolve(false)
     }
   }
@@ -1910,15 +1784,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
       // Validate required parameters
       if (userName.isNullOrEmpty() || password.isNullOrEmpty() || realm.isNullOrEmpty() || firebaseToken.isNullOrEmpty()) {
-        Log.e("OmikitPlugin", "❌ Missing required parameters for credential check")
         promise.resolve(mapOf("success" to false, "message" to "Missing required parameters"))
         return@launch
       }
 
       withContext(Dispatchers.Default) {
         try {
-          Log.d("OmikitPlugin", "🔍 Checking credentials for user: $userName")
-          
           OmiClient.getInstance(reactApplicationContext!!).checkCredentials(
             userName = userName ?: "",
             password = password ?: "",
@@ -1927,8 +1798,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             host = host,
             projectId = projectId
           ) { success, statusCode, message ->
-            Log.d("OmikitPlugin", "🔍 Credential check callback - success: $success, status: $statusCode, message: $message")
-            
             val result = mapOf(
               "success" to success,
               "statusCode" to statusCode,
@@ -1939,7 +1808,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           }
           
         } catch (e: Exception) {
-          Log.e("OmikitPlugin", "❌ Error during credential check: ${e.message}", e)
           val errorResult = mapOf(
             "success" to false,
             "message" to e.message
@@ -1966,15 +1834,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
       // Validate required parameters
       if (userName.isNullOrEmpty() || password.isNullOrEmpty() || realm.isNullOrEmpty() || firebaseToken.isNullOrEmpty()) {
-        Log.e("OmikitPlugin", "❌ Missing required parameters for registration with options")
         promise.resolve(mapOf("success" to false, "message" to "Missing required parameters"))
         return@launch
       }
 
       withContext(Dispatchers.Default) {
         try {
-          Log.d("OmikitPlugin", "⚙️ Registering with options for user: $userName - showNotification: $showNotification, enableAutoUnregister: $enableAutoUnregister")
-          
           OmiClient.getInstance(reactApplicationContext!!).registerWithOptions(
             userName = userName ?: "",
             password = password ?: "",
@@ -1986,8 +1851,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             showNotification = showNotification,
             enableAutoUnregister = enableAutoUnregister
           ) { success, statusCode, message ->
-            Log.d("OmikitPlugin", "⚙️ Registration with options callback - success: $success, status: $statusCode, message: $message")
-            
             val result = mapOf(
               "success" to success,
               "statusCode" to statusCode,
@@ -1998,7 +1861,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           }
           
         } catch (e: Exception) {
-          Log.e("OmikitPlugin", "❌ Error during registration with options: ${e.message}", e)
           val errorResult = mapOf(
             "success" to false,
             "message" to e.message

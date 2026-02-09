@@ -2,22 +2,60 @@ import Foundation
 import React
 import OmiKit
 
+#if RCT_NEW_ARCH_ENABLED
+import React_Codegen
+#endif
+
 @objc(OmikitPlugin)
 public class OmikitPlugin: RCTEventEmitter {
-  
+
   @objc public static var instance : OmikitPlugin!
-  
+
   public override init() {
     super.init()
     OmikitPlugin.instance = self
+  }
+
+  // TurboModule conformance
+  #if RCT_NEW_ARCH_ENABLED
+  @objc public static func moduleName() -> String {
+    return "OmikitPlugin"
+  }
+  #endif
+
+  @objc public override static func moduleName() -> String! {
+    return "OmikitPlugin"
+  }
+
+  // Export constants for event names
+  @objc public override func constantsToExport() -> [AnyHashable : Any]! {
+    return [
+      "CALL_STATE_CHANGED": CALL_STATE_CHANGED,
+      "MUTED": MUTED,
+      "HOLD": HOLD,
+      "SPEAKER": SPEAKER,
+      "REMOTE_VIDEO_READY": REMOTE_VIDEO_READY,
+      "CLICK_MISSED_CALL": CLICK_MISSED_CALL,
+      "SWITCHBOARD_ANSWER": SWITCHBOARD_ANSWER,
+      "CALL_QUALITY": CALL_QUALITY,
+      "AUDIO_CHANGE": AUDIO_CHANGE,
+      "REQUEST_PERMISSION": REQUEST_PERMISSION
+    ]
   }
   
   
   // MARK: - Service Methods
   @objc(startServices:rejecter:)
-  func startServices(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-    CallManager.shareInstance().registerNotificationCenter(showMissedCall: true)
-    resolve(true)
+  func startServices(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // Ensure instance is set for callbacks
+    if OmikitPlugin.instance == nil {
+      OmikitPlugin.instance = self
+    }
+
+    DispatchQueue.main.async {
+      CallManager.shareInstance().registerNotificationCenter(showMissedCall: true)
+      resolve(true)
+    }
   }
   
   @objc(configPushNotification:resolver:rejecter:)
@@ -315,6 +353,105 @@ public class OmikitPlugin: RCTEventEmitter {
       SWITCHBOARD_ANSWER,
       CALL_QUALITY,
       AUDIO_CHANGE,
+      REQUEST_PERMISSION
     ]
+  }
+
+  // MARK: - Stub Methods for TurboModule Compatibility
+  // These methods are Android-only but required by Codegen spec
+
+  @objc(onHold:resolver:rejecter:)
+  func onHold(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // iOS uses toggleHold instead
+    resolve(true)
+  }
+
+  @objc(hideSystemNotificationSafely:rejecter:)
+  func hideSystemNotificationSafely(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(hideSystemNotificationOnly:rejecter:)
+  func hideSystemNotificationOnly(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(hideSystemNotificationAndUnregister:resolver:rejecter:)
+  func hideSystemNotificationAndUnregister(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(checkAndRequestPermissions:resolver:rejecter:)
+  func checkAndRequestPermissions(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature, iOS handles permissions differently
+    resolve(true)
+  }
+
+  @objc(checkPermissionStatus:rejecter:)
+  func checkPermissionStatus(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(nil)
+  }
+
+  @objc(requestPermissionsByCodes:resolver:rejecter:)
+  func requestPermissionsByCodes(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(systemAlertWindow:rejecter:)
+  func systemAlertWindow(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(requestSystemAlertWindowPermission:rejecter:)
+  func requestSystemAlertWindowPermission(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(openSystemAlertSetting:rejecter:)
+  func openSystemAlertSetting(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(nil)
+  }
+
+  @objc(checkCredentials:resolver:rejecter:)
+  func checkCredentials(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Stub for iOS - not implemented yet
+    resolve([
+      "success": true,
+      "statusCode": 200,
+      "message": "iOS stub"
+    ])
+  }
+
+  @objc(registerWithOptions:resolver:rejecter:)
+  func registerWithOptions(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Stub for iOS - not implemented yet
+    resolve([
+      "success": true,
+      "statusCode": 200,
+      "message": "iOS stub"
+    ])
+  }
+
+  @objc(getKeepAliveStatus:rejecter:)
+  func getKeepAliveStatus(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve([
+      "isActive": false,
+      "platform": "ios"
+    ])
+  }
+
+  @objc(triggerKeepAlivePing:rejecter:)
+  func triggerKeepAlivePing(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
   }
 }

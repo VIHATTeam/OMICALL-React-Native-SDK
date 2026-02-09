@@ -2,7 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.0.0 [09/02/2026]
+- Update OMIKIT iOS to version 1.10.11
+- Update OMIKIT Android to version 2.5.17
 
+### 🚀 Major Features
+- **New Architecture Support**: Full TurboModule + Fabric implementation for React Native 0.74+
+- **Backward Compatible**: Works seamlessly with both Old and New Architecture
+- **Type Safety**: Enhanced with Codegen-based TypeScript specifications
+- **Zero Breaking Changes**: Drop-in replacement for v3.x - no code changes required
+
+### Added
+- TurboModule specification (`src/NativeOmikitPlugin.ts`) with full type safety for 40 methods
+- Fabric component specs for camera views (`NativeFLLocalCameraView.ts`, `NativeFLRemoteCameraView.ts`)
+- Runtime architecture detection - automatically uses optimal implementation
+- Codegen configuration in `package.json` for automatic native code generation
+- `getConstants()` method for exporting event constants to JavaScript
+- iOS TurboModule Protocol Header for New Architecture support
+- Enhanced TypeScript definitions with proper return types
+
+### Changed
+- Updated `src/omikit.tsx` with hybrid runtime detection (TurboModule vs NativeModule)
+- Updated `src/omi_local_camera.tsx` and `src/omi_remote_camera.tsx` with Fabric support
+- Enhanced `package.json` with `codegenConfig` and updated peer dependency to React Native >=0.74.0
+- Updated Android `build.gradle` - already configured for New Architecture
+- Updated iOS `OmikitPlugin.swift` with TurboModule conformance and constants export
+- Version bumped to 4.0.0 (semantic versioning - major new features)
+- Fixed TypeScript type mismatches for better type safety
+
+### Technical Details
+- **React Native**: >=0.74.0 (supports both Old and New Architecture)
+- **Codegen**: Automatic generation on both platforms
+- **Event System**: Unified across both architectures
+- **Build System**: Conditional compilation based on `newArchEnabled` (Android) and `RCT_NEW_ARCH_ENABLED` (iOS)
+
+### Migration
+**No code changes required!** The SDK automatically detects your architecture at runtime.
+
+For users on React Native 0.74+:
+- To enable New Architecture: Set `newArchEnabled=true` in `android/gradle.properties` and `RCT_NEW_ARCH_ENABLED=1` for iOS
+- Old Architecture continues to work without any changes
+
+### Performance
+- TurboModules provide faster native method calls (JSI-based)
+- Fabric components offer improved rendering performance for camera views
+- Type-safe Codegen eliminates runtime type checking overhead
+
+---
 
 ## 3.3.25 [17/10/2025]
 - Update OMIKIT android to version 2.4.25
