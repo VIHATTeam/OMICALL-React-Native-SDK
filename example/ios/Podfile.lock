@@ -125,9 +125,9 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - OmiKit (1.8.53)
+  - OmiKit (1.10.11)
   - omikit-plugin (4.0.0):
-    - OmiKit (= 1.8.53)
+    - OmiKit (= 1.10.11)
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -1371,7 +1371,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (4.11.1):
+  - react-native-safe-area-context (4.14.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1384,8 +1384,8 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-safe-area-context/common (= 4.11.1)
-    - react-native-safe-area-context/fabric (= 4.11.1)
+    - react-native-safe-area-context/common (= 4.14.0)
+    - react-native-safe-area-context/fabric (= 4.14.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1394,7 +1394,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/common (4.11.1):
+  - react-native-safe-area-context/common (4.14.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1415,7 +1415,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/fabric (4.11.1):
+  - react-native-safe-area-context/fabric (4.14.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1777,7 +1777,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (4.8.0):
+  - RNScreens (4.4.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1798,9 +1798,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.8.0)
+    - RNScreens/common (= 4.4.0)
     - Yoga
-  - RNScreens/common (4.8.0):
+  - RNScreens/common (4.4.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2088,8 +2088,8 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   hermes-engine: 3852e37f6158a2fcfad23e31215ed495da3a6a40
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  OmiKit: 8f17463703b44178af54f7181cbe8e6c49b291b3
-  omikit-plugin: a57a39fd5044a387821c82e6523f14d9ba3f6204
+  OmiKit: 4954cc3c77487812f37fdcd8dfecbae68defb13c
+  omikit-plugin: ac7c29a7257b886a09390236998aecf56a2842a1
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCT-Folly: 84578c8756030547307e4572ab1947de1685c599
   RCTDeprecation: d575d28132f93e5deef4849d5afffb4ac4e63226
@@ -2121,7 +2121,7 @@ SPEC CHECKSUMS:
   React-logger: addd140841248966c2547eb94836399cc1061f4d
   React-Mapbuffer: 029b5332e78af8c67c4b5e65edfc717068b8eac1
   React-microtasksnativemodule: f30949ee318ba90b9668de1e325b98838b9a4da2
-  react-native-safe-area-context: 17800bbaacdd18289d68ac8d4eb541c1a183463f
+  react-native-safe-area-context: 819935871d06a80e963546208027f839aa972a85
   React-nativeconfig: 470fce6d871c02dc5eff250a362d56391b7f52d6
   React-NativeModulesApple: 1586448c61a7c2bd4040cc03ccde66a72037e77e
   React-perflogger: c8860eaab4fe60d628b27bf0086a372c429fc74f
@@ -2155,7 +2155,7 @@ SPEC CHECKSUMS:
   RNFBMessaging: 0f0498a95c605e3afcf13ac5f349d0b201ea65f6
   RNGestureHandler: 07b194ed7e48ef8ccf3f8dc2fc6b6e82155ed8a3
   RNPermissions: 0e82f78ef22cf0ace20a556df97803fe68bf0aa4
-  RNScreens: 7c77d18e5dc04d1c810eb267d1c6d132ff433c24
+  RNScreens: 351f431ef2a042a1887d4d90e1c1024b8ae9d123
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: c5b0e913b5b3b4cde588227c1402e747797061f3
 
