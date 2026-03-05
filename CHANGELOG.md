@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 
+## 3.3.29 [05/03/2026]
+- Add getter functions: `getProjectId`, `getAppId`, `getDeviceId`, `getFcmToken`, `getSipInfo`, `getVoipToken` (iOS only)
+- Fix iOS `getUserInfo` selector mismatch (typo `getUserInfor`)
+- Security: remove `example/android/gradle.properties` from git tracking
+- Update OMIKIT android to version 2.6.4
+- Update OMIKIT iOS to version 1.10.34
+
+
 ## 3.3.28 [09/02/2025]
 - Increase version 
 

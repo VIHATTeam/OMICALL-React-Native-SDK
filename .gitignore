@@ -77,3 +77,7 @@ example/android/gradle.properties
 
 /dev
 /dev/*
+
+log_*
+plans/*
+/plans/*
