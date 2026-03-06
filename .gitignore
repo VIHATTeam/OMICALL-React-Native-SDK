@@ -85,6 +85,10 @@ OMICALL-React-Native-SDK
 /docs/
 
 /GoogleService-Info.plist
-/example/ios/GoogleService-Info.plist   
+/example/ios/GoogleService-Info.plist
 /.claude/
-.claude/*.tgz
+*.tgz
+
+log_*
+plans/*
+/plans/*
