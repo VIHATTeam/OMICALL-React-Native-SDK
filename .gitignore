@@ -87,4 +87,4 @@ OMICALL-React-Native-SDK
 /GoogleService-Info.plist
 /example/ios/GoogleService-Info.plist   
 /.claude/
-.claude/
+.claude/*.tgz
