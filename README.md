@@ -166,11 +166,11 @@ allprojects {
 Then add your credentials to `~/.gradle/gradle.properties` (or project-level `gradle.properties`):
 
 ```properties
-OMI_USER=your_github_username
-OMI_TOKEN=your_github_personal_access_token
+OMI_USER=omi_github_username
+OMI_TOKEN=omi_github_access_token
 ```
 
-> **Note:** The GitHub token needs `read:packages` scope. Generate one at [GitHub Settings > Tokens](https://github.com/settings/tokens).
+> **Note:** Contact the OMICall development team to get `OMI_USER` and `OMI_TOKEN` credentials.
 
 ### 4. New Architecture (Optional)
 
@@ -299,7 +299,7 @@ const loginResult = await initCallWithUserPassword({
   host: '',              // SIP proxy, defaults to vh.omicrm.com
   isVideo: false,
   fcmToken: 'your_fcm_token',
-  projectId: 'your_project_id', // optional
+  projectId: 'your_project_id', // firebase project id
 });
 
 // Step 3: Listen to call events
@@ -365,7 +365,7 @@ await initCallWithUserPassword({
   host?: string,            // SIP proxy server (optional)
   isVideo: boolean,         // Enable video capability
   fcmToken: string,         // Firebase token for push notifications
-  projectId?: string,       // OMICALL project ID (optional)
+  projectId: string,       // Firebase project ID 
   isSkipDevices?: boolean,  // true = Customer mode, false = Agent mode (default)
 });
 ```
@@ -415,6 +415,51 @@ await initCallWithApiKey({
   projectId?: string,  // OMICALL project ID (optional)
 });
 ```
+
+### Option 3: App-to-App API (v4.0+)
+
+Starting from **v4.0**, customers using the **App-to-App** service must call the OMICALL API to provision SIP extensions before initializing the SDK. The API returns SIP credentials that you pass to `initCallWithUserPassword()` with `isSkipDevices: true`.
+
+> For full API documentation (endpoints, request/response formats), see the [API Integration Guide](./docs/api-integration-guide.md).
+
+**Quick flow:**
+
+```
+Your Backend                    OMICALL API                 Mobile App (SDK)
+     │                              │                            │
+     │  1. POST .../init            │                            │
+     ├─────────────────────────────►│                            │
+     │  {domain, extension,         │                            │
+     │   password, proxy}           │                            │
+     │◄─────────────────────────────┤                            │
+     │                              │                            │
+     │  2. Return credentials       │                            │
+     ├──────────────────────────────────────────────────────────►│
+     │                              │   3. startServices()       │
+     │                              │   4. initCallWithUserPassword
+     │                              │      (isSkipDevices: true) │
+     │                              │                            │
+```
+
+```typescript
+// After getting credentials from your backend:
+await startServices();
+
+await initCallWithUserPassword({
+  userName: credentials.extension,     // from API response
+  password: credentials.password,      // from API response
+  realm: credentials.domain,           // from API response
+  host: credentials.outboundProxy,     // from API response
+  isVideo: false,
+  fcmToken: 'your-fcm-token',
+  isSkipDevices: true,                 // Required for App-to-App
+});
+```
+
+> **Important:**
+> - Call the OMICALL API from your **backend server** only — never expose the Bearer token in client-side code.
+> - You **must** call the [Logout API](./docs/api-integration-guide.md#5-logout) before switching users. Otherwise, both devices using the same SIP extension will receive incoming calls simultaneously.
+> - Use getter functions (`getProjectId()`, `getAppId()`, `getDeviceId()`, `getFcmToken()`, `getVoipToken()`) to retrieve device params for the [Add Device](./docs/api-integration-guide.md#4-add-device) and Logout APIs.
 
 ---
 
@@ -940,6 +985,8 @@ await removeVideoEvent();
 
 ## Push Notifications
 
+> **Setup Guide:** To configure VoIP (iOS) and FCM (Android) for receiving incoming calls, follow the detailed guide at [OMICall Mobile SDK Setup](https://omicrm.io/post/detail/mobile-sdk-post89?lng=vi&p=BrwVVWCLGM).
+
 ### Configuration
 
 ```typescript
@@ -1176,6 +1223,7 @@ if (initialCall) {
 
 Full documentation in [`./docs/`](./docs/):
 
+- [API Integration Guide (App-to-App)](./docs/api-integration-guide.md)
 - [Project Overview & PDR](./docs/project-overview-pdr.md)
 - [Codebase Summary](./docs/codebase-summary.md)
 - [System Architecture](./docs/system-architecture.md)
