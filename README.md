@@ -264,11 +264,11 @@ Then run `cd ios && pod install`.
    │      │      │                  │      │       │
    │      ▼      │                  │      ▼       │
    │  OMIKIT SDK │                  │  OmiKit SDK  │
-   │  (v2.6.4)  │                  │  (v1.10.34)  │
+   │  (v2.6.4)   │                  │  (v1.10.34)  │
    │      │      │                  │      │       │
    │      ▼      │                  │      ▼       │
    │  SIP Stack  │                  │  SIP Stack   │
-   │  (OMSIP)   │                  │  (OMSIP)     │
+   │  (OMSIP)    │                  │  (OMSIP)     │
    └─────────────┘                  └──────────────┘
 ```
 
@@ -470,8 +470,8 @@ await initCallWithApiKey({
       │◄────────────────────┤  (event emitted)    │
       │                     │                     │
       │  ┌──────────────┐   │                     │
-      │  │ Show Call UI  │   │                     │
-      │  │ [Accept][Deny]│   │                     │
+      │  │ Show Call UI │   │                     │
+      │  │[Accept][Deny]│   │                     │
       │  └──────────────┘   │                     │
       │                     │                     │
       │  joinCall()         │                     │
@@ -495,7 +495,7 @@ await initCallWithApiKey({
       │               │               │◄──────────────┤
       │               │               │               │
 
-  ┌───────────────── iOS (VoIP Push) ──────────────────┐
+  ┌───────────────── iOS (VoIP Push) ───────────────────┐
   │   │               │               │               │ │
   │   │               │  PushKit VoIP │               │ │
   │   │               │◄──────────────┤               │ │
@@ -511,9 +511,9 @@ await initCallWithApiKey({
   │   │◄──────────────┤               │               │ │
   │   │  incoming (2) │               │               │ │
   │   │◄──────────────┤               │               │ │
-  └───────────────────────────────────────────────────────┘
+  └─────────────────────────────────────────────────────┘
 
-  ┌───────────────── Android (FCM) ────────────────────┐
+  ┌───────────────── Android (FCM) ─────────────────────┐
   │   │               │               │               │ │
   │   │               │  FCM Message  │               │ │
   │   │               │◄──────────────┤               │ │
@@ -528,7 +528,7 @@ await initCallWithApiKey({
   │   │◄──────────────┤               │               │ │
   │   │  incoming (2) │               │               │ │
   │   │◄──────────────┤               │               │ │
-  └───────────────────────────────────────────────────────┘
+  └─────────────────────────────────────────────────────┘
 
       │               │               │               │
       │  joinCall()   │               │               │
@@ -558,8 +558,8 @@ await initCallWithApiKey({
       │  disconnected (6)   │  200 OK             │
       │◄────────────────────┤────────────────────►│
       │                     │                     │
-      │                     │  Show Missed Call    │
-      │                     │  Notification        │
+      │                     │  Show Missed Call   │
+      │                     │  Notification       │
       │                     │                     │
       │  (user taps notif)  │                     │
       │                     │                     │
@@ -601,14 +601,14 @@ await initCallWithApiKey({
       │  incoming (2)       │  SIP INVITE         │
       │◄────────────────────┤◄────────────────────┤
       │                     │                     │
-  ┌── rejectCall() ──┐                            │
+  ┌── rejectCall() ───┐                           │
   │ Decline this      │  486 Busy Here            │
-  │ device only       ├─────────────────────────►│
+  │ device only       ├─────────────────────────► │
   └───────────────────┘  (other devices ring)     │
       │                     │                     │
-  ┌── dropCall() ────┐                            │
+  ┌── dropCall() ─────┐                           │
   │ Decline + stop    │  603 Decline              │
-  │ ALL devices       ├─────────────────────────►│
+  │ ALL devices       ├─────────────────────────► │
   └───────────────────┘  (PBX stops all ringing)  │
       │                     │                     │
 ```
