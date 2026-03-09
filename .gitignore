@@ -82,7 +82,8 @@ example/android/gradle.properties
 OMICALL-React-Native-SDK
 /OMICALL-React-Native-SDK/
 
-/docs/
+/docs/dev
+/docs/plans
 
 /GoogleService-Info.plist
 /example/ios/GoogleService-Info.plist
