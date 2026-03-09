@@ -12,8 +12,9 @@ const OmiLocalCameraViewPaper: HostComponent<ViewProps> = requireNativeComponent
 // Export the Paper component
 export const OmiLocalCameraView: HostComponent<ViewProps> = OmiLocalCameraViewPaper;
 
-// Methods remain unchanged
-const FLLocalCamera = NativeModules.FLLocalCameraView;
+// Module name separated from ViewManager name to avoid name collision
+const FLLocalCamera = NativeModules.FLLocalCameraModule || NativeModules.FLLocalCameraView;
 export function refreshLocalCamera(): Promise<boolean> {
+  if (!FLLocalCamera) return Promise.resolve(false);
   return FLLocalCamera.refresh();
 }

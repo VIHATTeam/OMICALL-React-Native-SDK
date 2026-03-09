@@ -10,11 +10,24 @@ import {
   StyleSheet,
   TextInput,
   View,
+  Text,
+  ScrollView,
   Linking,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 
-import { initCallWithUserPassword, getCurrentUser, logout } from 'omikit-plugin';
+import {
+  initCallWithUserPassword,
+  getCurrentUser,
+  logout,
+  getProjectId,
+  getAppId,
+  getDeviceId,
+  getFcmToken,
+  getSipInfo,
+  getVoipToken,
+} from 'omikit-plugin';
 
 import LocalStorage from './local_storage';
 import { requestNotification, token } from './notification';
@@ -33,11 +46,11 @@ import { CustomLoading } from './components/custom_view/custom_loading';
 
 // Default credentials for testing
 const DEFAULT_CREDENTIALS = {
-  realm: '',
+  realm: 'luuphuongmytrinh9a2',
   userName: '100',
   password: 'iT2OjDYA0H',
-  host: '',
-  projectId: '',
+  host: 'vh.omicrm.com',
+  projectId: 'omicrm-6558a',
 };
 
 // Error messages mapping for user-friendly display
@@ -121,6 +134,7 @@ export const LoginScreen = () => {
 
   // UI state
   const [loading, setLoading] = useState(false);
+  const [sdkInfo, setSdkInfo] = useState<Record<string, string | null> | null>(null);
 
   // Input refs for focus management
   const userNameRef = useRef<TextInput>() as MutableRefObject<TextInput>;
@@ -166,6 +180,31 @@ export const LoginScreen = () => {
   // ============================================================================
 
   /**
+   * Fetch SDK info (test before/after login)
+   */
+  const fetchSdkInfo = async () => {
+    try {
+      console.log('[SDK_INFO] Fetching on login screen (before login)...');
+      const [projectId, appId, deviceId, fcmToken, sipInfo, voipToken] =
+        await Promise.all([
+          getProjectId(),
+          getAppId(),
+          getDeviceId(),
+          getFcmToken(),
+          getSipInfo(),
+          getVoipToken(),
+        ]);
+      const info = { projectId, appId, deviceId, fcmToken, sipInfo, voipToken };
+      console.log('[SDK_INFO] Result:', info);
+      setSdkInfo(info);
+    } catch (error) {
+      console.log('[SDK_INFO] Error:', error);
+      setSdkInfo(null);
+      Alert.alert('SDK Info Error', String(error));
+    }
+  };
+
+  /**
    * Handle user login with OmiKit
    */
   const handleLogin = async () => {
@@ -187,8 +226,9 @@ export const LoginScreen = () => {
 
     try {
       // Get FCM token for push notifications
+      console.log('[LOGIN] Step 1: Getting FCM token...');
       const fcmToken = await token;
-      console.log('FCM Token:', fcmToken);
+      console.log('[LOGIN] Step 1 done - FCM Token:', fcmToken);
 
       // Prepare login info
       const loginInfo: LoginInfo = {
@@ -200,26 +240,39 @@ export const LoginScreen = () => {
         fcmToken: fcmToken || '',
         projectId: DEFAULT_CREDENTIALS.projectId,
       };
+      
+      console.log('[LOGIN] Step 2: Login info prepared:', JSON.stringify({
+        ...loginInfo,
+        password: '***',
+        fcmToken: fcmToken ? `${fcmToken.substring(0, 10)}...` : 'empty',
+      }));
 
       // Logout any existing session first
-      await logout();
-      console.log('Previous session cleared');
+      // console.log('[LOGIN] Step 3: Logging out previous session...');
+      // const logoutResult = await logout();
+      // console.log('[LOGIN] Step 3 done - Logout result:', logoutResult);
 
       // Check current user state
+      console.log('[LOGIN] Step 4: Checking current user...');
       const currentUser = await getCurrentUser();
-      console.log('Current user before login:', currentUser);
+      console.log('[LOGIN] Step 4 done - Current user:', currentUser);
 
       // Attempt login
+      console.log('[LOGIN] Step 5: Calling initCallWithUserPassword...');
+      const startTime = Date.now();
       const result = await initCallWithUserPassword(loginInfo);
-      console.log('Login result:', result);
+      const elapsed = Date.now() - startTime;
+      console.log(`[LOGIN] Step 5 done - Result: ${result} (took ${elapsed}ms)`);
 
       if (result) {
         // Verify login was successful
+        console.log('[LOGIN] Step 6: Verifying user...');
         const verifiedUser = await getCurrentUser();
-        console.log('Verified user after login:', verifiedUser);
+        console.log('[LOGIN] Step 6 done - Verified user:', verifiedUser);
 
         // Save login info for auto-login
         LocalStorage.set('login_info', JSON.stringify(loginInfo));
+        console.log('[LOGIN] SUCCESS - Navigating to Home');
 
         // Navigate to home screen
         navigation.reset({
@@ -227,13 +280,17 @@ export const LoginScreen = () => {
           routes: [{ name: 'Home' }],
         });
       } else {
+        console.log('[LOGIN] FAILED - result is falsy:', result);
         showErrorAlert(
           'Login Failed',
           'Unable to initialize call service. Please check your credentials and try again.'
         );
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('[LOGIN] ERROR at some step:', error);
+      console.error('[LOGIN] Error name:', error?.name);
+      console.error('[LOGIN] Error message:', error?.message);
+      console.error('[LOGIN] Error code:', error?.code);
 
       // Parse and display user-friendly error message
       const errorMessage = parseErrorMessage(error);
@@ -276,7 +333,7 @@ export const LoginScreen = () => {
 
   return (
     <KeyboardAvoid>
-      <View style={styles.container}>
+      <ScrollView style={styles.container}>
         {/* Username Input */}
         <CustomTextField
           label="User name"
@@ -345,9 +402,28 @@ export const LoginScreen = () => {
           style={styles.button}
         />
 
+        {/* SDK Info Test Section */}
+        <TouchableOpacity style={styles.sdkInfoButton} onPress={fetchSdkInfo}>
+          <Text style={styles.sdkInfoButtonText}>GET SDK INFO (Before Login)</Text>
+        </TouchableOpacity>
+
+        {sdkInfo && (
+          <View style={styles.sdkInfoBox}>
+            <Text style={styles.sdkInfoTitle}>SDK Info</Text>
+            {Object.entries(sdkInfo).map(([key, value]) => (
+              <View key={key} style={styles.sdkInfoRow}>
+                <Text style={styles.sdkInfoLabel}>{key}:</Text>
+                <Text style={styles.sdkInfoValue} numberOfLines={1}>
+                  {value ?? 'null'}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Loading Indicator */}
         {loading && <CustomLoading />}
-      </View>
+      </ScrollView>
     </KeyboardAvoid>
   );
 };
@@ -360,6 +436,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+    paddingBottom: 60
   },
   inputSpacing: {
     marginTop: 16,
@@ -369,5 +446,50 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 24,
+  },
+  sdkInfoButton: {
+    marginTop: 16,
+    backgroundColor: '#6c757d',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+    marginBottom: 50,
+  },
+  sdkInfoButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600' as const,
+  },
+  sdkInfoBox: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    marginBottom: 50,
+  },
+  sdkInfoTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    marginBottom: 8,
+    color: '#333',
+  },
+  sdkInfoRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: 3,
+  },
+  sdkInfoLabel: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600' as const,
+  },
+  sdkInfoValue: {
+    fontSize: 12,
+    color: '#333',
+    flex: 1,
+    textAlign: 'right' as const,
+    marginLeft: 8,
   },
 });

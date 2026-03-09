@@ -12,7 +12,8 @@ RCT_EXTERN_METHOD(configPushNotification:(id)data
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 // Get initial call
-RCT_EXTERN_METHOD(getInitialCall:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(getInitialCall:(id)data
+                  resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 // Initialize call with user password
@@ -97,6 +98,25 @@ RCT_EXTERN_METHOD(getUserInfo:(id)data
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+// Getter functions
+RCT_EXTERN_METHOD(getProjectId:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(getSipInfo:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(getDeviceId:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(getFcmToken:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(getAppId:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(getVoipToken:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 // Get audio
 RCT_EXTERN_METHOD(getAudio:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
@@ -116,6 +136,60 @@ RCT_EXTERN_METHOD(transferCall:(id)data
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(rejectCall:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// Hold
+RCT_EXTERN_METHOD(onHold:(id)data
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// System notification (Android-only stubs)
+RCT_EXTERN_METHOD(hideSystemNotificationSafely:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(hideSystemNotificationOnly:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(hideSystemNotificationAndUnregister:(id)data
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// Permission management (Android-only stubs)
+RCT_EXTERN_METHOD(checkAndRequestPermissions:(id)data
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(checkPermissionStatus:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(requestPermissionsByCodes:(id)data
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// System alert window (Android-only stubs)
+RCT_EXTERN_METHOD(systemAlertWindow:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(requestSystemAlertWindowPermission:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(openSystemAlertSetting:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// Credentials & registration
+RCT_EXTERN_METHOD(checkCredentials:(id)data
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(registerWithOptions:(id)data
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// Keep alive (Android-only stubs)
+RCT_EXTERN_METHOD(getKeepAliveStatus:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(triggerKeepAlivePing:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 // Required to run on the main thread

@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, StyleSheet, View, DeviceEventEmitter } from 'react-native';
+import { Platform, StyleSheet, View, DeviceEventEmitter, Text, ScrollView, Alert } from 'react-native';
 import {
   check,
   request,
@@ -17,6 +17,13 @@ import {
   OmiStartCallStatus,
   omiEmitter,
   startCall,
+  getProjectId,
+  getAppId,
+  getDeviceId,
+  getFcmToken,
+  getSipInfo,
+  getVoipToken,
+  getUserInfo,
 } from 'omikit-plugin';
 
 import { LiveData } from './livedata';
@@ -40,6 +47,41 @@ export const HomeScreen = () => {
 
   const [phone, setPhone] = useState('101');
   const [isVideoCall, setIsVideoCall] = useState(false);
+  const [sdkInfo, setSdkInfo] = useState<Record<string, string | null>>({});
+
+  // Fetch all getter function results
+  const fetchSdkInfo = async () => {
+    try {
+      const [projectId, appId, deviceId, fcmToken, sipInfo, voipToken] = await Promise.all([
+        getProjectId(),
+        getAppId(),
+        getDeviceId(),
+        getFcmToken(),
+        getSipInfo(),
+        getVoipToken(),
+      ]);
+      const info = { projectId, appId, deviceId, fcmToken, sipInfo, voipToken };
+      console.log('SDK Info:', info);
+      setSdkInfo(info);
+    } catch (error) {
+      console.log('fetchSdkInfo error:', error);
+      Alert.alert('Error', String(error));
+    }
+  };
+
+  // Fetch user info by phone number
+  const fetchUserInfo = async () => {
+    const phoneNumber = phone.trim();
+    if (!phoneNumber) return;
+    try {
+      const result = await getUserInfo(phoneNumber);
+      console.log('getUserInfo result:', result);
+      Alert.alert('User Info', JSON.stringify(result, null, 2));
+    } catch (error) {
+      console.log('getUserInfo error:', error);
+      Alert.alert('Error', String(error));
+    }
+  };
 
   // Check for initial call when app opens from killed state
   const checkInitCall = useCallback(async () => {
@@ -200,7 +242,7 @@ export const HomeScreen = () => {
 
   return (
     <KeyboardAvoid>
-      <View style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <CustomTextField
           placeHolder="Phone number/Usr Uuid"
           value={phone}
@@ -219,25 +261,89 @@ export const HomeScreen = () => {
           callback={handleCall}
           style={styles.button}
         />
+
+        {/* Getter Functions Test Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Getter Functions</Text>
+          <CustomButton
+            title="GET SDK INFO"
+            callback={fetchSdkInfo}
+            style={styles.button}
+          />
+          <CustomButton
+            title="GET USER INFO"
+            callback={fetchUserInfo}
+            style={styles.button}
+          />
+
+          {Object.keys(sdkInfo).length > 0 && (
+            <View style={styles.infoBox}>
+              {Object.entries(sdkInfo).map(([key, value]) => (
+                <View key={key} style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>{key}:</Text>
+                  <Text style={styles.infoValue} selectable>
+                    {value ?? 'null'}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
         <CustomButton
           title="LOG OUT"
           callback={handleLogout}
           style={styles.button}
         />
-      </View>
+      </ScrollView>
     </KeyboardAvoid>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
     flex: 1,
+  },
+  content: {
+    padding: 24,
+    paddingBottom: 48,
   },
   checkbox: {
     marginTop: 24,
   },
   button: {
     marginTop: 24,
+  },
+  section: {
+    marginTop: 32,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+    paddingTop: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  infoBox: {
+    marginTop: 16,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  infoLabel: {
+    fontWeight: '600',
+    color: '#555',
+    width: 90,
+    fontSize: 12,
+  },
+  infoValue: {
+    flex: 1,
+    color: '#222',
+    fontSize: 12,
   },
 });

@@ -30,9 +30,15 @@ const OmikitPlugin: Spec = (() => {
   );
 })();
 
-// ✅ Setup omiEmitter cho iOS và Android
+// Setup omiEmitter for iOS and Android
+// In bridgeless mode, NativeModules is empty — use TurboModule instance instead
 const omiEmitter = Platform.OS === 'ios'
-  ? new NativeEventEmitter(NativeModules.OmikitPlugin || OmikitPlugin)
+  ? new NativeEventEmitter(
+      (NativeModules.OmikitPlugin ?? OmikitPlugin ?? {
+        addListener: () => {},
+        removeListeners: () => {},
+      }) as any
+    )
   : DeviceEventEmitter;
 
 /**
@@ -375,5 +381,64 @@ export function requestPermissionsByCodes(codes: number[]): Promise<boolean> {
     return Promise.resolve(true);
   }
   return OmikitPlugin.requestPermissionsByCodes({ codes });
+}
+
+// MARK: - Getter Functions
+
+/**
+ * Retrieves user info by phone number.
+ * @param {string} phone - The phone number to look up.
+ * @returns {Promise<any>} User info object or null.
+ */
+export function getUserInfo(phone: string): Promise<any> {
+  return OmikitPlugin.getUserInfo({ phone });
+}
+
+/**
+ * Retrieves the project ID from OmiClient.
+ * @returns {Promise<string | null>} The project ID or null.
+ */
+export function getProjectId(): Promise<string | null> {
+  return OmikitPlugin.getProjectId();
+}
+
+/**
+ * Retrieves SIP connection info (user@realm).
+ * @returns {Promise<string | null>} SIP info string or null.
+ */
+export function getSipInfo(): Promise<string | null> {
+  return OmikitPlugin.getSipInfo();
+}
+
+/**
+ * Retrieves the app ID from OmiClient.
+ * @returns {Promise<string | null>} The app ID or null.
+ */
+export function getAppId(): Promise<string | null> {
+  return OmikitPlugin.getAppId();
+}
+
+/**
+ * Retrieves the device ID from OmiClient.
+ * @returns {Promise<string | null>} The device ID or null.
+ */
+export function getDeviceId(): Promise<string | null> {
+  return OmikitPlugin.getDeviceId();
+}
+
+/**
+ * Retrieves the FCM token from OmiClient.
+ * @returns {Promise<string | null>} The FCM token or null.
+ */
+export function getFcmToken(): Promise<string | null> {
+  return OmikitPlugin.getFcmToken();
+}
+
+/**
+ * Retrieves the VoIP token (iOS only, Android returns null).
+ * @returns {Promise<string | null>} The VoIP token or null.
+ */
+export function getVoipToken(): Promise<string | null> {
+  return OmikitPlugin.getVoipToken();
 }
 

@@ -18,7 +18,7 @@ class FLLocalCameraModule(reactContext: ReactApplicationContext, localViewManage
   lateinit var localViewManager : FLLocalCameraView
 
   override fun getName(): String {
-    return "FLLocalCameraView"
+    return "FLLocalCameraModule"
   }
 
   init {

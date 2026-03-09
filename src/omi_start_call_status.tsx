@@ -26,4 +26,6 @@ export enum OmiStartCallStatus {
 
   // Other errors (9+)
   haveAnotherCall = 9,          // Already have another call in progress
+  accountTurnOffNumberInternal = 10, // Internal number has been deactivated
+  noNetwork = 11,               // No network connection available
 }

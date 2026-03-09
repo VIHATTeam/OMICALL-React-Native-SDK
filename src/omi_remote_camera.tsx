@@ -12,8 +12,9 @@ const OmiRemoteCameraViewPaper: HostComponent<ViewProps> = requireNativeComponen
 // Export the Paper component
 export const OmiRemoteCameraView: HostComponent<ViewProps> = OmiRemoteCameraViewPaper;
 
-// Methods remain unchanged
-const FLRemoteCamera = NativeModules.FLRemoteCameraView;
+// Module name separated from ViewManager name to avoid name collision
+const FLRemoteCamera = NativeModules.FLRemoteCameraModule || NativeModules.FLRemoteCameraView;
 export function refreshRemoteCamera(): Promise<boolean> {
+  if (!FLRemoteCamera) return Promise.resolve(false);
   return FLRemoteCamera.refresh();
 }

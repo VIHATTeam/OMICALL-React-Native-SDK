@@ -120,7 +120,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   private val mainScope = CoroutineScope(Dispatchers.Main)
   private var isIncoming: Boolean = false
   private var isAnswerCall: Boolean = false
-  private var permissionPromise: Promise? = null
+  @Volatile private var permissionPromise: Promise? = null
   
   // Call state management to prevent concurrent calls
   private var isCallInProgress: Boolean = false
@@ -245,7 +245,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       // Clear call progress state when remote party ends call
       markCallEnded()
       // Kiểm tra kiểu dữ liệu trước khi ép kiểu để tránh lỗi
-      val call = callInfo ?: mutableMapOf()
+      val call = callInfo
 
       val timeStartToAnswer = (call["time_start_to_answer"] as? Long) ?: 0L
       val timeEnd = (call["time_end"] as? Long) ?: 0L
@@ -275,7 +275,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val map: WritableMap = WritableNativeMap().apply {
           putString("callerNumber", "")
           putBoolean("isVideo", NotificationService.isVideo)
-          putBoolean("incoming", isIncoming ?: false)
+          putBoolean("incoming", isIncoming)
           putString("transactionId", "")
           putString("_id", "")
           putInt("status", CallState.connecting.value)
@@ -320,13 +320,21 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   override fun networkHealth(stat: Map<String, *>, quality: Int) {
     val map: WritableMap = WritableNativeMap()
     map.putInt("quality", quality)
+    // Pass full diagnostics from stat map
+    val statMap: WritableMap = WritableNativeMap()
+    (stat["mos"] as? Number)?.let { statMap.putDouble("mos", it.toDouble()) }
+    (stat["jitter"] as? Number)?.let { statMap.putDouble("jitter", it.toDouble()) }
+    (stat["latency"] as? Number)?.let { statMap.putDouble("latency", it.toDouble()) }
+    (stat["ppl"] as? Number)?.let { statMap.putDouble("packetLoss", it.toDouble()) }
+    (stat["lcn"] as? Number)?.let { statMap.putInt("lcn", it.toInt()) }
+    map.putMap("stat", statMap)
     sendEvent(CALL_QUALITY, map)
   }
 
   override fun onAudioChanged(audioInfo: Map<String, Any>) {
     val audio: WritableMap = WritableNativeMap()
-    audio.putString("name", audioInfo["name"] as String)
-    audio.putInt("type", audioInfo["type"] as Int)
+    audio.putString("name", audioInfo["name"] as? String ?: "")
+    audio.putInt("type", audioInfo["type"] as? Int ?: 0)
     val map: WritableMap = WritableNativeMap()
     val writeList = WritableNativeArray()
     writeList.pushMap(audio)
@@ -438,16 +446,14 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   override fun initialize() {
     super.initialize()
-    
-    
+
+    moduleInstance = this
     reactApplicationContext!!.addActivityEventListener(this)
     Handler(Looper.getMainLooper()).post {
-      OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(this)
-      
-      // ✅ Add listener cho AUTO-UNREGISTER status
-      OmiClient.getInstance(reactApplicationContext!!).addCallStateListener(autoUnregisterListener)
-      
-      OmiClient.getInstance(reactApplicationContext!!).setDebug(false)
+      val client = OmiClient.getInstance(reactApplicationContext!!)
+      client.addCallStateListener(this)
+      client.addCallStateListener(autoUnregisterListener)
+      client.setDebug(false)
     }
   }
 
@@ -524,23 +530,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   private fun prepareAudioSystem() {
     try {
-      // ✅ Check network connectivity first
       if (!isNetworkAvailable()) {
         return
       }
-      
+
       // Release any existing audio focus
       val audioManager = reactApplicationContext?.getSystemService(android.content.Context.AUDIO_SERVICE) as? android.media.AudioManager
       audioManager?.let {
-        // Reset audio mode
         it.mode = android.media.AudioManager.MODE_NORMAL
       }
-      
-      // Small delay để audio system ổn định
-      Thread.sleep(200)
-      
     } catch (e: Exception) {
-      Log.w("OmikitPlugin", "⚠️ Audio preparation warning: ${e.message}")
+      Log.w("OmikitPlugin", "Audio preparation warning: ${e.message}")
     }
   }
 
@@ -548,11 +548,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   private fun isNetworkAvailable(): Boolean {
     return try {
       val connectivityManager = reactApplicationContext?.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
-      val activeNetwork = connectivityManager?.activeNetworkInfo
-      val isConnected = activeNetwork?.isConnectedOrConnecting == true
-      isConnected
+        ?: return true
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+      } else {
+        @Suppress("DEPRECATION")
+        connectivityManager.activeNetworkInfo?.isConnectedOrConnecting == true
+      }
     } catch (e: Exception) {
-      Log.w("OmikitPlugin", "⚠️ Network check failed: ${e.message}")
+      Log.w("OmikitPlugin", "Network check failed: ${e.message}")
       true // Assume network is available if check fails
     }
   }
@@ -675,30 +681,34 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val userName = data.getString("userName")
       val password = data.getString("password")
       val realm = data.getString("realm")
-      val host = data.getString("host") ?: "vh.omicrm.com"
+      val host = data.getString("host").let { if (it.isNullOrEmpty()) "vh.omicrm.com" else it }
       val isVideo = data.getBoolean("isVideo")
       val firebaseToken = data.getString("fcmToken")
       val projectId = data.getString("projectId") ?: ""
+      val isSkipDevices = if (data.hasKey("isSkipDevices")) data.getBoolean("isSkipDevices") else false
 
       // Validate required parameters
       if (!ValidationHelper.validateRequired(mapOf(
           "userName" to userName,
-          "password" to password, 
+          "password" to password,
           "realm" to realm,
           "fcmToken" to firebaseToken
         ), promise)) return@launch
 
       withContext(Dispatchers.Default) {
         try {
-          // ✅ Cleanup trước khi register
+          // Cleanup before register using logout callback
           try {
-            OmiClient.getInstance(reactApplicationContext!!).logout()
-            delay(500) // Chờ cleanup hoàn tất
+            val logoutComplete = kotlinx.coroutines.CompletableDeferred<Unit>()
+            OmiClient.getInstance(reactApplicationContext!!).logout {
+              logoutComplete.complete(Unit)
+            }
+            // Wait for logout callback with timeout
+            kotlinx.coroutines.withTimeoutOrNull(3000) { logoutComplete.await() }
           } catch (e: Exception) {
-            Log.w("OmikitPlugin", "⚠️ Cleanup warning (expected): ${e.message}")
+            Log.w("OmikitPlugin", "Cleanup warning (expected): ${e.message}")
           }
-        
-          
+
           OmiClient.getInstance(reactApplicationContext!!).silentRegister(
             userName = userName ?: "",
             password = password ?: "",
@@ -706,18 +716,14 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             isVideo = isVideo ?: true,
             firebaseToken = firebaseToken ?: "",
             host = host,
-            projectId = projectId
+            projectId = projectId,
+            isSkipDevices = isSkipDevices
           ) { success, statusCode, message ->
-            if (success) {
-              // ✅ Resolve promise với kết quả từ callback
-              promise.resolve(success)
+            if (success || statusCode == 200) {
+              promise.resolve(true)
             } else {
-              if (statusCode == 200) {
-                promise.resolve(true)
-              } else {
-                val (errorCode, errorMessage) = OmiRegistrationStatus.getError(statusCode)
-                promise.reject(errorCode, "$errorMessage (Status: $statusCode)")
-              }
+              val (errorCode, errorMessage) = OmiRegistrationStatus.getError(statusCode)
+              promise.reject(errorCode, "$errorMessage (Status: $statusCode)")
             }
           }
           
@@ -763,14 +769,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             promise.resolve(false)
             return@withContext
           }
-          // ✅ Cleanup trước khi register với mutex
+          // Cleanup before register using logout callback
           try {
             omiClientMutex.withLock {
-              OmiClient.getInstance(reactApplicationContext!!).logout()
+              val logoutComplete = kotlinx.coroutines.CompletableDeferred<Unit>()
+              OmiClient.getInstance(reactApplicationContext!!).logout {
+                logoutComplete.complete(Unit)
+              }
+              kotlinx.coroutines.withTimeoutOrNull(3000) { logoutComplete.await() }
             }
-            delay(1000) // Chờ cleanup hoàn tất
           } catch (e: Exception) {
-            Log.w("OmikitPlugin", "⚠️ Cleanup warning (expected): ${e.message}")
+            Log.w("OmikitPlugin", "Cleanup warning (expected): ${e.message}")
           }
 
           omiClientMutex.withLock {
@@ -806,7 +815,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
               promise.resolve(false)
           } else {
               mainScope.launch {
-                  delay(1000) // Wait 2 seconds
+                  delay(1000) // Wait 1 second before retry
                   getInitialCall(counter - 1, promise) // Retry recursively
               }
           }
@@ -878,25 +887,34 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       )
     val map: WritableMap = WritableNativeMap()
     if (audio == PackageManager.PERMISSION_GRANTED) {
-      currentActivity?.runOnUiThread {
-        val phoneNumber = data.getString("phoneNumber") as String
-        val isVideo = data.getBoolean("isVideo") ?: false;
-        
+      val activity = currentActivity
+      if (activity == null) {
+        promise.reject("E_NO_ACTIVITY", "Current activity is null")
+        return
+      }
+      activity.runOnUiThread {
+        val phoneNumber = data.getString("phoneNumber")
+        if (phoneNumber.isNullOrEmpty()) {
+          promise.reject("E_INVALID_PHONE", "Phone number is required")
+          return@runOnUiThread
+        }
+        val isVideo = data.getBoolean("isVideo")
+
         val startCallResult =
           OmiClient.getInstance(reactApplicationContext!!).startCall(phoneNumber, isVideo)
-        var statusCalltemp = startCallResult.value as Int;
+        var statusCalltemp = startCallResult.value as Int
         if (startCallResult.value == 200 || startCallResult.value == 407) {
           statusCalltemp = 8
         }
         map.putInt("status", statusCalltemp)
         map.putString("_id", "")
-        map.putString("message", messageCall(startCallResult.value) as String)
+        map.putString("message", messageCall(startCallResult.value))
         promise.resolve(map)
       }
     } else {
       map.putInt("status", 4)
       map.putString("_id", "")
-      map.putString("message", messageCall(406) as String)
+      map.putString("message", messageCall(406))
       promise.resolve(map)
     }
   }
@@ -912,23 +930,23 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     if (audio == PackageManager.PERMISSION_GRANTED) {
       mainScope.launch {
         val uuid = data.getString("usrUuid") ?: ""
-        val isVideo = data.getBoolean("isVideo") ?: false;
-        
+        val isVideo = data.getBoolean("isVideo")
+
         val startCallResult =
           OmiClient.getInstance(reactApplicationContext!!).startCallWithUuid(uuid, isVideo)
-        var statusCalltemp = startCallResult.value as Int;
+        var statusCalltemp = startCallResult.value as Int
         if (startCallResult.value == 200 || startCallResult.value == 407) {
           statusCalltemp = 8
         }
         map.putInt("status", statusCalltemp)
         map.putString("_id", "")
-        map.putString("message", messageCall(startCallResult.value) as String)
+        map.putString("message", messageCall(startCallResult.value))
         promise.resolve(map)
       }
     } else {
       map.putInt("status", 4)
       map.putString("_id", "")
-      map.putString("message", messageCall(406) as String)
+      map.putString("message", messageCall(406))
       promise.resolve(map)
     }
   }
@@ -1046,7 +1064,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun toggleSpeaker(promise: Promise) {
-    currentActivity?.runOnUiThread {
+    val activity = currentActivity
+    if (activity == null) { promise.resolve(null); return }
+    activity.runOnUiThread {
       val newStatus = OmiClient.getInstance(reactApplicationContext!!).toggleSpeaker()
       promise.resolve(newStatus)
       sendEvent(SPEAKER, newStatus)
@@ -1055,7 +1075,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun sendDTMF(data: ReadableMap, promise: Promise) {
-    currentActivity?.runOnUiThread {
+    val activity = currentActivity
+    if (activity == null) { promise.resolve(false); return }
+    activity.runOnUiThread {
       val character = data.getString("character")
       var characterCode: Int? = character?.toIntOrNull()
       if (character == "*") {
@@ -1073,7 +1095,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun switchOmiCamera(promise: Promise) {
-    currentActivity?.runOnUiThread {
+    val activity = currentActivity
+    if (activity == null) { promise.resolve(false); return }
+    activity.runOnUiThread {
       OmiClient.getInstance(reactApplicationContext!!).switchCamera()
       promise.resolve(true)
     }
@@ -1081,7 +1105,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun toggleOmiVideo(promise: Promise) {
-    currentActivity?.runOnUiThread {
+    val activity = currentActivity
+    if (activity == null) { promise.resolve(false); return }
+    activity.runOnUiThread {
       OmiClient.getInstance(reactApplicationContext!!).toggleCamera()
       promise.resolve(true)
     }
@@ -1187,14 +1213,111 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
+  // MARK: - Getter Functions
+  @ReactMethod
+  fun getProjectId(promise: Promise) {
+    try {
+      val info = OmiClient.registrationInfo
+      if (info?.projectId != null) {
+        promise.resolve(info.projectId)
+        return
+      }
+      // Fallback: get from Firebase project ID
+      val firebaseProjectId = try {
+        com.google.firebase.FirebaseApp.getInstance().options.projectId
+      } catch (e: Exception) { null }
+      promise.resolve(firebaseProjectId)
+    } catch (e: Throwable) {
+      promise.resolve(null)
+    }
+  }
+
+  @ReactMethod
+  fun getAppId(promise: Promise) {
+    try {
+      val info = OmiClient.registrationInfo
+      if (info?.appId != null) {
+        promise.resolve(info.appId)
+        return
+      }
+      // Fallback: get package name of the host app
+      promise.resolve(reactApplicationContext?.packageName)
+    } catch (e: Throwable) {
+      promise.resolve(null)
+    }
+  }
+
+  @ReactMethod
+  fun getDeviceId(promise: Promise) {
+    try {
+      val info = OmiClient.registrationInfo
+      if (info?.deviceId != null) {
+        promise.resolve(info.deviceId)
+        return
+      }
+      // Fallback: get Android ID directly
+      val androidId = try {
+        Settings.Secure.getString(
+          reactApplicationContext?.contentResolver,
+          Settings.Secure.ANDROID_ID
+        )
+      } catch (e: Exception) { null }
+      promise.resolve(androidId)
+    } catch (e: Throwable) {
+      promise.resolve(null)
+    }
+  }
+
+  @ReactMethod
+  fun getFcmToken(promise: Promise) {
+    try {
+      val info = OmiClient.registrationInfo
+      if (info?.firebaseToken != null) {
+        promise.resolve(info.firebaseToken)
+        return
+      }
+      // Fallback: get FCM token directly from Firebase Messaging
+      try {
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+          .addOnSuccessListener { token -> promise.resolve(token) }
+          .addOnFailureListener { promise.resolve(null) }
+      } catch (e: Exception) {
+        promise.resolve(null)
+      }
+    } catch (e: Throwable) {
+      promise.resolve(null)
+    }
+  }
+
+  @ReactMethod
+  fun getSipInfo(promise: Promise) {
+    try {
+      val sipUser = OmiClient.getInstance(reactApplicationContext!!).getSipUser()
+      val sipRealm = OmiClient.getInstance(reactApplicationContext!!).getSipRealm()
+      if (!sipUser.isNullOrEmpty() && !sipRealm.isNullOrEmpty()) {
+        promise.resolve("$sipUser@$sipRealm")
+      } else {
+        promise.resolve(sipUser)
+      }
+    } catch (e: Throwable) {
+      promise.resolve(null)
+    }
+  }
+
+  @ReactMethod
+  fun getVoipToken(promise: Promise) {
+    // VoIP token is iOS only, Android returns null
+    promise.resolve(null)
+  }
+
   @ReactMethod
   fun getAudio(promise: Promise) {
     val inputs = OmiClient.getInstance(reactApplicationContext!!).getAudioOutputs()
     val writeList = WritableNativeArray()
     inputs.forEach {
       val map = WritableNativeMap()
-      map.putString("name", it["name"] as String)
-      map.putInt("type", it["type"] as Int)
+      map.putString("name", it["name"] as? String ?: "")
+      map.putInt("type", it["type"] as? Int ?: 0)
       writeList.pushMap(map)
     }
     promise.resolve(writeList)
@@ -1204,8 +1327,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun getCurrentAudio(promise: Promise) {
     val currentAudio = OmiClient.getInstance(reactApplicationContext!!).getCurrentAudio()
     val map: WritableMap = WritableNativeMap()
-    map.putString("name", currentAudio["name"] as String)
-    map.putInt("type", currentAudio["type"] as Int)
+    map.putString("name", currentAudio["name"] as? String ?: "")
+    map.putInt("type", currentAudio["type"] as? Int ?: 0)
     val writeList = WritableNativeArray()
     writeList.pushMap(map)
     promise.resolve(writeList)
@@ -1220,12 +1343,16 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun transferCall(data: ReadableMap, promise: Promise) {
-    currentActivity?.runOnUiThread {
+    val activity = currentActivity
+    if (activity == null) { promise.resolve(false); return }
+    activity.runOnUiThread {
       val phone = data.getString("phoneNumber")
-      if (reactApplicationContext != null) {
-        OmiClient.getInstance(reactApplicationContext!!).forwardCallTo(phone as String)
-        promise.resolve(true)
+      if (phone.isNullOrEmpty()) {
+        promise.reject("E_INVALID_PHONE", "Phone number is required for transfer")
+        return@runOnUiThread
       }
+      OmiClient.getInstance(reactApplicationContext!!).forwardCallTo(phone)
+      promise.resolve(true)
     }
   }
 
@@ -1233,6 +1360,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     const val NAME = "OmikitPlugin"
     const val REQUEST_PERMISSIONS_CODE = 1001
     const val REQUEST_OVERLAY_PERMISSION_CODE = 1002
+
+    // Singleton reference for companion methods to access module instance
+    @Volatile var moduleInstance: OmikitPluginModule? = null
 
     fun onDestroy() {
       try {
@@ -1272,28 +1402,28 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       act: ReactActivity
     ) {
       try {
-        val deniedPermissions = mutableListOf<String>()
         val grantedPermissions = mutableListOf<String>()
-        
+
         for (i in permissions.indices) {
           if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
             grantedPermissions.add(permissions[i])
-          } else {
-            deniedPermissions.add(permissions[i])
           }
         }
-        
-        
+
         // Check if we have essential permissions for VoIP
         val hasRecordAudio = grantedPermissions.contains(Manifest.permission.RECORD_AUDIO)
         val hasCallPhone = grantedPermissions.contains(Manifest.permission.CALL_PHONE)
         val hasModifyAudio = grantedPermissions.contains(Manifest.permission.MODIFY_AUDIO_SETTINGS)
-        
+
         val canProceed = hasRecordAudio && hasCallPhone && hasModifyAudio
-        
-        
+
+        // Resolve the stored permission promise
+        moduleInstance?.permissionPromise?.resolve(canProceed)
+        moduleInstance?.permissionPromise = null
       } catch (e: Exception) {
-        Log.e("OmikitPlugin", "❌ Error handling permission results: ${e.message}", e)
+        Log.e("OmikitPlugin", "Error handling permission results: ${e.message}", e)
+        moduleInstance?.permissionPromise?.resolve(false)
+        moduleInstance?.permissionPromise = null
       }
     }
 
@@ -1350,7 +1480,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         )
         if (isReopenCall) {
           val activeCall = Utils.getActiveCall(context)
-          OmikitPluginModule(context).onCallEstablished(
+          // Use singleton module instance instead of creating a throwaway one
+          moduleInstance?.onCallEstablished(
             activeCall?.id ?: 0,
             activeCall?.remoteNumber,
             activeCall?.isVideo,
@@ -1363,7 +1494,6 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           }
           OmiKitUtils().setStatusPendingCall(context, isAcceptedCall)
         }
-
       }
     }
   }
@@ -1616,7 +1746,16 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     )
   }
 
-  override fun onActivityResult(p0: Activity?, p1: Int, p2: Int, p3: Intent?) {
+  override fun onActivityResult(p0: Activity?, requestCode: Int, resultCode: Int, p3: Intent?) {
+    if (requestCode == REQUEST_OVERLAY_PERMISSION_CODE) {
+      val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        Settings.canDrawOverlays(reactApplicationContext)
+      } else {
+        true
+      }
+      permissionPromise?.resolve(granted)
+      permissionPromise = null
+    }
   }
 
   override fun onNewIntent(p0: Intent?) {
@@ -1641,16 +1780,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
-  // ✅ Thêm listener cho AUTO-UNREGISTER status
+  // Auto-unregister listener - only handles onAutoUnregisterStatus
+  // Other callbacks are NO-OP to prevent double-firing events (Fix #1)
   private val autoUnregisterListener = object : OmiListener {
     override fun onAutoUnregisterStatus(isScheduled: Boolean, timeUntilExecution: Long) {
-      // ✅ Auto-unregister prevention removed - no longer supported in new SDK
-      if (isScheduled && timeUntilExecution > 0 && timeUntilExecution < 3000) {
-        Log.w("OmikitPlugin", "🚨 AUTO-UNREGISTER sắp thực hiện trong ${timeUntilExecution}ms - SDK tự xử lý")
-        // preventAutoUnregisterCrash deprecated - SDK handles automatically
-      }
-      
-      // ✅ Gửi event cho React Native
       try {
         val statusData = mapOf(
           "isScheduled" to isScheduled,
@@ -1660,90 +1793,47 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         val map = createSafeWritableMap(statusData)
         sendEvent("AUTO_UNREGISTER_STATUS", map)
       } catch (e: Exception) {
-        Log.e("OmikitPlugin", "❌ Error sending AUTO_UNREGISTER_STATUS event: ${e.message}", e)
+        Log.e("OmikitPlugin", "Error sending AUTO_UNREGISTER_STATUS event: ${e.message}", e)
       }
     }
-    
-    // ✅ Implement các method khác của OmiListener (delegate to main listener)
-    override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {
-      this@OmikitPluginModule.incomingReceived(callerId, phoneNumber, isVideo)
-    }
-    
-    override fun onCallEstablished(callerId: Int, phoneNumber: String?, isVideo: Boolean?, startTime: Long, transactionId: String?) {
-      this@OmikitPluginModule.onCallEstablished(callerId, phoneNumber, isVideo, startTime, transactionId)
-    }
-    
-    override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {
-      this@OmikitPluginModule.onCallEnd(callInfo, statusCode)
-    }
-    
-    override fun onConnecting() {
-      this@OmikitPluginModule.onConnecting()
-    }
-    
-    override fun onDescriptionError() {
-      this@OmikitPluginModule.onDescriptionError()
-    }
-    
-    override fun onFcmReceived(uuid: String, userName: String, avatar: String) {
-      this@OmikitPluginModule.onFcmReceived(uuid, userName, avatar)
-    }
-    
-    override fun onRinging(callerId: Int, transactionId: String?) {
-      this@OmikitPluginModule.onRinging(callerId, transactionId)
-    }
-    
-    override fun networkHealth(stat: Map<String, *>, quality: Int) {
-      this@OmikitPluginModule.networkHealth(stat, quality)
-    }
-    
-    override fun onAudioChanged(audioInfo: Map<String, Any>) {
-      this@OmikitPluginModule.onAudioChanged(audioInfo)
-    }
-    
-    override fun onHold(isHold: Boolean) {
-      this@OmikitPluginModule.onHold(isHold)
-    }
-    
-    override fun onMuted(isMuted: Boolean) {
-      this@OmikitPluginModule.onMuted(isMuted)
-    }
-    
-    override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {
-      this@OmikitPluginModule.onOutgoingStarted(callerId, phoneNumber, isVideo)
-    }
-    
-    override fun onSwitchBoardAnswer(sip: String) {
-      this@OmikitPluginModule.onSwitchBoardAnswer(sip)
-    }
-    
-    override fun onRegisterCompleted(statusCode: Int) {
-      this@OmikitPluginModule.onRegisterCompleted(statusCode)
-    }
-    
-    override fun onRequestPermission(permissions: Array<String>) {
-      this@OmikitPluginModule.onRequestPermission(permissions)
-    }
-    
-    override fun onVideoSize(width: Int, height: Int) {
-      this@OmikitPluginModule.onVideoSize(width, height)
-    }
+
+    // NO-OP: main module listener handles these - avoid double-firing
+    override fun incomingReceived(callerId: Int?, phoneNumber: String?, isVideo: Boolean?) {}
+    override fun onCallEstablished(callerId: Int, phoneNumber: String?, isVideo: Boolean?, startTime: Long, transactionId: String?) {}
+    override fun onCallEnd(callInfo: MutableMap<String, Any?>, statusCode: Int) {}
+    override fun onConnecting() {}
+    override fun onDescriptionError() {}
+    override fun onFcmReceived(uuid: String, userName: String, avatar: String) {}
+    override fun onRinging(callerId: Int, transactionId: String?) {}
+    override fun networkHealth(stat: Map<String, *>, quality: Int) {}
+    override fun onAudioChanged(audioInfo: Map<String, Any>) {}
+    override fun onHold(isHold: Boolean) {}
+    override fun onMuted(isMuted: Boolean) {}
+    override fun onOutgoingStarted(callerId: Int, phoneNumber: String?, isVideo: Boolean?) {}
+    override fun onSwitchBoardAnswer(sip: String) {}
+    override fun onRegisterCompleted(statusCode: Int) {}
+    override fun onRequestPermission(permissions: Array<String>) {}
+    override fun onVideoSize(width: Int, height: Int) {}
   }
 
   // ✅ Helper function để hide notification một cách an toàn
   @ReactMethod
   fun hideSystemNotificationSafely(promise: Promise) {
     try {
-      // ✅ Delay 2 giây để đảm bảo registration hoàn tất
-      Handler(Looper.getMainLooper()).postDelayed({
+      val context = reactApplicationContext ?: run {
+        promise.resolve(false)
+        return
+      }
+      // Delay to ensure registration completes before hiding
+      mainScope.launch {
         try {
-          // ✅ Gọi function hide notification với error handling
-          OmiClient.getInstance(reactApplicationContext!!).hideSystemNotificationAndUnregister("Registration check completed")
+          delay(2000)
+          OmiClient.getInstance(context).hideSystemNotificationAndUnregister("Registration check completed")
           promise.resolve(true)
         } catch (e: Exception) {
           promise.resolve(false)
         }
-      }, 2000) // Delay 2 giây
+      }
     } catch (e: Exception) {
       promise.resolve(false)
     }
@@ -1778,7 +1868,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val userName = data.getString("userName")
       val password = data.getString("password")
       val realm = data.getString("realm")
-      val host = data.getString("host") ?: "vh.omicrm.com"
+      val host = data.getString("host").let { if (it.isNullOrEmpty()) "vh.omicrm.com" else it }
       val firebaseToken = data.getString("fcmToken")
       val projectId = data.getString("projectId") ?: ""
 
@@ -1825,7 +1915,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val userName = data.getString("userName")
       val password = data.getString("password")
       val realm = data.getString("realm")
-      val host = data.getString("host") ?: "vh.omicrm.com"
+      val host = data.getString("host").let { if (it.isNullOrEmpty()) "vh.omicrm.com" else it }
       val isVideo = data.getBoolean("isVideo")
       val firebaseToken = data.getString("fcmToken")
       val projectId = data.getString("projectId") ?: ""

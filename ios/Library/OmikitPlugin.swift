@@ -69,8 +69,8 @@ public class OmikitPlugin: RCTEventEmitter {
   }
   
   
-  @objc(getInitialCall:rejecter:)
-  func getInitialCall(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+  @objc(getInitialCall:resolver:rejecter:)
+  func getInitialCall(_ data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
     if let call = CallManager.shareInstance().getAvailableCall() {
       let data: [String: Any] = [
         "callerNumber": call.callerNumber,
@@ -249,13 +249,19 @@ public class OmikitPlugin: RCTEventEmitter {
     }
   }
   
-  @objc(getUserInfor:resolver:rejecter:)
-  func getUserInfor(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
-    guard let phone = data as? String else {
-      reject("INVALID_DATA", "Expected a phone number as a string.", nil)
+  @objc(getUserInfo:resolver:rejecter:)
+  func getUserInfo(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    // Support both {phone: "xxx"} object and direct string
+    let phone: String
+    if let dict = data as? [String: Any], let p = dict["phone"] as? String {
+      phone = p
+    } else if let p = data as? String {
+      phone = p
+    } else {
+      reject("INVALID_DATA", "Expected a dictionary with phone key or a phone number string.", nil)
       return
     }
-    
+
     CallManager.shareInstance().getUserInfo(phone: phone) { userInfo in
       if userInfo.isEmpty {
         reject("USER_NOT_FOUND", "User not found for phone number: \(phone)", nil)
@@ -264,7 +270,38 @@ public class OmikitPlugin: RCTEventEmitter {
       }
     }
   }
-  
+
+  // MARK: - Getter Functions
+  @objc(getProjectId:rejecter:)
+  func getProjectId(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getProjectId())
+  }
+
+  @objc(getSipInfo:rejecter:)
+  func getSipInfo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getSipInfo())
+  }
+
+  @objc(getDeviceId:rejecter:)
+  func getDeviceId(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getDeviceId())
+  }
+
+  @objc(getFcmToken:rejecter:)
+  func getFcmToken(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getFcmToken())
+  }
+
+  @objc(getAppId:rejecter:)
+  func getAppId(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getAppId())
+  }
+
+  @objc(getVoipToken:rejecter:)
+  func getVoipToken(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getVoipToken())
+  }
+
   // MARK: - Audio Methods
   @objc(getAudio:rejecter:)
   func getAudio(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
@@ -274,12 +311,21 @@ public class OmikitPlugin: RCTEventEmitter {
   
   @objc(setAudio:resolver:rejecter:)
   func setAudio(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-    guard let dataOmi = data as? [String: Any],
-          let portType = dataOmi["portType"] as? String else {
+    guard let dataOmi = data as? [String: Any] else {
       reject("INVALID_DATA", "Expected a dictionary with port type.", nil)
       return
     }
-    
+    // Support both number and string for portType
+    let portType: String
+    if let pt = dataOmi["portType"] as? String {
+      portType = pt
+    } else if let pt = dataOmi["portType"] as? NSNumber {
+      portType = pt.stringValue
+    } else {
+      reject("INVALID_DATA", "portType must be a number or string.", nil)
+      return
+    }
+
     CallManager.shareInstance().setAudioOutputs(portType: portType)
     resolve(true)
   }

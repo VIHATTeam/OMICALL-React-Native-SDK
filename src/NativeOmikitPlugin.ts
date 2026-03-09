@@ -11,6 +11,7 @@ export interface Spec extends TurboModule {
     isVideo: boolean;
     fcmToken: string;
     projectId?: string;
+    isSkipDevices?: boolean;
   }): Promise<boolean>;
 
   initCallWithApiKey(data: {
@@ -128,6 +129,18 @@ export interface Spec extends TurboModule {
 
   // Logout
   logout(): Promise<boolean>;
+
+  // Getter Functions (6 methods)
+  getProjectId(): Promise<string | null>;
+  getSipInfo(): Promise<string | null>;
+  getAppId(): Promise<string | null>;
+  getDeviceId(): Promise<string | null>;
+  getFcmToken(): Promise<string | null>;
+  getVoipToken(): Promise<string | null>;
+
+  // Event emitter methods (required for bridgeless mode)
+  addListener(eventName: string): void;
+  removeListeners(count: number): void;
 
   // Constants
   getConstants(): {

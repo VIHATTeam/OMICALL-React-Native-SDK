@@ -28,12 +28,11 @@ Pod::Spec.new do |s|
 
   # Dependencies
   s.dependency "React-Core"
-  s.dependency "OmiKit", "1.10.11"
+  s.dependency "OmiKit", "1.10.34"
 
   # Base build settings (for both Old and New Architecture)
   base_xcconfig = {
     "DEFINES_MODULE" => "YES",
-    "SWIFT_OPTIMIZATION_LEVEL" => "-Onone",
     # Note: arm64 simulator excluded due to OmiKit binary compatibility
     "EXCLUDED_ARCHS[sdk=iphonesimulator*]" => "arm64"
   }

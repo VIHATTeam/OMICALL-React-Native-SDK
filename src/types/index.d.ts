@@ -68,6 +68,23 @@ declare module 'omikit-plugin' {
     message?: string;
   }>;
 
+  // User & Info
+  export function getUserInfo(phone: string): Promise<any>;
+
+  // Getter Functions
+  /** Get the current project ID */
+  export function getProjectId(): Promise<string | null>;
+  /** Get the current app ID */
+  export function getAppId(): Promise<string | null>;
+  /** Get the current device ID */
+  export function getDeviceId(): Promise<string | null>;
+  /** Get the FCM token (Android) or push token */
+  export function getFcmToken(): Promise<string | null>;
+  /** Get SIP registration info (format: user@realm) */
+  export function getSipInfo(): Promise<string | null>;
+  /** Get VoIP token (iOS only, returns null on Android) */
+  export function getVoipToken(): Promise<string | null>;
+
   // ============================================
   // ENUMS
   // ============================================
@@ -114,6 +131,8 @@ declare module 'omikit-plugin' {
 
     // Other errors (9+)
     haveAnotherCall = 9,
+    accountTurnOffNumberInternal = 10,
+    noNetwork = 11,
   }
 
   /**
