@@ -2,16 +2,73 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.0.1 [09/03/2026]
 
-## 3.3.28 [09/02/2025]
-- Increase version 
+### New Features
+- Add getter functions: `getProjectId`, `getAppId`, `getDeviceId`, `getFcmToken`, `getSipInfo`, `getVoipToken` (iOS only)
+- New Architecture support: TurboModule codegen spec with runtime auto-detection
+- `getConstants()` method for exporting event constants to JavaScript
+- Add `isSkipDevices` parameter to `initCallWithUserPassword` — set `true` for Customer mode (hotline only), `false` for Agent mode (full outbound)
+- Full Quality & Diagnostics: `onCallQuality` event now returns `{ quality, stat: { mos, jitter, latency, packetLoss, lcn } }`
+- Add `noNetwork` (11) and `accountTurnOffNumberInternal` (10) to `OmiStartCallStatus` enum
 
+### Bug Fixes
+- Fix iOS `getUserInfo` selector mismatch (typo `getUserInfor`)
+- Fix NativeEventEmitter crash on iOS New Architecture
+- Fix Android name collision between FLLocalCameraModule and FLLocalCameraView
+- Fix null guard for `refreshLocalCamera` / `refreshRemoteCamera` on iOS
+- Fix Android `networkHealth` only passing `quality` int — now passes full stat map (mos, jitter, latency, packetLoss, lcn)
+- Fix iOS `updateNetworkHealth` only passing `quality` int — now passes full stat data (mos, jitter, latency, packetLoss)
+
+### Improvements
+- Runtime architecture detection - automatically uses TurboModule or NativeModule
+- Enhanced TypeScript definitions with proper return types
+- Codegen configuration in `package.json` for automatic native code generation
+- iOS TurboModule conformance and constants export
+- Android `getConstants()` for event name constants
+- Comprehensive README rewrite with API reference, call flow diagrams, end-call status codes, and Quality & Diagnostics documentation
+
+### Security
+- Remove `example/android/gradle.properties` from git tracking
+
+### Dependencies
+- Update OMIKIT android to version 2.6.4
+- Update OMIKIT iOS to version 1.10.34
+- React Native peer dependency >= 0.74.0
+
+## 4.0.0 [05/03/2026]
+
+### New Architecture Support
+- TurboModule codegen spec (`NativeOmikitPlugin.ts`) with runtime auto-detection
+- Fabric component support via interop layer (backward compatible)
+- Codegen configuration in `package.json` for automatic native code generation
+- iOS TurboModule conformance and `getConstants()` export
+- Android `getConstants()` for event name constants
+- Runtime architecture detection - automatically uses TurboModule or NativeModule
+
+### Bug Fixes
+- Fix iOS `getUserInfo` selector mismatch (typo `getUserInfor`)
+- Fix NativeEventEmitter crash on iOS New Architecture
+- Fix Android name collision between FLLocalCameraModule and FLLocalCameraView
+- Fix null guard for `refreshLocalCamera` / `refreshRemoteCamera` on iOS
+
+### Improvements
+- Enhanced TypeScript definitions with proper return types
+- React Native peer dependency >= 0.74.0
+
+### Security
+- Remove `example/android/gradle.properties` from git tracking
+
+## 3.3.29 [04/03/2026]
+- Update OMIKIT android to version 2.5.17
+- Update OMIKIT iOS to version 1.10.11
+- Add getter functions: `getProjectId`, `getAppId`, `getDeviceId`, `getFcmToken`, `getSipInfo`, `getVoipToken` (iOS only)
+- Support 16 Kb Policy of Google
 
 ## 3.3.27 [09/02/2025]
 - Update OMIKIT android to version 2.5.17
 - Update OMIKIT iOS to version 1.10.11
-- Support 16 Kb Policy off Google  
- 
+- Support 16 Kb Policy off Google
 
 ## 3.3.25 [17/10/2025]
 - Update OMIKIT android to version 2.4.25

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, NativeEventEmitter  } from 'react-native';
-import { omiEmitter, OmiCallEvent, testEventEmission, getKeepAliveStatus, triggerKeepAlivePing, deviceEmitter } from 'omikit-plugin';
+import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
+import { OmiCallEvent, getKeepAliveStatus, triggerKeepAlivePing } from 'omikit-plugin';
 
 export const TestEventsScreen = () => {
     const [eventLogs, setEventLogs] = useState<string[]>([]);
@@ -17,12 +17,12 @@ export const TestEventsScreen = () => {
         setIsListening(true);
 
         // Test listener
-        const testListener = deviceEmitter.addListener('test', (data) => {
+        const testListener = DeviceEventEmitter.addListener('test', (data) => {
             addLog(`🧪 Test event received: ${JSON.stringify(data)}`);
         });
 
         // Call state listener
-        const callStateListener = deviceEmitter.addListener(
+        const callStateListener = DeviceEventEmitter.addListener(
             OmiCallEvent.onCallStateChanged,
             (data) => {
                 addLog(`📞 Call state changed: ${JSON.stringify(data)}`);
@@ -30,11 +30,11 @@ export const TestEventsScreen = () => {
         );
 
         // Other event listeners
-        const mutedListener = deviceEmitter.addListener(OmiCallEvent.onMuted, (data) => {
+        const mutedListener = DeviceEventEmitter.addListener(OmiCallEvent.onMuted, (data) => {
             addLog(`🔇 Muted event: ${data}`);
         });
 
-        const audioListener = deviceEmitter.addListener(OmiCallEvent.onAudioChange, (data) => {
+        const audioListener = DeviceEventEmitter.addListener(OmiCallEvent.onAudioChange, (data) => {
             addLog(`🔊 Audio change: ${JSON.stringify(data)}`);
         });
 
@@ -49,16 +49,6 @@ export const TestEventsScreen = () => {
             setIsListening(false);
         };
     }, []);
-
-    const handleTestEvent = async () => {
-        try {
-            addLog('🚀 Triggering test event...');
-            const result = await testEventEmission();
-            addLog(`✅ Test event result: ${result}`);
-        } catch (error) {
-            addLog(`❌ Test event error: ${error}`);
-        }
-    };
 
     const clearLogs = () => {
         setEventLogs([]);
@@ -101,20 +91,16 @@ export const TestEventsScreen = () => {
             </View>
 
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={handleTestEvent}>
-                    <Text style={styles.buttonText}>Test Event</Text>
-                </TouchableOpacity>
-
                 <TouchableOpacity style={styles.button} onPress={checkKeepAliveStatus}>
                     <Text style={styles.buttonText}>Check Keep-Alive</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.button} onPress={handleManualPing}>
+                    <Text style={styles.buttonText}>Manual Ping</Text>
                 </TouchableOpacity>
             </View>
 
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={handleManualPing}>
-                    <Text style={styles.buttonText}>Manual Ping</Text>
-                </TouchableOpacity>
-
                 <TouchableOpacity style={styles.clearButton} onPress={clearLogs}>
                     <Text style={styles.buttonText}>Clear Logs</Text>
                 </TouchableOpacity>

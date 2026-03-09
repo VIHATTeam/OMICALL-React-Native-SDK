@@ -16,7 +16,7 @@ class FLRemoteCameraModule(reactContext: ReactApplicationContext, remoteViewMana
   var cameraView: TextureView
 
   override fun getName(): String {
-    return "FLRemoteCameraView"
+    return "FLRemoteCameraModule"
   }
 
   init {

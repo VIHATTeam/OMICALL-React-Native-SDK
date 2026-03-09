@@ -99,4 +99,10 @@
 #endif
 }
 
+// Enable Bridgeless mode for full New Architecture support
+- (BOOL)bridgelessEnabled
+{
+  return YES;
+}
+
 @end

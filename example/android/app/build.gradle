@@ -24,8 +24,8 @@ react {
     // debuggableVariants = ["liteDebug", "prodDebug"]
 
     /* Bundling */
-    //   A list containing the node command and its flags. Default is just 'node'.
-    // nodeExecutableAndArgs = ["node"]
+    // Configure node path for nvm users
+    nodeExecutableAndArgs = ["/Users/hsolutions/.nvm/versions/node/v20.19.4/bin/node"]
     //
     //   The command to run when bundling. By default is 'bundle'
     // bundleCommand = "ram-bundle"
@@ -113,11 +113,26 @@ android {
     }
 }
 
+// react-native-permissions v5.x configuration
+// Enable the permissions you need
+project.ext.reactNativePermissions = [
+    "RECORD_AUDIO",
+    "CAMERA",
+    "CALL_PHONE",
+    "READ_PHONE_STATE",
+    "POST_NOTIFICATIONS",
+    "READ_CONTACTS",
+]
+
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-messaging'
+
+    // omikit-plugin is manually included in settings.gradle
+    implementation project(':omikit-plugin')
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

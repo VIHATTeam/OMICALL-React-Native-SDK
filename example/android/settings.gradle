@@ -1,6 +1,18 @@
 pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
-extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+
+// Enable autolinking with custom npx path for nvm users
+extensions.configure(com.facebook.react.ReactSettingsExtension) {
+    it.autolinkLibrariesFromCommand(
+        ["/Users/hsolutions/.nvm/versions/node/v20.19.4/bin/npx", "@react-native-community/cli", "config"],
+        file("../")  // workingDirectory = example folder
+    )
+}
+
 rootProject.name = 'OmikitPluginExample'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+
+// Manually include omikit-plugin (configured via react-native.config.js)
+include ':omikit-plugin'
+project(':omikit-plugin').projectDir = new File(rootProject.projectDir, '../../android')

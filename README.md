@@ -1,1461 +1,1187 @@
-# 📦 OMICALL SDK FOR React-Native
+# OMICALL SDK for React Native
 
-The OmiKit exposes the 📦 <a href="https://www.npmjs.com/package/omikit-plugin">omikit-plugin</a>.
+The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SIP calling via the OMICALL platform with support for both Old and **New Architecture** (TurboModules + Fabric).
 
-The most important part of the framework is :
+**Status:** Active maintenance | **Version:** 4.0.1
 
-- ✅ Help to easy integrate with Omicall.
-- ✅ Easy custom Call UI/UX.
-- ✅ Optimize codec voip for you.
-- ✅ Full inteface to interactive with core function like sound/ringtone/codec.
+---
 
-### 📝 Status
+## Table of Contents
 
-Currently active maintenance and improve performance 
-<br>
+- [Compatibility](#compatibility)
+- [Installation](#installation)
+- [Android Setup](#android-setup)
+- [iOS Setup](#ios-setup)
+- [Architecture Overview](#architecture-overview)
+- [Quick Start](#quick-start)
+- [Authentication](#authentication)
+- [Call Flows (ASCII Diagrams)](#call-flows)
+- [API Reference](#api-reference)
+- [Events](#events)
+- [Enums](#enums)
+- [Video Calls](#video-calls)
+- [Push Notifications](#push-notifications)
+- [Permissions (Android)](#permissions-android)
+- [Quality & Diagnostics](#quality--diagnostics)
+- [Advanced Features](#advanced-features)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
 
-## 🛠️ Configuration
+---
 
-### 🛠️ Install 
-<br>
+## Compatibility
 
-✅ Install via npm:
+| omikit-plugin | React Native | Architecture | Installation |
+|---------------|--------------|--------------|--------------|
+| **4.0.x** (latest) | 0.74+ | Old + New (auto-detect) | `npm install omikit-plugin@latest` |
+| 3.3.x | 0.60 – 0.73 | Old Architecture only | `npm install omikit-plugin@3.3.29` |
 
-```ruby
-npm install omikit-plugin@latest
+**v4.0.x highlights:**
+- **TurboModules (JSI)** — 4-10x faster native method calls via direct C++ bridge
+- **100% backward compatible** — auto-detects architecture at runtime
+- **Zero breaking changes** from v3.x for RN 0.74+
+- **Bridgeless mode** support for full New Architecture (iOS & Android)
+
+### Native SDK Versions
+
+| Platform | SDK | Version |
+|----------|-----|---------|
+| Android | OMIKIT | 2.6.4 |
+| iOS | OmiKit | 1.10.34 |
+
+---
+
+## Installation
+
+```bash
+npm install omikit-plugin
+# or
+yarn add omikit-plugin
 ```
 
-✅ Install via yarn:
-```ruby
-yarn add omikit-plugin --latest
+### iOS
+
+```bash
+cd ios && pod install
 ```
 
-#### 🛠️ Step 1: Config native file 
+### Android
 
-##### 🚀 Android:
-📌 **Config gradle file**
-- Add these settings in `build.gradle`:
+No extra steps — permissions are declared in the module's `AndroidManifest.xml`.
 
-```gradle 
-jcenter() // This func will replace soon 
-maven {
-  url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-  credentials {
-      username = project.findProperty("OMI_USER") ?: "" // Please connect with developer OMI for get information 
-      password = project.findProperty("OMI_TOKEN") ?: ""
-  }
-  authentication {
-      basic(BasicAuthentication)
-  }
-}
+---
 
+## Android Setup
+
+### 1. Permissions
+
+Add to `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<!-- Required for all calls -->
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+<uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+<!-- Only required for video calls -->
+<uses-permission android:name="android.permission.CAMERA" />
 ```
 
+> **Note:** If your app does **NOT** use video calls, add the following to your app's `AndroidManifest.xml` to remove the camera foreground service permission declared by the SDK:
+>
+> ```xml
+> <!-- Remove camera foreground service if NOT using video call -->
+> <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"
+>     tools:node="remove" />
+> ```
+>
+> Make sure to add the `tools` namespace to your manifest tag: `xmlns:tools="http://schemas.android.com/tools"`
 
-```kotlin
-// gradle.properties
-OMI_USER=omicall
-OMI_TOKEN=${OMI_TOKEN} // connect with dev off OMI for get token 
-```
+### 2. Firebase Cloud Messaging (FCM)
 
-```kotlin
-// in dependencies
-classpath 'com.google.gms:google-services:4.3.13'
-// You can choose the version of google-services to suit your project
-```
+Add your `google-services.json` to `android/app/`.
 
-```kotlin
-// under buildscript
-allprojects {
-      repositories {
-        maven {
-            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-            url("$rootDir/../node_modules/react-native/android")
-        }
-        maven {
-            // Android JSC is installed from npm
-            url("$rootDir/../node_modules/jsc-android/dist")
-        }
-        mavenCentral {
-            // We don't want to fetch react-native from Maven Central as there are
-            // older versions over there.
-            content {
-                excludeGroup "com.facebook.react"
-            }
-        }
-        google()
-        maven { url 'https://www.jitpack.io' }
-       maven {
-          url "https://maven.pkg.github.com/omicall/OMICall-SDK"
-          credentials {
-              username = project.findProperty("OMI_USER") ?: ""
-              password = project.findProperty("OMI_TOKEN") ?: ""
-          }
-          authentication {
-              basic(BasicAuthentication)
-          }
-        }
-      }
-}
-```
+In `android/app/build.gradle`:
 
-You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/build.gradle">android/build.gradle</a> to know more informations.
-
-- Add these settings in `app/build.gradle`:
-
-```kotlin
-apply plugin: 'com.android.application'
+```groovy
 apply plugin: 'com.google.gms.google-services'
 ```
 
-You can refer <a href="https://github.com/VIHATTeam/OMICALL-React-Native-SDK/blob/main/example/android/app/build.gradle">android/app/build.gradle</a> to know more informations.
+### 3. Maven Repository
 
-<br>
+**Option A — `settings.gradle.kts` (recommended for new projects)**
 
-📌 **Config AndroidManifest.xml file**
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://repo.omicall.com/maven") }
+        maven {
+            url = uri("https://maven.pkg.github.com/omicall/OMICall-SDK")
+            credentials {
+                username = providers.gradleProperty("OMI_USER").getOrElse("")
+                password = providers.gradleProperty("OMI_TOKEN").getOrElse("")
+            }
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+        }
+    }
+}
+```
 
+**Option B — `build.gradle` (Groovy / legacy projects)**
 
+```groovy
+// android/build.gradle (project level)
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://repo.omicall.com/maven' }
+        maven {
+            url "https://maven.pkg.github.com/omicall/OMICall-SDK"
+            credentials {
+                username = project.findProperty("OMI_USER") ?: ""
+                password = project.findProperty("OMI_TOKEN") ?: ""
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+}
+```
+
+Then add your credentials to `~/.gradle/gradle.properties` (or project-level `gradle.properties`):
+
+```properties
+OMI_USER=your_github_username
+OMI_TOKEN=your_github_personal_access_token
+```
+
+> **Note:** The GitHub token needs `read:packages` scope. Generate one at [GitHub Settings > Tokens](https://github.com/settings/tokens).
+
+### 4. New Architecture (Optional)
+
+To enable New Architecture on Android, in `android/gradle.properties`:
+
+```properties
+newArchEnabled=true
+```
+
+---
+
+## iOS Setup
+
+### 1. Info.plist
+
+Add to your `Info.plist`:
 
 ```xml
-<manifest
-      xmlns:tools="http://schemas.android.com/tools">
-       // ... your config
-      <uses-feature android:name="android.hardware.telephony" android:required="false" />
-      <uses-permission android:name="android.permission.INTERNET" />
-      <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-      <uses-permission android:name="android.permission.WAKE_LOCK" />
-      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-      
-      <!-- 🔥 Android 15+ (SDK 35+) Required Permissions -->
-      <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-      <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-      <uses-permission android:name="android.permission.CALL_PHONE"/>
-      <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
-      <uses-permission android:name="android.permission.USE_SIP"/>
-      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
-      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
-      <uses-permission android:name="android.permission.CAMERA"/> <!-- For video calls -->
-      
-      // ... your config
-
-         <application
-                android:name=".MainApplication"
-                android:alwaysRetainTaskState="true"
-                android:largeHeap="true"
-                android:exported="true"
-                android:supportsRtl="true"
-                android:allowBackup="false"
-                android:enableOnBackInvokedCallback="true"
-                // ... your config
-        >
-                <activity
-                            android:name=".MainActivity"
-                            android:windowSoftInputMode="adjustResize"
-                            android:showOnLockScreen="true"
-                            android:launchMode="singleTask"
-                            android:largeHeap="true"
-                            android:alwaysRetainTaskState="true"
-                            android:supportsPictureInPicture="false"
-                            android:showWhenLocked="true"
-                            android:turnScreenOn="true"
-                            android:exported="true"
-                            // ... your config
-                            >
-                           // ... your config
-                          <intent-filter>
-                              <action android:name="android.intent.action.MAIN" />
-                              <category android:name="android.intent.category.LAUNCHER" />
-                          </intent-filter>
-                            <intent-filter>
-                          <action android:name="android.intent.action.CALL" />
-                              <category android:name="android.intent.category.DEFAULT" />
-                              <data
-                                  android:host="incoming_call"
-                                  android:scheme="omisdk" />
-                          </intent-filter>
-                         // ... your config
-                     </activity>
-                  // ... your config
-                <receiver
-                    android:name="vn.vihat.omicall.omisdk.receiver.FirebaseMessageReceiver"
-                    android:exported="true"
-                    android:enabled="true"
-                    tools:replace="android:exported"
-                    android:permission="com.google.android.c2dm.permission.SEND">
-                    <intent-filter>
-                        <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                    </intent-filter>
-                </receiver>
-                <service
-                  android:name="vn.vihat.omicall.omisdk.service.NotificationService"
-                  android:enabled="true"
-                  android:exported="false">
-                </service>
-                   // ... your config
-           </application>
-</manifest>
+<key>NSMicrophoneUsageDescription</key>
+<string>Required for VoIP calls</string>
+<key>NSCameraUsageDescription</key>
+<string>Required for video calls</string>
 ```
 
-<br>
+### 2. Background Modes
 
-📌 **Config MainActivity file**
-### ✅ For React Native < 0.74
+In Xcode, enable the following Background Modes:
 
-```java
-public class MainActivity extends ReactActivity {
-  // your config ... 
+- [x] Voice over IP
+- [x] Remote notifications
+- [x] Background fetch
 
+### 3. Push Notifications
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    reactApplicationContext = new ReactApplicationContext(this);
-  }
+Enable **Push Notifications** capability in Xcode for VoIP push (PushKit).
 
-  @Override
-  public void onNewIntent(Intent intent) {
-    super.onNewIntent(intent);
-    if (intent != null) {
-      OmikitPluginModule.Companion.onGetIntentFromNotification(reactApplicationContext, intent, this);
-    }
-  }
+### 4. AppDelegate Setup
 
-  @Override
-  protected void onResume() {
-    super.onResume();
-    OmikitPluginModule.Companion.onResume(this);
-    Intent intent = getIntent();
-    if (intent != null) {
-      OmikitPluginModule.Companion.onGetIntentFromNotification(reactApplicationContext, intent, this);
-    }
-    // your config ... 
-  }
-}
-```
-
-### ✅ For React Native > 0.74
-
-```kotlin
-class MainActivity : ReactActivity() {
-    // your config ....
-    private var reactApplicationContext: ReactApplicationContext? = null
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        intent?.let { intentData ->
-            try {
-                OmikitPluginModule.Companion.handlePickupIntentEarly(this, intentData)
-            } catch (e: Exception) {
-                Log.e("MainActivity", "⚠️ PICKUP-FIX: Error handling early intent: ${e.message}")
-            }
-        }
-
-        val reactInstanceManager: ReactInstanceManager = reactNativeHost.reactInstanceManager
-        val currentContext = reactInstanceManager.currentReactContext
-        if (currentContext != null && currentContext is ReactApplicationContext) {
-            reactApplicationContext = currentContext
-            Log.d("MainActivity", "ReactApplicationContext is available.")
-        } else {
-            Log.d("MainActivity", "ReactApplicationContext Not ready yet, will listen to the event.")
-        }
-
-        reactInstanceManager.addReactInstanceEventListener(object : ReactInstanceManager.ReactInstanceEventListener {
-            override fun onReactContextInitialized(reactContext: com.facebook.react.bridge.ReactContext) {
-                if (reactContext is ReactApplicationContext) {
-                    reactApplicationContext = reactContext
-                    Log.d("MainActivity", "ReactApplicationContext đã được khởi tạo.")
-                }
-            }
-        })
-    }
-
-    override fun onNewIntent(intent: Intent?) {
-       super.onNewIntent(intent)
-        intent?.let { newIntent ->
-            Log.d("MainActivity", "🚀 PICKUP-FIX: New intent received (warm start)")
-            // IMPORTANT: Update the activity's intent to the new one
-            setIntent(newIntent)
-            try {
-                // Try to handle immediately if React context is ready
-                reactApplicationContext?.let {
-                    OmikitPluginModule.Companion.onGetIntentFromNotification(it, newIntent, this)
-                } ?: run {
-                    OmikitPluginModule.Companion.handlePickupIntentEarly(this, newIntent)
-                }
-            } catch (e: Exception) {
-                Log.e("MainActivity", "❌ PICKUP-FIX: Error in onNewIntent: ${e.message}")
-            }
-        } ?: Log.e("MainActivity", "Intent in onNewIntent is null.")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        reactApplicationContext?.let { context ->
-            OmikitPluginModule.Companion.onResume(this)
-            // Handle intent if exists (already updated by onNewIntent or from onCreate)
-            intent?.let { intentData ->
-                OmikitPluginModule.Companion.onGetIntentFromNotification(context, intentData, this)
-            }
-        } ?: Log.e("MainActivity", "ReactApplicationContext has not been initialized in onResume.")
-    }
-
-     // your config ....
-}
-```
-
-```kotlin
-import com.google.firebase.FirebaseApp;
-
-// This is important because we push incoming calls via Firebase.
-class MainApplication : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        if (FirebaseApp.getApps(this).isEmpty()) {
-            FirebaseApp.initializeApp(this)
-        }
-    }
-}
-
-```
-
-- ✨ Setup remote push notification: Only support Firebase for remote push notification.
-
-  - ✅ Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
-  - ✅ Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> to setup notification for React native)
-
-  - ✅ For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/android-sdk/cau-hinh-push-notification">Config Push for Android</a>
-
-<br>
-
-*Now let's continue configuring iOS, let's go 🚀*
-
-##### 🚀 Config for IOS
-
-##### 📌 iOS(Object-C):
-
-- ✅ Assets: Add `call_image` into assets folder to update callkit image. We only support png style. *(This will help show your application icon on iOS CallKit when a call comes in)*
-
-- ✅ Add variables in **Appdelegate.h** for **Old Architecture**:
+In your `AppDelegate.mm` (or `.m`):
 
 ```objc
-#import <UIKit/UIKit.h>
-#import <UserNotifications/UserNotifications.h>
-// #import <OmiKit/OmiKit-umbrella.h>
-#import <OmiKit/OmiKit.h>
+#import <OmiKit/OmiKit-umbrella.h>
 #import <OmiKit/Constants.h>
-
-@interface AppDelegate : UIResponder <UIApplicationDelegate, RCTBridgeDelegate, UNUserNotificationCenterDelegate>
-
-@property (nonatomic, strong) UIWindow *window;
-@property (nonatomic, strong) PushKitManager *pushkitManager;
-@property (nonatomic, strong) CallKitProviderDelegate * provider;
-@property (nonatomic, strong) PKPushRegistry * voipRegistry;
-
-@end
 ```
 
-- ✅ Add variables in **Appdelegate.h** for **New Architecture**:
+### 5. New Architecture (Optional)
 
-```objc
-#import <UIKit/UIKit.h>
-#import <UserNotifications/UserNotifications.h>
-// #import <OmiKit/OmiKit-umbrella.h>
-#import <OmiKit/OmiKit.h>
-#import <OmiKit/Constants.h>
+In your `Podfile`:
 
-@interface AppDelegate :  NSObject <UIApplicationDelegate, UNUserNotificationCenterDelegate, RCTBridgeDelegate>
-
-@property (nonatomic, strong) UIWindow *window;
-@property (nonatomic, strong) PushKitManager *pushkitManager;
-@property (nonatomic, strong) CallKitProviderDelegate * provider;
-@property (nonatomic, strong) PKPushRegistry * voipRegistry;
-
-@end
-
+```ruby
+ENV['RN_NEW_ARCH_ENABLED'] = '1'
 ```
 
-- ✅ Update AppDelegate.m:
+For **full bridgeless mode**, in `AppDelegate.mm`:
 
 ```objc
-#import <OmiKit/OmiKit.h>
-
-
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+- (BOOL)bridgelessEnabled
 {
-
-  //  ----- Start OmiKit Config ------
-  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:2 callKitImage:@"call_image" typePushVoip:TYPE_PUSH_CALLKIT_DEFAULT];
-  _provider = [[CallKitProviderDelegate alloc] initWithCallManager: [OMISIPLib sharedInstance].callManager];
-  _voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
-  _pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:_voipRegistry];
-  if (@available(iOS 10.0, *)) {
-        [UNUserNotificationCenter currentNotificationCenter].delegate = (id<UNUserNotificationCenterDelegate>) self;
-  }
-  //  ----- End OmiKit Config ------
-
   return YES;
-
-}
-
-
-//Called when a notification is delivered to a foreground app.
--(void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
-{
-  NSLog(@"User Info : %@",notification.request.content.userInfo);
-  completionHandler(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge);
-}
-
-// This function is used to send an event back into the app when the user presses on a missed call notification
-- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)())completionHandler {
-    NSDictionary *userInfo  = response.notification.request.content.userInfo;
-    if (userInfo && [userInfo valueForKey:@"omisdkCallerNumber"]) {
-      NSLog(@"User Info : %@",userInfo);
-        [OmikitNotification didRecieve:userInfo];
-    }
-    completionHandler();
-}
-
-// This function will terminate all ongoing calls when the user kills the app
-- (void)applicationWillTerminate:(UIApplication *)application {
-    @try {
-        [OmiClient OMICloseCall];
-    }
-    @catch (NSException *exception) {
-
-    }
 }
 ```
 
-- 📝 Tips: Error Use of undeclared identifier 'OmikitNotification' at file `AppDelegate.m`, please import this line below
+Then run `cd ios && pod install`.
 
-```objc
-#if __has_include("OmikitNotification.h")
-#import "OmikitNotification.h"
-#elif __has_include(<OmikitPlugin/OmikitPlugin-Swift.h>)
-#import <OmikitPlugin/OmikitPlugin-Swift.h>
-#else
-#import <omikit_plugin/OmikitNotification.h>
-#endif
+---
+
+## Architecture Overview
 
 ```
-- Add these lines into `Info.plist`:
-
-```xml
-<key>NSMicrophoneUsageDescription</key>
-<string>Need microphone access for make Call</string>
-//If you implement video call
-<key>NSCameraUsageDescription</key>
-<string>Need camera access for video call functions</string>
+┌─────────────────────────────────────────────────────────────┐
+│                     React Native App                        │
+│                                                             │
+│   import { startCall, omiEmitter } from 'omikit-plugin'     │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+              ┌────────────▼────────────┐
+              │   Architecture Bridge   │
+              │                         │
+              │  TurboModule? ──► JSI   │  (New Arch: direct C++ calls)
+              │       │                 │
+              │       └──► NativeModule │  (Old Arch: JSON bridge)
+              └────────────┬────────────┘
+                           │
+          ┌────────────────┼────────────────┐
+          │                                 │
+   ┌──────▼──────┐                  ┌───────▼──────┐
+   │   Android   │                  │     iOS      │
+   │             │                  │              │
+   │ OmikitPlugin│                  │ OmikitPlugin │
+   │  Module.kt  │                  │   .swift     │
+   │      │      │                  │      │       │
+   │      ▼      │                  │      ▼       │
+   │  OMIKIT SDK │                  │  OmiKit SDK  │
+   │  (v2.6.4)   │                  │  (v1.10.34)  │
+   │      │      │                  │      │       │
+   │      ▼      │                  │      ▼       │
+   │  SIP Stack  │                  │  SIP Stack   │
+   │  (OMSIP)    │                  │  (OMSIP)     │
+   └─────────────┘                  └──────────────┘
 ```
 
-- 💡 Save token for `OmiClient`: if You added `Cloud Messaging` in your project so you don't need add these lines.
-
-```swift
-- (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)devToken
-{
-      // parse token bytes to string
-     // const char *data = [devToken bytes];
-     const unsigned char *data = (const unsigned char *)[devToken bytes];
-    NSMutableString *token = [NSMutableString string];
-    for (NSUInteger i = 0; i < [devToken length]; i++)
-    {
-        [token appendFormat:@"%02.2hhX", data[i]];
-    }
-
-    // print the token in the console.
-    NSLog(@"Push Notification Token: %@", [token copy]);
-    [OmiClient setUserPushNotificationToken:[token copy]];
-}
-
-```
-
-**✨ Only use under lines when added `Cloud Messaging` plugin in your project**
-
-- ✅ Setup push notification: We only support Firebase for push notification.
-- ✅ Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
-- ✅ Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
-- ✅ For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/ios-sdk/cau-hinh-push-notification">Config Push for iOS</a>
-
-**✨Important release note**
-
-```
-We support 2 environments. So you need set correct key in Appdelegate.
-- KEY_OMI_APP_ENVIROMENT_SANDBOX support on debug mode
-- KEY_OMI_APP_ENVIROMENT_PRODUCTION support on release mode
-- Visit on web admin to select correct enviroment.
-```
-
-*📝Note: At Tab Build Setting off Target Project, you need set: **_Enable Modules (C and Objective C)_** : YES*
-
-#### ❌ Currently, OMICALL does not support React Native new architect.
-
-📌 Config turn Off for new architect
-
-<br>
-
-✅ For iOS
-```Ruby
-use_react_native!(
-    :path => config[:reactNativePath],
-    :new_arch_enabled => false,  // <=== add this line 
-   ... your config
-  )
-```
-
-✅ For Android
-
-- Open file **_android/gradle.properties_** and add line below:
-```kotlin
-# Turn off New Architecture
-newArchEnabled=false
-```
-#### 📌 iOS(Swift):
-
-📝 Notes: The configurations are similar to those for object C above, with only a slight difference in the syntax of the functions
-
-- ✅ Add variables in Appdelegate.swift:
-
-```swift
-import OmiKit
-import PushKit
-import NotificationCenter
-
-var pushkitManager: PushKitManager?
-var provider: CallKitProviderDelegate?
-var voipRegistry: PKPushRegistry?
-```
-
-- ✅ Add these lines into `didFinishLaunchingWithOptions`:
-
-```swift
-OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_SANDBOX, userNameKey: "extension", maxCall: 1, callKitImage: "call_image")
-provider = CallKitProviderDelegate.init(callManager: OMISIPLib.sharedInstance().callManager)
-voipRegistry = PKPushRegistry.init(queue: .main)
-pushkitManager = PushKitManager.init(voipRegistry: voipRegistry)
-```
-
-- ✅ Add these lines into `Info.plist`:
-
-```xml
-<key>NSCameraUsageDescription</key>
-<string>Need camera access for video call functions</string>
-<key>NSMicrophoneUsageDescription</key>
-<string>Need microphone access for make Call</string>
-```
-
-- ✅ Save token for `OmiClient`: if you added `firebase_messaging` in your project so you don't need add these lines.
-
-```swift
-func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-    let deviceTokenString = deviceToken.hexString
-    OmiClient.setUserPushNotificationToken(deviceTokenString)
-}
-
-extension Data {
-    var hexString: String {
-        let hexString = map { String(format: "%02.2hhx", $0) }.joined()
-        return hexString
-    }
-}
-```
-
-**✨ Only use under lines when added `Cloud Messaging` plugin in your project**
-
-- ✅ Setup push notification: We only support Firebase for push notification.
-- ✅ Add `google-service.json` in `android/app` (For more information, you can refer <a href="https://rnfirebase.io/app/usage">Core/App</a>)
-- ✅ Add Firebase Messaging to receive `fcm_token` (You can refer <a href="https://pub.dev/packages/firebase_messaging">Cloud Messaging</a> to setup notification for React Native)
-- ✅ For more setting information, please refer <a href="https://api.omicall.com/web-sdk/mobile-sdk/ios-sdk/cau-hinh-push-notification">Config Push for iOS</a>
-- 
-
-**❌ Important release note**
-
-```
-We support 2 environments. So you need set correct key in Appdelegate.
-- KEY_OMI_APP_ENVIROMENT_SANDBOX support on debug mode
-- KEY_OMI_APP_ENVIROMENT_PRODUCTION support on release mode
-- Visit on web admin to select correct enviroment.
-```
-
-## 🛠️ Step 2: Integrate into React Native code 
-
-### 🚀 Request permission
-
-**📌 We need you request permission about call before make call:**
-
-- ✅ You can use <a href="https://github.com/zoontek/react-native-permissions">react-native-permissions</a> to do this
-
-```
--Android:
-+ PERMISSIONS.ANDROID.RECORD_AUDIO
-+ PERMISSIONS.ANDROID.POST_NOTIFICATIONS
-+ PERMISSIONS.ANDROID.CALL_PHONE
-+ PERMISSIONS.ANDROID.CAMERA; (if you want to make Video calls)
-
--IOS:
-+ PERMISSIONS.IOS.MICROPHONE;
-+ PERMISSIONS.IOS.CAMERA; (if you want to make Video calls)
-
-```
-
-### 🔥 **Android Permission Management**
-
-**📌 For Android (SDK), additional permissions are required:**
-
-🔥 Notes:
-	
-  •	POST_NOTIFICATIONS and RECORD_AUDIO must be requested at runtime in your code.
-	
-  •	FOREGROUND_SERVICE* permissions only need to be declared in the manifest; Android will enforce them automatically when you call startForegroundService().
-
-```xml
-<!-- Runtime permissions -->
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-<uses-permission android:name="android.permission.RECORD_AUDIO"/>
-
-<!-- Foreground service permissions (manifest only, no runtime request needed) -->
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" tools:node="remove" /> 
-
-<service 
-    android:name="net.gotev.sipservice.SipService" 
-    android:foregroundServiceType="phoneCall|microphone" 
-    tools:replace="android:foregroundServiceType" 
-    android:exported="false" 
-/>
-
-```
-
-- ✅ Set up <a href="https://rnfirebase.io/messaging/usage">Cloud Messaging</a> plugin:
-
-```
-//if you use only on Android. you only implement for Android.
-//because we use APNS to push notification on iOS so you don't need add Firebase for iOS.
-//But you can use firebase-messaging to get APNS token for iOS.
-```
-#### 🚀 OMIKIT-Plugin functions 🚀
-<br>
-
-📌 **startServices()**
-
-✅ Description:
-
-The `startServices()` function is used to initialize necessary services in `omikit-plugin`.
-It should only be called once in the root file of your application.
-
-- Usage:
- ```javascript
- // Import startServices from omikit-plugin
-import { startServices } from 'omikit-plugin';
-
-// Call startServices() to initialize the required services
-startServices();
- ```
-- 📝 Notes:<br>
-  •	Do not call this function multiple times; it should be called only once when the application starts. <br>
-  •	Ensure that `omikit-plugin` is installed before using this function.
-
-*Add the following code to the root file of your application, such as `App.js` or `index.js`*
-
-
-📌 **requestLoginPermissions()**
-
-`Note`: Starting from Android 13+, certain foreground services (such as microphone or phone call) require explicit user permission before they can be started.
-This means the user must grant these permissions before initiating a call or any service that relies on them.
-
-```TypeScript
-import { 
-  PERMISSIONS, 
-  request, 
-  check, 
-  RESULTS, 
-  requestMultiple 
-} from 'react-native-permissions';
-import { Platform } from 'react-native';
-
-export async function requestLoginPermissions(): Promise<boolean> {
-  if (Platform.OS !== 'android') return true;
-
-  const permissions: string[] = [];
-
-  // Android 13+ cần POST_NOTIFICATIONS
-  if (Platform.Version >= 33) {
-    permissions.push(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
-  }
-
-  // Android 14+ và 15+ cần RECORD_AUDIO trước khi start foreground service
-  permissions.push(PERMISSIONS.ANDROID.RECORD_AUDIO);
-
-  const statuses = await requestMultiple(permissions);
-
-  // Check kết quả
-  const allGranted = Object.values(statuses).every(
-    status => status === RESULTS.GRANTED
-  );
-
-  if (!allGranted) {
-    console.warn('❌ Some required permissions were not granted');
-    return false;
-  }
-
-  console.log('✅ All required permissions granted');
-  return true;
-}
-```
-
-Example: use func `requestLoginPermissions()`
-
-```TypeScript
-async function handleLogin() {
-  const ok = await requestLoginPermissions();
-  if (!ok) {
-    // Block login, show alert
-    return;
-  }
-
-  // ✅ Safe để start service login
-  // initCallWithApiKey(); 
-  initCallWithUserPassword()
-}
-```
-
-
-📌 **initCallWithApiKey()**
-
-📝 Notes: The information below is taken from the API, you should connect with our Technical team for support
-
-✅ Description: <br>
-  - The `initCallWithApiKey()` function is usually used for your client, who only has a certain function, calling a fixed number. For example, you can only call your hotline number 
-
-```javascript
-import { initCallWithApiKey, getCurrentUser } from 'omikit-plugin';
-import messaging from '@react-native-firebase/messaging';
-
-let token: String;
-
-// Retrieve the appropriate push notification token based on the platform
-if (Platform.OS === "ios") {
-  token = await messaging.getAPNSToken(); // Get APNS token for iOS
-} else {
-  token = await messaging.getToken(); // Get FCM token for Android
-}
-
-// Define the login information required for call initialization
-const loginInfo = {
-  usrUuid: usrUuid,      // Unique user identifier
-  fullName: fullName,    // User's full name
-  apiKey: apiKey,        // API key for authentication
-  phone: phone,          // User's phone number
-  fcmToken: token,       // FCM token for Android, APNS token for iOS
-  isVideo: isVideo,      // Determines if video calls are enabled
-  projectId: projectId   // Firebase project ID
-};
-
-// Initialize call functionality using the provided API key
-const result = await initCallWithApiKey(loginInfo);
-
-/* ❌ ❌ NOTE: Please check the user information again, if the object is not empty then you have successfully logged in. 
-Otherwise, if you have not successfully logged in, you should not navigate to the call screen. When startCall with empty information, it may crash your application or not be clear when receiving the startCall error  ❌❌*/
-
-// Example:
-
-if (result){
-  const infoUser = await getCurrentUser()
-  if (infoUser != null && Object.keys(infoUser).length > 0) { 
-    // ✅ Login OMI Success 
-    // Can navigate to call screen or start call 🚀 🚀
-  }
-}
- ```
-
-📌 **initCallWithUserPassword()**
-
-📝 Notes: The information below is taken from the API, you should connect with our Technical team for support
-
-✅ Description: <br>
-  - The `initCallWithUserPassword()` function is for employees. They can call any telecommunications number allowed in your business on the OMI system.
-  
-```javascript
-import { initCallWithUserPassword, getCurrentUser } from 'omikit-plugin';
-import messaging from '@react-native-firebase/messaging';
-
-let token: String;
-
-// Retrieve the appropriate push notification token based on the platform
-if (Platform.OS === "ios") {
-  token = await messaging.getAPNSToken(); // Get APNS token for iOS
-} else {
-  token = await messaging.getToken(); // Get FCM token for Android
-}
-
-// Define the login information required for call initialization
-const loginInfo = {
-  userName: userName,   // User's SIP username (string)
-  password: password,   // User's SIP password (string)
-  realm: realm,         // SIP server domain (string)
-  isVideo: isVideo,     // Enables or disables video calls (boolean: true/false)
-  fcmToken: token,      // FCM token for Android, APNS token for iOS
-  projectId: projectId  // Firebase project ID
-};
-
-// Initialize call functionality using username and password authentication
- initCallWithUserPassword(loginInfo)
-      .then(result => {
-        console.log('initCallWithUserPassword success:', result);
-
-        if (result) {
-        // ✅ Login OMI Success 
-        /* ❌ ❌ NOTE: Please check the user information again, if the object is not empty then you have successfully logged in. 
-Otherwise, if you have not successfully logged in, you should not navigate to the call screen. When startCall with empty information, it may crash your application or not be clear when receiving the startCall error  ❌❌*/
-          const infoUser = await getCurrentUser()
-          if (infoUser != null && Object.keys(infoUser).length > 0) { 
-            // ✅ Login OMI Success 
-            // Can navigate to call screen or start call 🚀 🚀
-          }
-        }
-      })
-      .catch(error => {
-        // You can log error and check cause error
-        console.error('initCallWithUserPassword error:', error?.code, error?.message);
-        if (error?.code === 'ERROR_MISSING_RECORD_AUDIO') { // Please request permission audio
-          requestPermission(); 
-        }
-      })
-      .finally(() => {
-        // Doing something 
-        // setLoading(false);
-      });
-```
-📝 **Detailed Description of Possible Errors(error?.code)**
-
-| **Message**                        | **Description**                                                                 | **Next Action**                                                                 |
-|------------------------------------|---------------------------------------------------------------------------------|----------------------------                                        
-| `ERROR_MISSING_PARAMETERS`         | Missing required parameters. Please check your configuration.                   | Verify all required fields are provided                                         |
-| `ERROR_INVALID_CREDENTIALS`        | Invalid credentials. Please check username/password.                            | Double-check login info                                                         |
-| `ERROR_FORBIDDEN`                  | Access denied. Check realm/domain permissions.                                  | Confirm account permissions with provider                                       |
-| `ERROR_REALM_NOT_FOUND`            | Realm not found. Check configuration.                                           | Ensure realm/domain is correct                                                  |
-| `ERROR_TIMEOUT`                    | Connection timeout                                                              | Retry with stable network                                                       |
-| `ERROR_MISSING_RECORD_AUDIO`       | RECORD_AUDIO permission required for Android 14+                                | Ask user to grant microphone permission                                         |
-| `ERROR_MISSING_FOREGROUND_SERVICE` | FOREGROUND_SERVICE permission required                                          | Request foreground service permission before starting service                   |
-| `ERROR_MISSING_POST_NOTIFICATIONS` | POST_NOTIFICATIONS permission required for Android 13+                          | Request notification permission before registering                              |
-| `ERROR_SERVICE_START_FAILED`       | Failed to start SIP service                                                     | Check logs and required permissions                                             |
-| `ERROR_SERVICE_NOT_AVAILABLE`      | SIP service not available                                                       | Ensure service is running                                                       |
-| `ERROR_SERVICE_DEGRADED`           | Service degraded - may miss calls when app killed                               | Keep app in foreground or request proper permissions                            |
-| `ERROR_SERVICE_UNAVAILABLE`        | Service temporarily unavailable                                                 | Try again later                                                                 |
-| `ERROR_NETWORK_UNAVAILABLE`        | Network unavailable                                                             | Check network connection                                                        |
-| `ERROR_CONNECTION_TIMEOUT`         | Connection timeout                                                              | Verify network and server availability                                          |
-| `ERROR_UNKNOWN`                    | Unknown error occurred                                                          | Check logs and report issue                                                     |
-
-📌 **configPushNotification()**
-
-✅ Description: Config push notification: func is used to configure the incoming call popup UI on Android and the representative name for iOS
-
-  ```javascript
-import { configPushNotification } from 'omikit-plugin';
-
-// Configure push notifications for incoming calls
-configPushNotification({
-  notificationIcon: "calling_face", // Notification icon for Android (located in drawable folder)
-  prefix: "Cuộc gọi tới từ: ", // Prefix for incoming call notifications
-  incomingBackgroundColor: "#FFFFFFFF", // Background color for incoming call screen
-  incomingAcceptButtonImage: "join_call", // Image for the accept call button
-  incomingDeclineButtonImage: "hangup", // Image for the decline call button
-  backImage: "ic_back", // Image for the back button
-  userImage: "calling_face", // Default user image for incoming calls
-  prefixMissedCallMessage: "Cuộc gọi nhỡ từ", // Prefix message for missed call notifications
-  missedCallTitle: "Cuộc gọi nhỡ", // Title for missed call notifications
-  userNameKey: "uuid", // User identification key: options are "uuid", "full_name", or "extension"
-  channelId: "com.channel.sample", // Custom notification channel ID for Android
-  audioNotificationDescription: "Cuộc gọi audio", // Description for audio call notifications
-  videoNotificationDescription: "Cuộc gọi video", // Description for video call notifications
-  representName: "", // Representative name to display for all incoming calls (e.g., business name)
-  isUserBusy: true // By default, it is set to true. The Omicall system will continue ringing the next user if isUserBusy is true. If it is false, the call will be immediately terminated, assuming the call scenario is based on a criteria-based routing.
+---
+
+## Quick Start
+
+```typescript
+import {
+  startServices,
+  initCallWithUserPassword,
+  startCall,
+  joinCall,
+  endCall,
+  omiEmitter,
+  OmiCallEvent,
+  OmiCallState,
+} from 'omikit-plugin';
+
+// Step 1: Start SDK services (call once on app launch)
+await startServices();
+
+// Step 2: Login with SIP credentials
+const loginResult = await initCallWithUserPassword({
+  userName: 'sip_user',
+  password: 'sip_password',
+  realm: 'your_realm',
+  host: '',              // SIP proxy, defaults to vh.omicrm.com
+  isVideo: false,
+  fcmToken: 'your_fcm_token',
+  projectId: 'your_project_id', // optional
 });
 
-// Note: Ensure that the following images are added to `android/app/src/main/res/drawable`:
-// - incomingAcceptButtonImage (join_call)
-// - incomingDeclineButtonImage (hangup)
-// - backImage (ic_back)
-// - userImage (calling_face)
-  ```
+// Step 3: Listen to call events
+const subscription = omiEmitter.addListener(
+  OmiCallEvent.onCallStateChanged,
+  (data) => {
+    console.log('Call state:', data.status);
 
-📌 **getInitialCall()**
+    switch (data.status) {
+      case OmiCallState.incoming:
+        // Show incoming call UI
+        // data.callerNumber, data.isVideo
+        break;
+      case OmiCallState.confirmed:
+        // Call connected — show active call UI
+        break;
+      case OmiCallState.disconnected:
+        // Call ended
+        // data.codeEndCall — SIP end code
+        break;
+    }
+  }
+);
 
-✅ Description: Get call when user open application at first time
-
-  ```javascript
-import { getInitialCall } from 'omikit-plugin';
-
-// Check if there is an ongoing call when the app initializes
-const callingInfo = await getInitialCall();
-
-if (callingInfo !== false) {
-  // If there is an active call, navigate to the call screen
-  navigation.navigate('DialCall' as never, callingInfo as never);
-}
-
-// If callingInfo is not false, it means the user has an ongoing call.
-  ```
-
-📌 **startCall()**
-
-✅ Description: Used to initiate a call to a random number, telecommunication number, hotline or internal number
-
-  ```javascript
-import { startCall } from 'omikit-plugin';
-
-// Start a call with the given phone number
+// Step 4: Make outgoing call
 const result = await startCall({
-  phoneNumber: phone, // The phone number to call
-  isVideo: false // Set to true for a video call, false for an audio call
-});
-  ```
-
-✨  The result returned by `startCall()` is an object with the following structure:
-
-  ```javascript
-  result = {
-      "_id": String // This is call_id. it just have id for iOS,
-      "status": Number // This is result code when make,
-      "message": String // This is a string key, describing the status of the call
-    }
-  ```
-
-  📝 Detailed Description of Possible Results
-
-| **Message**                               | **Status** | **Description**                                                         |
-|-------------------------------------------|------------|-------------------------------------------------------------------------|
-| `"INVALID_UUID"`                          | 0          | uid is invalid (we can not find on my page)                             |
-| `"INVALID_PHONE_NUMBER"`                  | 1          | sip user is invalid                                                     |
-| `"SAME_PHONE_NUMBER_WITH_PHONE_REGISTER"` | 2          | Cannot call same phone number                                           |
-| `"MAX_RETRY"`                             | 3          | Call timeout exceeded, please try again later                           |
-| `"PERMISSION_DENIED"`                     | 4          | The user has not granted MIC or audio permissions                       |
-| `"COULD_NOT_FIND_END_POINT"`              | 5          | Please login before making your call                                    |
-| `"REGISTER_ACCOUNT_FAIL"`                 | 6          | Can't log in to OMI (maybe wrong login information)                     |
-| `"START_CALL_FAIL"`                       | 7          | Call failed, please try again                                           |
-| `"HAVE_ANOTHER_CALL"`                     | 9          | There is another call in progress; please wait for that call to end     |
-| `"EXTENSION_NUMBER_IS_OFF"`               | 10         | Extension number off User is turn Off                                   |
-| `"START_CALL_SUCCESS"`                    | 8          | START CALL SUCCESSFULLY                                                 |
-
-<br>
-
-
-📌 **startCallWithUuid()**
-
-✅ Description: Call with UUID (only support with Api key):
-
-```javascript
-import { startCallWithUuid } from 'omikit-plugin';
-
-// Initiate a call using the user's UUID. This function works similarly to `startCall()`.
-const result = await startCallWithUuid({
-  usrUuid: uuid,    // The user's UUID (unique identifier)
-  isVideo: false    // Set to true for a video call, false for an audio call
+  phoneNumber: '0901234567',
+  isVideo: false,
 });
 
-// The result returned has the same structure as that from `startCall()`.
-```
-
-<br>
-
-📌 **joinCall()**
-
-✅ Description: Used to join (pick up) any incoming call
-
-```javascript
-  import {joinCall} from 'omikit-plugin';
-
-  await joinCall();
-```
-
-📝 Note: When calling `joinCall`, sdk will check permission of microphone and camera. If have any permission denied, sdk will send a event `onRequestPermissionAndroid` with list permission you need to request. You need to request permission before calling `joinCall` again.
-
-
-📌 **transferCall()**
-
-✅ Description: Used to forward the current ongoing call to any employee in your business
-
-```javascript
-   import {transferCall} from 'omikit-plugin';
-
-  transferCall({
-    phoneNumber: 102 // employee's internal number
-    })
-```
-
-📌 **endCall()**
-
-✅ Description:  We will push a event `endCall` for you.
-
-```javascript
- import {endCall} from 'omikit-plugin';
-
-    const value = await endCall();
-    //value is call information
-    Sample output:
-    {
-       "transaction_id":ea7dff38-cb1e-483d-8576...........,
-       "direction":"inbound",
-       "source_number":111,
-       "destination_number":110,
-       "time_start_to_answer":1682858097393,
-       "time_end":1682858152181,
-       "sip_user":111,
-       "disposition":"answered"
-    }
-```
-
-📌 **dropCall()**
-
-✅ Description:   When an incoming call has not yet been answered, and the call scenario is based on criteria, invoking dropCall will cause the OMI system to cancel the ringing on other devices simultaneously.
-
-```javascript
- import {dropCall} from 'omikit-plugin';
-
- const value = await dropCall(); // return true/false
-   
-```
-
-📌 **toggleMute()**
-
-✅ Description:  Toggle the audio, On/off audio a call
-
-```javascript
-  import {toggleMute} from 'omikit-plugin';
-
-  toggleMute();
-```
-
-📌 **toggleSpeaker()**
-
-✅ Description: Toggle the speaker, On/off the phone speaker
-
-```javascript
-  import {toggleSpeaker} from 'omikit-plugin';
-
-  toggleSpeaker();
-```
-
-📌 **toggleHold()**
-
-✅ Description: hold current call 
-
-```javascript
-  import {toggleHold} from 'omikit-plugin';
-
-  toggleHold();
-```
-
-📌 **sendDTMF()**
-
-✅ Description: Send character: We only support `1 to 9` and `* #`.
-
-```javascript
-    // FUNC IS USED when the user wants key interaction during a call. For example, press key 1, 2, 3.. to move to group
-    import {sendDTMF} from 'omikit-plugin';
-
-    sendDTMF({
-        character: text,
-    });
-```
-
-📌 **getCurrentUser()**
-
-✅ Description: Retrieves the current user's information.
-
-```javascript
-    import {getCurrentUser} from 'omikit-plugin';
-    final user = await getCurrentUser();
-```
-
-✨ Output Sample:
-
-```javascript
-{
-    "extension": "111",
-    "full_name": "chau1",
-    "avatar_url": "",
-    "uuid": "122aaa"
+if (result.status === 8) {
+  console.log('Call started, ID:', result._id);
 }
+
+// Step 5: Accept incoming call
+await joinCall();
+
+// Step 6: End call
+await endCall();
+
+// Cleanup on unmount
+subscription.remove();
 ```
 
-📌 **getGuestUser()**
+---
 
-✅ Description: Get guest user information:
+## Authentication
 
-```javascript
-    import {getGuestUser} from 'omikit-plugin';
-    final user = await getGuestUser();
+Two authentication methods are available. Each supports two login modes depending on who is using the app:
+
+| Mode | `isSkipDevices` | Use Case | Capabilities |
+|------|-----------------|----------|--------------|
+| **Agent** (default) | `false` | Employees / call center agents | Can make outbound calls to any telecom number |
+| **Customer** | `true` | End customers | Can only call the business hotline (no outbound to external numbers) |
+
+### Option 1: Username + Password (SIP Credentials)
+
+```typescript
+await initCallWithUserPassword({
+  userName: string,         // SIP username
+  password: string,         // SIP password
+  realm: string,            // SIP realm/domain
+  host?: string,            // SIP proxy server (optional)
+  isVideo: boolean,         // Enable video capability
+  fcmToken: string,         // Firebase token for push notifications
+  projectId?: string,       // OMICALL project ID (optional)
+  isSkipDevices?: boolean,  // true = Customer mode, false = Agent mode (default)
+});
 ```
 
-✨ Output Sample:
+#### Agent Login (default)
 
-```javascript
-{
-    "extension": "111",
-    "full_name": "chau1",
-    "avatar_url": "",
-    "uuid": "122aaa"
-}
+For employees / call center agents who can make outbound calls to any phone number:
+
+```typescript
+await initCallWithUserPassword({
+  userName: '100',
+  password: 'sip_password',
+  realm: 'your_realm',
+  host: '',
+  isVideo: false,
+  fcmToken: fcmToken,
+  // isSkipDevices defaults to false — Agent mode
+});
 ```
 
-📌 **ggetUserInfo()**
+#### Customer Login
 
-✅ Description: Get user information from internal number
+For end customers who can only call the business hotline — no outbound dialing to external telecom numbers, no assigned phone number:
 
-```javascript
-    import {getUserInfo} from 'omikit-plugin';
-    final user = await ggetUserInfo("111");
+```typescript
+await initCallWithUserPassword({
+  userName: '200',
+  password: 'sip_password',
+  realm: 'your_realm',
+  host: '',
+  isVideo: false,
+  fcmToken: fcmToken,
+  isSkipDevices: true,  // Customer mode — skip device registration
+});
 ```
 
-✨ Output Sample:
+### Option 2: API Key
 
-```javascript
-{
-    "extension": "111",
-    "full_name": "chau1",
-    "fullName": "chau1",
-    "avatar_url": "",
-    "avatarUrl": "",
-    "uuid": "122aaa"
-}
-```
-  
-📌 **endCall()**
-
-✅ Description: End a completed call (including rejecting a call).
-
-```javascript
-    import {endCall} from 'omikit-plugin';
-    endCall();
+```typescript
+await initCallWithApiKey({
+  fullName: string,    // Display name
+  usrUuid: string,     // User UUID from OMICALL
+  apiKey: string,      // API key from OMICALL dashboard
+  isVideo: boolean,    // Enable video capability
+  phone: string,       // Phone number
+  fcmToken: string,    // Firebase token for push notifications
+  projectId?: string,  // OMICALL project ID (optional)
+});
 ```
 
+---
 
-📌 **rejectCall()**
+## Call Flows
 
-✅ Description: Used to reject an incoming call when the user has not accepted it yet.
+### Outgoing Call Flow
 
-📝 Note: Do not use this function to end an ongoing call.
-
-```javascript
-    import {rejectCall} from 'omikit-plugin';
-    rejectCall();
+```
+ ┌──────────┐          ┌──────────┐          ┌──────────┐
+ │  JS App  │          │  Native  │          │ SIP/PBX  │
+ └────┬─────┘          └────┬─────┘          └────┬─────┘
+      │                     │                     │
+      │  startCall()        │                     │
+      ├────────────────────►│                     │
+      │                     │  SIP INVITE         │
+      │                     ├────────────────────►│
+      │                     │                     │
+      │  calling (1)        │  180 Ringing        │
+      │◄────────────────────┤◄────────────────────┤
+      │                     │                     │
+      │  early (3)          │  183 Progress       │
+      │◄────────────────────┤◄────────────────────┤
+      │                     │                     │
+      │  connecting (4)     │  200 OK             │
+      │◄────────────────────┤◄────────────────────┤
+      │                     │                     │
+      │  confirmed (5)      │  ACK                │
+      │◄────────────────────┤────────────────────►│
+      │                     │                     │
+      │     ══════ Active Call (RTP audio/video) ══════
+      │                     │                     │
+      │  endCall()          │                     │
+      ├────────────────────►│  BYE                │
+      │                     ├────────────────────►│
+      │  disconnected (6)   │  200 OK             │
+      │◄────────────────────┤◄────────────────────┤
+      │                     │                     │
 ```
 
+### Incoming Call — App in Foreground
 
-📌 **logout()**
-
-✅ Description: logout and remove all information.
-
-```javascript
-    import {logout} from 'omikit-plugin';
-    logout();
+```
+ ┌──────────┐          ┌──────────┐          ┌──────────┐
+ │  JS App  │          │  Native  │          │ SIP/PBX  │
+ └────┬─────┘          └────┬─────┘          └────┬─────┘
+      │                     │                     │
+      │                     │  SIP INVITE         │
+      │                     │◄────────────────────┤
+      │                     │  180 Ringing        │
+      │                     ├────────────────────►│
+      │                     │                     │
+      │  incoming (2)       │                     │
+      │◄────────────────────┤  (event emitted)    │
+      │                     │                     │
+      │  ┌──────────────┐   │                     │
+      │  │ Show Call UI │   │                     │
+      │  │[Accept][Deny]│   │                     │
+      │  └──────────────┘   │                     │
+      │                     │                     │
+      │  joinCall()         │                     │
+      ├────────────────────►│  200 OK             │
+      │                     ├────────────────────►│
+      │  confirmed (5)      │  ACK                │
+      │◄────────────────────┤◄────────────────────┤
+      │                     │                     │
+      │     ══════ Active Call (RTP audio/video) ══════
+      │                     │                     │
 ```
 
-📌 **systemAlertWindow()**
+### Incoming Call — App in Background / Killed
 
-✅ Description: Check system alert window permission (only Android).
+```
+ ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+ │  JS App  │    │  Native  │    │Push Svc  │    │ SIP/PBX  │
+ └────┬─────┘    └────┬─────┘    └────┬─────┘    └────┬─────┘
+      │               │               │               │
+      │               │               │  Push Notify  │
+      │               │               │◄──────────────┤
+      │               │               │               │
 
-```javascript
-    import {systemAlertWindow} from 'omikit-plugin';
-     const isAllow = await systemAlertWindow();
-      //true => allow
-      //false => denied
+  ┌───────────────── iOS (VoIP Push) ───────────────────┐
+  │   │               │               │               │ │
+  │   │               │  PushKit VoIP │               │ │
+  │   │               │◄──────────────┤               │ │
+  │   │               │               │               │ │
+  │   │               │  Show CallKit │               │ │
+  │   │               │  ┌──────────┐ │               │ │
+  │   │               │  │ System   │ │               │ │
+  │   │               │  │ Call UI  │ │               │ │
+  │   │               │  │[Slide ►] │ │               │ │
+  │   │               │  └──────────┘ │               │ │
+  │   │               │               │               │ │
+  │   │  App launched │               │               │ │
+  │   │◄──────────────┤               │               │ │
+  │   │  incoming (2) │               │               │ │
+  │   │◄──────────────┤               │               │ │
+  └─────────────────────────────────────────────────────┘
+
+  ┌───────────────── Android (FCM) ─────────────────────┐
+  │   │               │               │               │ │
+  │   │               │  FCM Message  │               │ │
+  │   │               │◄──────────────┤               │ │
+  │   │               │               │               │ │
+  │   │               │  Start Foreground Service     │ │
+  │   │               │  ┌──────────────────────┐     │ │
+  │   │               │  │ Full-screen Notif    │     │ │
+  │   │               │  │ [Accept]  [Decline]  │     │ │
+  │   │               │  └──────────────────────┘     │ │
+  │   │               │               │               │ │
+  │   │  App launched │               │               │ │
+  │   │◄──────────────┤               │               │ │
+  │   │  incoming (2) │               │               │ │
+  │   │◄──────────────┤               │               │ │
+  └─────────────────────────────────────────────────────┘
+
+      │               │               │               │
+      │  joinCall()   │               │               │
+      ├──────────────►│  200 OK       │               │
+      │               ├──────────────────────────────►│
+      │  confirmed (5)│               │               │
+      │◄──────────────┤               │               │
+      │               │               │               │
 ```
 
+### Missed Call Flow
 
-📌 **openSystemAlertSetting()**
-
-✅ Description:  Open to enable system alert window (only Android).
-
-```javascript
-     import {openSystemAlertSetting} from 'omikit-plugin';
-
-    if (Platform.OS === 'android') {
-      openSystemAlertSetting();
-    }
+```
+ ┌──────────┐          ┌──────────┐          ┌──────────┐
+ │  JS App  │          │  Native  │          │ SIP/PBX  │
+ └────┬─────┘          └────┬─────┘          └────┬─────┘
+      │                     │                     │
+      │                     │  SIP INVITE         │
+      │                     │◄────────────────────┤
+      │  incoming (2)       │                     │
+      │◄────────────────────┤                     │
+      │                     │                     │
+      │     (user ignores / timeout / caller hangs up)
+      │                     │                     │
+      │                     │  CANCEL             │
+      │                     │◄────────────────────┤
+      │  disconnected (6)   │  200 OK             │
+      │◄────────────────────┤────────────────────►│
+      │                     │                     │
+      │                     │  Show Missed Call   │
+      │                     │  Notification       │
+      │                     │                     │
+      │  (user taps notif)  │                     │
+      │                     │                     │
+      │  onClickMissedCall  │                     │
+      │◄────────────────────┤                     │
+      │                     │                     │
 ```
 
-📌 **getCurrentAudio()**
+### Call Transfer Flow
 
-✅ Description:  Get current information of audio devices
-
-```javascript
- import {getCurrentAudio} from 'omikit-plugin';
-
-    getCurrentAudio().then((data: any) => {
-      console.log(data); // [{"name": "Speaker", "type": "Speaker"}]
-          // Note: Data is an array containing information about audio devices, with parameters:
-          // - name: Name of the audio device
-          // - type: Audio device type (e.g. "Speaker", "Receiver", etc.)
-    });
+```
+ ┌──────────┐          ┌──────────┐          ┌──────────┐
+ │  JS App  │          │  Native  │          │ SIP/PBX  │
+ └────┬─────┘          └────┬─────┘          └────┬─────┘
+      │                     │                     │
+      │     ══════ Active Call with Party A ══════
+      │                     │                     │
+      │  transferCall(B)    │                     │
+      ├────────────────────►│  SIP REFER → B      │
+      │                     ├────────────────────►│
+      │                     │                     │
+      │                     │  202 Accepted       │
+      │                     │◄────────────────────┤
+      │                     │                     │
+      │  disconnected (6)   │  BYE (from A)       │
+      │◄────────────────────┤◄────────────────────┤
+      │                     │                     │
+      │     ══════ Party A now talks to B ══════
+      │                     │                     │
 ```
 
-📌 **setAudio()**
+### Reject / Drop Call Flow
 
-✅ Description: set Audio calls the current device
-
-```javascript
- import {  getAudio, setAudio} from 'omikit-plugin';
-
-    const audioList = await getAudio(); // Get a list of supported audio device types 
-    console.log("audioList --> ", audioList) // audioList -->  [{"name": "Receiver", "type": "Receiver"}, {"name": "Speaker", "type": "Speaker"}]
-    
-    const receiver = audioList.find((element: any) => {
-          return element.type === 'Receiver'; // type: "Speaker" is the external speaker, Receiver is the internal speaker
-    });
-    
-    setAudio({
-      portType: receiver.type,
-    });
+```
+ ┌──────────┐          ┌──────────┐          ┌──────────┐
+ │  JS App  │          │  Native  │          │ SIP/PBX  │
+ └────┬─────┘          └────┬─────┘          └────┬─────┘
+      │                     │                     │
+      │  incoming (2)       │  SIP INVITE         │
+      │◄────────────────────┤◄────────────────────┤
+      │                     │                     │
+  ┌── rejectCall() ───┐                           │
+  │ Decline this      │  486 Busy Here            │
+  │ device only       ├─────────────────────────► │
+  └───────────────────┘  (other devices ring)     │
+      │                     │                     │
+  ┌── dropCall() ─────┐                           │
+  │ Decline + stop    │  603 Decline              │
+  │ ALL devices       ├─────────────────────────► │
+  └───────────────────┘  (PBX stops all ringing)  │
+      │                     │                     │
 ```
 
-##### 📝 Video Call functions: Support only video call, You need enable video in `init functions` and `start call` to implements under functions.
+---
 
-✅ Description: Video Call functions: Support only video call, You need enable video in `init functions` and `start call` to implements under functions.
+## API Reference
 
+### Service & Auth
 
-📌 Switch front/back camera: We use the front camera for first time.
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `startServices()` | `Promise<boolean>` | Initialize SDK. Call once on app launch |
+| `initCallWithUserPassword(data)` | `Promise<boolean>` | Login with SIP username/password |
+| `initCallWithApiKey(data)` | `Promise<boolean>` | Login with API key |
+| `logout()` | `Promise<boolean>` | Logout and unregister SIP |
 
-  ```javascript
-  import {switchOmiCamera} from 'omikit-plugin';
-  switchOmiCamera();
-  ```
+### Call Control
 
-📌 Toggle a video in video call: On/off video in video call
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `startCall({ phoneNumber, isVideo })` | `Promise<{ status, message, _id }>` | Initiate outgoing call |
+| `startCallWithUuid({ usrUuid, isVideo })` | `Promise<boolean>` | Call by user UUID |
+| `joinCall()` | `Promise<any>` | Accept incoming call |
+| `endCall()` | `Promise<any>` | End active call (sends SIP BYE) |
+| `rejectCall()` | `Promise<boolean>` | Reject on this device only (486) |
+| `dropCall()` | `Promise<boolean>` | Reject + stop ringing on ALL devices (603) |
+| `transferCall({ phoneNumber })` | `Promise<boolean>` | Blind transfer to another number |
+| `getInitialCall()` | `Promise<any>` | Get pending call data on cold start |
 
-  ```javascript
-  import {toggleOmiVideo} from 'omikit-plugin';
-  toggleOmiVideo();
-  ```
+### Media Control
 
-📌 Local Camera Widget: Your camera view in a call
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `toggleMute()` | `Promise<boolean\|null>` | Toggle microphone mute |
+| `toggleSpeaker()` | `Promise<boolean>` | Toggle speakerphone |
+| `toggleHold()` | `Promise<void>` | Toggle call hold |
+| `onHold({ holdStatus })` | `Promise<boolean>` | Set hold state explicitly |
+| `sendDTMF({ character })` | `Promise<boolean>` | Send DTMF tone (0-9, *, #) |
+| `getAudio()` | `Promise<any>` | List available audio devices |
+| `setAudio({ portType })` | `Promise<void>` | Set audio output device |
+| `getCurrentAudio()` | `Promise<any>` | Get current audio device |
 
-  ```javascript
-  import { OmiLocalCameraView } from 'omikit-plugin';
-  <OmiLocalCameraView style={styles.localCamera} />
-  ```
+### Video Control
 
-📌 Remote Camera Widget: Remote camera view in a call
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `toggleOmiVideo()` | `Promise<boolean>` | Toggle video stream on/off |
+| `switchOmiCamera()` | `Promise<boolean>` | Switch front/back camera |
+| `registerVideoEvent()` | `Promise<boolean>` | Start receiving remote video frames |
+| `removeVideoEvent()` | `Promise<boolean>` | Stop receiving remote video frames |
 
-  ```javascript
-  import { OmiRemoteCameraView } from 'omikit-plugin';
-  <OmiRemoteCameraView style={styles.remoteCamera} />
-  ```
+### User & Info
 
-📌 More function: Refresh local camera
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `getCurrentUser()` | `Promise<any>` | Get logged-in user details |
+| `getGuestUser()` | `Promise<any>` | Get guest/remote user details |
+| `getUserInfo(phone)` | `Promise<any>` | Look up user by phone number |
 
-  ```javascript
-  import {refreshLocalCamera} from 'omikit-plugin';
-  refreshLocalCamera();
-  ```
+### Getter Functions (v4.0.1+)
 
-📌 More function: Refresh remote camera
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `getProjectId()` | `Promise<string\|null>` | Current project ID |
+| `getAppId()` | `Promise<string\|null>` | Current app ID |
+| `getDeviceId()` | `Promise<string\|null>` | Current device ID |
+| `getFcmToken()` | `Promise<string\|null>` | FCM push token |
+| `getSipInfo()` | `Promise<string\|null>` | SIP info (`user@realm`) |
+| `getVoipToken()` | `Promise<string\|null>` | VoIP token (iOS only) |
 
-  ```javascript
-  import {refreshRemoteCamera} from 'omikit-plugin';
-  refreshRemoteCamera();
-  ```
+### Notification Control
 
-📌 Register event: Register remote video ready: only visible on iOS
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `configPushNotification(data)` | `Promise<any>` | Configure push notification settings |
+| `hideSystemNotificationSafely()` | `Promise<boolean>` | Hide notification without unregistering |
+| `hideSystemNotificationOnly()` | `Promise<boolean>` | Hide notification only |
+| `hideSystemNotificationAndUnregister(reason)` | `Promise<boolean>` | Hide + unregister with reason |
 
-  ```javascript
-  import {registerVideoEvent} from 'omikit-plugin';
-  registerVideoEvent();
-  ```
+---
 
-### 🚀🚀 Events listener 🚀🚀 
+## Events
 
-```javascript
-import { omiEmitter } from 'omikit-plugin';
+Use `omiEmitter` to listen for events emitted by the native SDK.
 
-/*
-❌ ❌ With TypeScript, in Android, it seems our omiEmitter is not working properly. Please use the following manual declaration, to ensure performance
-*/
+```typescript
+import { omiEmitter, OmiCallEvent } from 'omikit-plugin';
+```
 
-// 📌 For TypeScript, Android 
-import { NativeEventEmitter, NativeModules } from "react-native";
-const { OmikitPlugin } = NativeModules;
-const omiEmitter = new NativeEventEmitter(OmikitPlugin);
+### Event Reference
 
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `onCallStateChanged` | `{ status, callerNumber, isVideo, incoming, codeEndCall }` | Call lifecycle changes |
+| `onMuted` | `boolean` | Microphone mute toggled |
+| `onSpeaker` | `boolean` | Speaker toggled |
+| `onHold` | `boolean` | Hold state changed |
+| `onRemoteVideoReady` | — | Remote video stream is ready |
+| `onClickMissedCall` | `{ callerNumber }` | User tapped missed call notification |
+| `onSwitchboardAnswer` | `{ data }` | Switchboard answered |
+| `onCallQuality` | `{ quality, stat }` | Call quality metrics (see [Quality & Diagnostics](#quality--diagnostics)) |
+| `onAudioChange` | `{ data }` | Audio device changed |
+| `onRequestPermissionAndroid` | `{ permissions }` | Permission request needed (Android only) |
 
+### Usage Example
 
+```typescript
+import { omiEmitter, OmiCallEvent, OmiCallState } from 'omikit-plugin';
 
 useEffect(() => {
-    omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
-    omiEmitter.addListener(OmiCallEvent.onMuted, onMuted);
-    omiEmitter.addListener(OmiCallEvent.onSpeaker, onSpeaker);
-    omiEmitter.addListener(OmiCallEvent.onHold, onHold);
-    omiEmitter.addListener(OmiCallEvent.onClickMissedCall, clickMissedCall);
-    omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, onSwitchboardAnswer);
-    omiEmitter.addListener(OmiCallEvent.onCallQuality, onCallQuality);
+  const subscriptions = [
+    // Call state changes
+    omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (data) => {
+      console.log('State:', data.status, 'Caller:', data.callerNumber);
 
-    omiEmitter.addListener(OmiCallEvent.onAudioChange, onAudioChange);
+      if (data.status === OmiCallState.incoming) {
+        // Navigate to incoming call screen
+      }
+      if (data.status === OmiCallState.confirmed) {
+        // Call connected
+      }
+      if (data.status === OmiCallState.disconnected) {
+        // Call ended, check data.codeEndCall for reason
+      }
+    }),
 
+    // Mute state
+    omiEmitter.addListener(OmiCallEvent.onMuted, (isMuted) => {
+      setMuted(isMuted);
+    }),
 
-    if(Platform.OS == "android") {
-      omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, onRequestPermission);
-    }
+    // Speaker state
+    omiEmitter.addListener(OmiCallEvent.onSpeaker, (isOn) => {
+      setSpeaker(isOn);
+    }),
 
-    if (Platform.OS === 'ios') {
-      registerVideoEvent();
-      omiEmitter.addListener(
-        OmiCallEvent.onRemoteVideoReady,
-        refreshRemoteCameraEvent
-      );
-    }
+    // Missed call notification tapped
+    omiEmitter.addListener(OmiCallEvent.onClickMissedCall, (data) => {
+      // Navigate to call history or callback
+    }),
 
-    return () => {
-        omiEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
-        omiEmitter.removeAllListeners(OmiCallEvent.onMuted);
-        omiEmitter.removeAllListeners(OmiCallEvent.onHold);
-        omiEmitter.removeAllListeners(OmiCallEvent.onSpeaker);
-        omiEmitter.removeAllListeners(OmiCallEvent.onSwitchboardAnswer);
-        omiEmitter.removeAllListeners(OmiCallEvent.onAudioChange);
+    // Call quality & diagnostics
+    omiEmitter.addListener(OmiCallEvent.onCallQuality, ({ quality, stat }) => {
+      console.log('Quality level:', quality); // 0=Good, 1=Medium, 2=Bad
+      if (stat) {
+        console.log('MOS:', stat.mos, 'Jitter:', stat.jitter, 'Latency:', stat.latency);
+      }
+    }),
+  ];
 
-        if(Platform.OS == "android") {
-          omiEmitter.removeAllListeners(OmiCallEvent.onRequestPermissionAndroid);
-        }
-
-        if (Platform.OS === 'ios') {
-           removeVideoEvent();
-           omiEmitter.removeAllListeners(OmiCallEvent.onRemoteVideoReady);
-        }
-    };
+  return () => subscriptions.forEach(sub => sub.remove());
 }, []);
 ```
 
-- ✅ **Important Event: `onCallStateChanged`**  
-  This event is used to listen for call state changes. The emitted event is an `OmiAction` object containing two properties: `actionName` and `data`.
+---
 
-- 📝 **Action Name Values:**
-  - **`onCallStateChanged`**: Indicates that the call state has changed.
-  - **`onSwitchboardAnswer`**: Indicates that the switchboard SIP is listening.
-  - **Call Status Values:**
-    - `unknown` (0)
-    - `calling` (1)
-    - `incoming` (2)
-    - `early` (3)
-    - `connecting` (4)
-    - `confirmed` (5)
-    - `disconnected` (6)
-    - `hold` (7)
+## Enums
 
-> **Note:** The `onCallStateChanged` event tracks the current state of the call. Please refer to `OmiCallState` for detailed status descriptions.
+### OmiCallState
 
-### 📞 **Call State Lifecycle**
-- ✅ **Incoming Call Lifecycle:**  
-  `incoming` → `connecting` → `confirmed` → `disconnected`
+| Value | Name | Description |
+|-------|------|-------------|
+| 0 | `unknown` | Initial/unknown state |
+| 1 | `calling` | Outgoing call initiated, waiting for response |
+| 2 | `incoming` | Incoming call received |
+| 3 | `early` | Early media (183 Session Progress) |
+| 4 | `connecting` | 200 OK received, establishing media |
+| 5 | `confirmed` | Call active, RTP media flowing |
+| 6 | `disconnected` | Call ended |
+| 7 | `hold` | Call on hold |
 
-- ✅ **Outgoing Call Lifecycle:**  
-  `calling` → `early` → `connecting` → `confirmed` → `disconnected`
+### OmiStartCallStatus
 
+| Value | Name | Description |
+|-------|------|-------------|
+| 0 | `invalidUuid` | Invalid user UUID |
+| 1 | `invalidPhoneNumber` | Invalid phone number format |
+| 2 | `samePhoneNumber` | Calling your own number |
+| 3 | `maxRetry` | Max retry attempts exceeded |
+| 4 | `permissionDenied` | General permission denied |
+| 450 | `permissionMicrophone` | Microphone permission needed |
+| 451 | `permissionCamera` | Camera permission needed |
+| 452 | `permissionOverlay` | Overlay permission needed |
+| 5 | `couldNotFindEndpoint` | SIP endpoint not found |
+| 6 | `accountRegisterFailed` | SIP registration failed |
+| 7 | `startCallFailed` | Call initiation failed |
+| 8 | `startCallSuccess` | Call started successfully (Android) |
+| 407 | `startCallSuccessIOS` | Call started successfully (iOS) |
+| 9 | `haveAnotherCall` | Another call is in progress |
+| 10 | `accountTurnOffNumberInternal` | Internal number has been deactivated |
+| 11 | `noNetwork` | No network connection available |
 
-```javascript
-// The event is updated every time the call status changes
-const onCallStateChanged = (data: any) => {
-// ⚠️ ⚠️  Currently, we support two data formats: camelCase and snake_case. Snake_case is used for data v1, while camelCase is for v2. We encourage customers to use camelCase instead of snake_case, as we plan to completely remove the snake_case format in the future ❌ ❌
+### OmiAudioType
 
-  /*
-    Call state change event data (Object) includes:
-    
-    - _id: string (UUID of the call)
-    - callInfo: object (Detailed call information)
-    - callerNumber: string (Phone number of the caller)
-    - code_end_call, codeEndCall: number (Status code when the call ends)
-    - destination_number, destinationNumber?: string (Destination phone number, optional)
-    - direction: string ("inbound" or "outbound", call direction)
-    - disposition: string (Call answer status)
-    - incoming: boolean (true if it is an incoming call)
-    - isVideo: boolean (true if it is a video call)
-    - sip_user, sipUser: string (Current SIP user)
-    - source_number, sourceNumber: string (SIP number of the user)
-    - status: string (value matching with List status call)
-    - time_end, timeEnd: number (Timestamp when the call ended)
-    - time_start_to_answer, timeStartToAnswer: number (Time taken to answer the call)
-    - transaction_id, transactionId: string (OMI Call unique ID)
-    - typeNumber: string ("", "internal", "phone", "zalo")
-  */
-};
+| Value | Name | Description |
+|-------|------|-------------|
+| 0 | `receiver` | Phone earpiece |
+| 1 | `speaker` | Speakerphone |
+| 2 | `bluetooth` | Bluetooth device |
+| 3 | `headphones` | Wired headphones |
 
-// Event returned when the user mutes the call
-const onMuted = (isMuted: boolean) => {
-// isMuted: true when muted call 
-}
+### End Call Status Codes (`codeEndCall`)
 
-// Event returns value when user holds call
-const onHold = (isHold: boolean) => {
-// isHold: true when hold call 
-}
+When a call ends (state = `disconnected`), the `codeEndCall` field in the `onCallStateChanged` event payload contains the status code indicating why the call ended.
 
-//  The event updates the quality of an ongoing call
-const onCallQuality = (data: any) => {
-    const { quality } = data;
-    // quality: int is mean quality off calling 
-    // 1 is good, 2 is medium, 3 is low 
-}
+#### Standard SIP Codes
 
-// Even when user turn on speakerphone  
-const onSpeaker = (isSpeaker: boolean) => {
-  // isSpeaker: true, false  
-  // True mean speaker devices is open 
-}
+| Code | Description |
+|------|-------------|
+| 200 | Normal call ending |
+| 408 | Call timeout — no answer |
+| 480 | Temporarily unavailable |
+| 486 | Busy (or call rejected via `rejectCall()`) |
+| 487 | Call cancelled before being answered |
+| 500 | Server error |
+| 503 | Server unavailable |
 
-// * onSwitchboardAnswer have callback when employee answered script call.
-const onSwitchboardAnswer = (data: any) => {
-  const { sip } = data
-  // sip: String 
-}
+#### OMICALL Extended Codes
 
-// * onAudioChange have callback when the user switches the audio output device (headphones)
-const onAudioChange = (audioData: any) => {
-  const { data } = audioData;
-    
+| Code | Description |
+|------|-------------|
+| 600 | Call declined |
+| 601 | Call ended by customer |
+| 602 | Call answered / ended by another agent |
+| 603 | Call declined (via `dropCall()` — stops ringing on ALL devices) |
+
+#### Business Rule Codes (PBX)
+
+| Code | Description |
+|------|-------------|
+| 850 | Exceeded concurrent call limit |
+| 851 | Exceeded call limit |
+| 852 | No service plan assigned — contact provider |
+| 853 | Internal number has been deactivated |
+| 854 | Number is in DNC (Do Not Call) list |
+| 855 | Exceeded call limit for trial plan |
+| 856 | Exceeded minute limit for trial plan |
+| 857 | Number blocked in configuration |
+| 858 | Unknown or unconfigured number prefix |
+| 859 | No available number for Viettel direction — contact provider |
+| 860 | No available number for Vinaphone direction — contact provider |
+| 861 | No available number for Mobifone direction — contact provider |
+| 862 | Number prefix temporarily locked for Viettel |
+| 863 | Number prefix temporarily locked for Vinaphone |
+| 864 | Number prefix temporarily locked for Mobifone |
+| 865 | Advertising call outside allowed time window — try again later |
+
+**Common scenarios:**
+
+```
+User hangs up normally           → 200
+Caller cancels before answer     → 487
+Callee rejects (this device)     → 486  (rejectCall)
+Callee rejects (all devices)     → 603  (dropCall)
+Callee busy on another call      → 486
+No answer / timeout              → 408 or 480
+Answered by another agent        → 602
+Exceeded concurrent call limit   → 850
+Number in DNC list               → 854
+```
+
+**Usage:**
+
+```typescript
+omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (data) => {
+  if (data.status === OmiCallState.disconnected) {
+    const code = data.codeEndCall;
+
+    if (code === 200) {
+      console.log('Call ended normally');
+    } else if (code === 487) {
+      console.log('Call was cancelled');
+    } else if (code === 602) {
+      console.log('Call was answered by another agent');
+    } else if (code >= 850 && code <= 865) {
+      console.log('Business rule error:', code);
+      // Show user-friendly message based on code
+    } else {
+      console.log('Call ended with code:', code);
+    }
+  }
+});
+```
+
+---
+
+## Video Calls
+
+### Setup
+
+```typescript
+import { OmiLocalCamera, OmiRemoteCamera } from 'omikit-plugin';
+```
+
+### Video Components
+
+```tsx
+// Local camera preview (your camera)
+<OmiLocalCamera style={{ width: 120, height: 160 }} />
+
+// Remote camera view (other party's video)
+<OmiRemoteCamera style={{ width: '100%', height: '100%' }} />
+```
+
+### Video Call Flow
+
+```typescript
+// 1. Register for video events BEFORE starting call
+await registerVideoEvent();
+
+// 2. Start video call
+await startCall({ phoneNumber: '0901234567', isVideo: true });
+
+// 3. Toggle video during call
+await toggleOmiVideo();   // on/off video stream
+await switchOmiCamera();  // front/back camera
+
+// 4. Listen for remote video ready
+omiEmitter.addListener(OmiCallEvent.onRemoteVideoReady, () => {
+  // Remote video is now available - show OmiRemoteCamera
+});
+
+// 5. Cleanup when call ends
+await removeVideoEvent();
+```
+
+---
+
+## Push Notifications
+
+### Configuration
+
+```typescript
+// Call after startServices(), before or after login
+await configPushNotification({
+  // Your platform-specific push configuration
+});
+```
+
+### How Push Works
+
+#### iOS — VoIP Push (PushKit)
+
+```
+PBX ──► APNS ──► PushKit ──► App wakes up
+                              ├── Report to CallKit
+                              ├── Show system call UI
+                              └── Register SIP & connect
+```
+
+- Uses PushKit VoIP push for reliable delivery even when app is killed
+- CallKit provides native system call UI (slide to answer)
+- No user-visible notification — CallKit handles the UI
+
+#### Android — FCM
+
+```
+PBX ──► FCM ──► App receives data message
+                 ├── Start foreground service
+                 ├── Show full-screen notification
+                 └── Register SIP & connect
+```
+
+- Uses FCM data message (not notification message)
+- Foreground service keeps the app alive during the call
+- Full-screen intent for lock screen call UI
+
+### Notification Management
+
+```typescript
+// Hide the system notification without affecting SIP registration
+await hideSystemNotificationSafely();
+
+// Hide notification only
+await hideSystemNotificationOnly();
+
+// Hide notification and unregister SIP (with reason for analytics)
+await hideSystemNotificationAndUnregister('user_dismissed');
+```
+
+---
+
+## Permissions (Android)
+
+Android 15+ requires explicit runtime permissions for VoIP functionality.
+
+### Quick Setup
+
+```typescript
+import {
+  checkAndRequestPermissions,
+  checkPermissionStatus,
+  requestPermissionsByCodes,
+  requestSystemAlertWindowPermission,
+  openSystemAlertSetting,
+} from 'omikit-plugin';
+
+// Check and request all permissions at once
+const granted = await checkAndRequestPermissions(isVideo);
+
+// Check current permission status
+const status = await checkPermissionStatus();
+// Returns: { microphone: boolean, camera: boolean, overlay: boolean, ... }
+```
+
+### Handle Permission Errors from startCall
+
+```typescript
+const result = await startCall({ phoneNumber, isVideo: false });
+
+switch (result.status) {
+  case 450: // OmiStartCallStatus.permissionMicrophone
+    await requestPermissionsByCodes([450]);
+    break;
+  case 451: // OmiStartCallStatus.permissionCamera
+    await requestPermissionsByCodes([451]);
+    break;
+  case 452: // OmiStartCallStatus.permissionOverlay
+    await requestSystemAlertWindowPermission();
+    // or open system settings directly:
+    await openSystemAlertSetting();
+    break;
 }
 ```
 
-✨ Table describing `code_end_call, codeEndCall` status
+### Permission Codes
 
-| Code            | Description                                                                                                           |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `600, 503`  | These are the codes of the network operator or the user who did not answer the call  |
-| `408`   | Call request timeout (Each call usually has a waiting time of 30 seconds. If the 30 seconds expire, it will time out) |
-| `403`           | Your service plan only allows calls to dialed numbers. Please upgrade your service pack|
-| `404`           | The current number is not allowed to make calls to the carrier|
-| `480`           | The number has an error, please contact support to check the details |
-| `603`           | The call was rejected. Please check your account limit or call barring configuration! |
-| `850`           | Simultaneous call limit exceeded, please try again later |
-| `486`           | The listener refuses the call and does not answer |
-| `601`           | Call ended by the customer |
-| `602`           | Call ended by the other employee |
-| `603`           | The call was rejected. Please check your account limit or call barring configuration |
-| `850`           | Simultaneous call limit exceeded, please try again later |
-| `851`           | Call duration limit exceeded, please try again later |
-| `852`           | Service package not assigned, please contact the provider |
-| `853`           | Internal number has been disabled |
-| `854`           | Subscriber is in the DNC list |
-| `855`           | Exceeded the allowed number of calls for the trial package |
-| `856`           | Exceeded the allowed minutes for the trial package |
-| `857`           | Subscriber has been blocked in the configuration |
-| `858`           | Unidentified or unconfigured number |
-| `859`           | No available numbers for Viettel direction, please contact the provider |
-| `860`           | No available numbers for VinaPhone direction, please contact the provider |
-| `861`           | No available numbers for Mobifone direction, please contact the provider |
-| `862`           | Temporary block on Viettel direction, please try again |
-| `863`           | Temporary block on VinaPhone direction, please try again |
-| `864`           | Temporary block on Mobifone direction, please try again |
-| `865`           | he advertising number is currently outside the permitted calling hours, please try again later |
+| Code | Permission | Required for |
+|------|-----------|--------------|
+| 450 | Microphone | All calls |
+| 451 | Camera | Video calls |
+| 452 | Overlay (SYSTEM_ALERT_WINDOW) | Incoming call popup on lock screen |
 
+> **Note:** On iOS, permissions are handled via `Info.plist` and system prompts. The above functions return `true` on iOS.
 
-### **Breaking Changes**
-- **Android 15+ Support**: Requires additional permissions in AndroidManifest.xml
-- **New Architecture**: Still requires `newArchEnabled=false`
-- **Minimum SDK**: Android SDK 21+ recommended for full feature support
+---
 
-# ⚠️ Issues
+## Quality & Diagnostics
 
+The `onCallQuality` event provides real-time call quality metrics during an active call.
 
-## ✨ iOS
+### Event Payload
 
-- Must use "Rosetta Destination" to run debug example app on macOS Apple chip
+```typescript
+{
+  quality: number;   // 0 = Good, 1 = Medium, 2 = Bad
+  stat: {
+    mos: number;         // Mean Opinion Score (1.0 – 5.0)
+    jitter: number;      // Jitter in milliseconds
+    latency: number;     // Round-trip latency in milliseconds
+    packetLoss: number;  // Packet loss percentage (0 – 100)
+    lcn?: number;        // Loss Connect Number (Android only)
+  }
+}
+```
+
+### MOS Score Thresholds
+
+| MOS Range | Quality | Description |
+|-----------|---------|-------------|
+| ≥ 4.0 | Excellent | Clear, no perceptible issues |
+| 3.5 – 4.0 | Good | Minor impairments, generally clear |
+| 3.0 – 3.5 | Fair | Noticeable degradation |
+| 2.0 – 3.0 | Poor | Significant degradation |
+| < 2.0 | Bad | Nearly unusable |
+
+### Network Freeze Detection
+
+When `lcn` (Loss Connect Number) increases consecutively, it indicates potential network freeze — useful for showing a "weak network" warning in the UI.
+
+### Usage Example
+
+```typescript
+import { omiEmitter, OmiCallEvent } from 'omikit-plugin';
+
+omiEmitter.addListener(OmiCallEvent.onCallQuality, ({ quality, stat }) => {
+  // quality: 0 = Good, 1 = Medium, 2 = Bad
+  if (quality >= 2 && stat) {
+    console.warn(
+      `Poor call quality — MOS: ${stat.mos}, Jitter: ${stat.jitter}ms, ` +
+      `Latency: ${stat.latency}ms, Loss: ${stat.packetLoss}%`
+    );
+    // Show weak network warning to user
+  }
+});
+```
+
+---
+
+## Advanced Features
+
+### Check Credentials Without Connecting
+
+Validate credentials without establishing a SIP connection:
+
+```typescript
+const result = await checkCredentials({
+  userName: 'sip_user',
+  password: 'sip_password',
+  realm: 'your_realm',
+});
+// result: { success: boolean, statusCode: number, message: string }
+```
+
+### Register With Options
+
+Full control over registration behavior:
+
+```typescript
+const result = await registerWithOptions({
+  // Registration options
+});
+// result: { success: boolean, statusCode: number, message: string }
+```
+
+### Keep-Alive
+
+Monitor and maintain SIP connection:
+
+```typescript
+// Check current keep-alive status
+const status = await getKeepAliveStatus();
+
+// Manually trigger a keep-alive ping
+await triggerKeepAlivePing();
+```
+
+### Cold Start Call Handling
+
+When the app is launched from a push notification:
+
+```typescript
+// Call this in your app's entry point
+const initialCall = await getInitialCall();
+
+if (initialCall) {
+  // There's a pending call — navigate to call screen
+  console.log('Pending call from:', initialCall.callerNumber);
+}
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| `LINKING_ERROR` on launch | Native module not linked | Run `pod install` (iOS) or rebuild the app |
+| Login returns `false` | Wrong SIP credentials or network | Verify `userName`, `password`, `realm`, `host` |
+| `accountRegisterFailed` (status 6) | SIP registration failed | Check `realm` and `host` params; verify network connectivity |
+| No incoming calls | Push not configured | Ensure FCM (Android) / PushKit VoIP (iOS) is set up |
+| No incoming calls on iOS (killed) | Missing Background Mode | Enable "Voice over IP" in Background Modes |
+| Incoming call on Android — no UI | Missing overlay permission | Call `requestSystemAlertWindowPermission()` |
+| `startCall` returns 450/451/452 | Missing runtime permissions | Call `requestPermissionsByCodes([code])` |
+| No audio during call | Audio route issue | Check `getAudio()` and `setAudio()` |
+| Video not showing | Video event not registered | Call `registerVideoEvent()` before the call |
+| NativeEventEmitter warning (iOS) | Old RN bridge issue | Upgrade to v4.0.x with New Architecture |
+| `Invalid local URI` in logs | Empty proxy/host in login | Pass `host` parameter in `initCallWithUserPassword` |
+| Build error with New Arch | Codegen not configured | Ensure `codegenConfig` exists in `package.json` |
+
+---
+
+## Documentation
+
+Full documentation in [`./docs/`](./docs/):
+
+- [Project Overview & PDR](./docs/project-overview-pdr.md)
+- [Codebase Summary](./docs/codebase-summary.md)
+- [System Architecture](./docs/system-architecture.md)
+- [Code Standards](./docs/code-standards.md)
+- [Roadmap](./docs/project-roadmap.md)
+
+## License
+
+MIT — [ViHAT Group](https://github.com/VIHATTeam)

@@ -2,22 +2,60 @@ import Foundation
 import React
 import OmiKit
 
+#if RCT_NEW_ARCH_ENABLED
+import React_Codegen
+#endif
+
 @objc(OmikitPlugin)
 public class OmikitPlugin: RCTEventEmitter {
-  
+
   @objc public static var instance : OmikitPlugin!
-  
+
   public override init() {
     super.init()
     OmikitPlugin.instance = self
+  }
+
+  // TurboModule conformance
+  #if RCT_NEW_ARCH_ENABLED
+  @objc public static func moduleName() -> String {
+    return "OmikitPlugin"
+  }
+  #endif
+
+  @objc public override static func moduleName() -> String! {
+    return "OmikitPlugin"
+  }
+
+  // Export constants for event names
+  @objc public override func constantsToExport() -> [AnyHashable : Any]! {
+    return [
+      "CALL_STATE_CHANGED": CALL_STATE_CHANGED,
+      "MUTED": MUTED,
+      "HOLD": HOLD,
+      "SPEAKER": SPEAKER,
+      "REMOTE_VIDEO_READY": REMOTE_VIDEO_READY,
+      "CLICK_MISSED_CALL": CLICK_MISSED_CALL,
+      "SWITCHBOARD_ANSWER": SWITCHBOARD_ANSWER,
+      "CALL_QUALITY": CALL_QUALITY,
+      "AUDIO_CHANGE": AUDIO_CHANGE,
+      "REQUEST_PERMISSION": REQUEST_PERMISSION
+    ]
   }
   
   
   // MARK: - Service Methods
   @objc(startServices:rejecter:)
-  func startServices(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-    CallManager.shareInstance().registerNotificationCenter(showMissedCall: true)
-    resolve(true)
+  func startServices(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // Ensure instance is set for callbacks
+    if OmikitPlugin.instance == nil {
+      OmikitPlugin.instance = self
+    }
+
+    DispatchQueue.main.async {
+      CallManager.shareInstance().registerNotificationCenter(showMissedCall: true)
+      resolve(true)
+    }
   }
   
   @objc(configPushNotification:resolver:rejecter:)
@@ -31,8 +69,8 @@ public class OmikitPlugin: RCTEventEmitter {
   }
   
   
-  @objc(getInitialCall:rejecter:)
-  func getInitialCall(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+  @objc(getInitialCall:resolver:rejecter:)
+  func getInitialCall(_ data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
     if let call = CallManager.shareInstance().getAvailableCall() {
       let data: [String: Any] = [
         "callerNumber": call.callerNumber,
@@ -211,13 +249,19 @@ public class OmikitPlugin: RCTEventEmitter {
     }
   }
   
-  @objc(getUserInfor:resolver:rejecter:)
-  func getUserInfor(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
-    guard let phone = data as? String else {
-      reject("INVALID_DATA", "Expected a phone number as a string.", nil)
+  @objc(getUserInfo:resolver:rejecter:)
+  func getUserInfo(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    // Support both {phone: "xxx"} object and direct string
+    let phone: String
+    if let dict = data as? [String: Any], let p = dict["phone"] as? String {
+      phone = p
+    } else if let p = data as? String {
+      phone = p
+    } else {
+      reject("INVALID_DATA", "Expected a dictionary with phone key or a phone number string.", nil)
       return
     }
-    
+
     CallManager.shareInstance().getUserInfo(phone: phone) { userInfo in
       if userInfo.isEmpty {
         reject("USER_NOT_FOUND", "User not found for phone number: \(phone)", nil)
@@ -226,7 +270,38 @@ public class OmikitPlugin: RCTEventEmitter {
       }
     }
   }
-  
+
+  // MARK: - Getter Functions
+  @objc(getProjectId:rejecter:)
+  func getProjectId(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getProjectId())
+  }
+
+  @objc(getSipInfo:rejecter:)
+  func getSipInfo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getSipInfo())
+  }
+
+  @objc(getDeviceId:rejecter:)
+  func getDeviceId(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getDeviceId())
+  }
+
+  @objc(getFcmToken:rejecter:)
+  func getFcmToken(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getFcmToken())
+  }
+
+  @objc(getAppId:rejecter:)
+  func getAppId(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getAppId())
+  }
+
+  @objc(getVoipToken:rejecter:)
+  func getVoipToken(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(OmiClient.getVoipToken())
+  }
+
   // MARK: - Audio Methods
   @objc(getAudio:rejecter:)
   func getAudio(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
@@ -236,12 +311,21 @@ public class OmikitPlugin: RCTEventEmitter {
   
   @objc(setAudio:resolver:rejecter:)
   func setAudio(data: Any, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-    guard let dataOmi = data as? [String: Any],
-          let portType = dataOmi["portType"] as? String else {
+    guard let dataOmi = data as? [String: Any] else {
       reject("INVALID_DATA", "Expected a dictionary with port type.", nil)
       return
     }
-    
+    // Support both number and string for portType
+    let portType: String
+    if let pt = dataOmi["portType"] as? String {
+      portType = pt
+    } else if let pt = dataOmi["portType"] as? NSNumber {
+      portType = pt.stringValue
+    } else {
+      reject("INVALID_DATA", "portType must be a number or string.", nil)
+      return
+    }
+
     CallManager.shareInstance().setAudioOutputs(portType: portType)
     resolve(true)
   }
@@ -315,6 +399,105 @@ public class OmikitPlugin: RCTEventEmitter {
       SWITCHBOARD_ANSWER,
       CALL_QUALITY,
       AUDIO_CHANGE,
+      REQUEST_PERMISSION
     ]
+  }
+
+  // MARK: - Stub Methods for TurboModule Compatibility
+  // These methods are Android-only but required by Codegen spec
+
+  @objc(onHold:resolver:rejecter:)
+  func onHold(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // iOS uses toggleHold instead
+    resolve(true)
+  }
+
+  @objc(hideSystemNotificationSafely:rejecter:)
+  func hideSystemNotificationSafely(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(hideSystemNotificationOnly:rejecter:)
+  func hideSystemNotificationOnly(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(hideSystemNotificationAndUnregister:resolver:rejecter:)
+  func hideSystemNotificationAndUnregister(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(checkAndRequestPermissions:resolver:rejecter:)
+  func checkAndRequestPermissions(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature, iOS handles permissions differently
+    resolve(true)
+  }
+
+  @objc(checkPermissionStatus:rejecter:)
+  func checkPermissionStatus(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(nil)
+  }
+
+  @objc(requestPermissionsByCodes:resolver:rejecter:)
+  func requestPermissionsByCodes(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(systemAlertWindow:rejecter:)
+  func systemAlertWindow(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(requestSystemAlertWindowPermission:rejecter:)
+  func requestSystemAlertWindowPermission(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
+  }
+
+  @objc(openSystemAlertSetting:rejecter:)
+  func openSystemAlertSetting(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(nil)
+  }
+
+  @objc(checkCredentials:resolver:rejecter:)
+  func checkCredentials(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Stub for iOS - not implemented yet
+    resolve([
+      "success": true,
+      "statusCode": 200,
+      "message": "iOS stub"
+    ])
+  }
+
+  @objc(registerWithOptions:resolver:rejecter:)
+  func registerWithOptions(data: Any, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Stub for iOS - not implemented yet
+    resolve([
+      "success": true,
+      "statusCode": 200,
+      "message": "iOS stub"
+    ])
+  }
+
+  @objc(getKeepAliveStatus:rejecter:)
+  func getKeepAliveStatus(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve([
+      "isActive": false,
+      "platform": "ios"
+    ])
+  }
+
+  @objc(triggerKeepAlivePing:rejecter:)
+  func triggerKeepAlivePing(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    // Android-only feature
+    resolve(true)
   }
 }
