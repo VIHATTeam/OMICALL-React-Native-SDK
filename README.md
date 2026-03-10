@@ -288,7 +288,9 @@ import {
   OmiCallState,
 } from 'omikit-plugin';
 
-// Step 1: Start SDK services (call once on app launch)
+// Step 1: Start SDK services
+// ⚠️ Call ONCE on app launch (e.g., in App.tsx / index.js / useEffect in root component)
+// Do NOT call this multiple times — it initializes native audio and event listeners.
 await startServices();
 
 // Step 2: Login with SIP credentials
@@ -666,7 +668,7 @@ await initCallWithUserPassword({
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `startServices()` | `Promise<boolean>` | Initialize SDK. Call once on app launch |
+| `startServices()` | `Promise<boolean>` | Initialize SDK. **Call once** on app launch (e.g., `App.tsx` or `index.js`). Do not call multiple times |
 | `initCallWithUserPassword(data)` | `Promise<boolean>` | Login with SIP username/password |
 | `initCallWithApiKey(data)` | `Promise<boolean>` | Login with API key |
 | `logout()` | `Promise<boolean>` | Logout and unregister SIP |
