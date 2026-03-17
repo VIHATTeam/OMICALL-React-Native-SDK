@@ -7,39 +7,52 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-// Runtime detection: Try TurboModule first, fallback to NativeModule
-const isTurboModuleEnabled = (global as any).__turboModuleProxy != null;
-
-const OmikitPlugin: Spec = (() => {
-  if (isTurboModuleEnabled) {
-    // New Architecture - use TurboModule
+// Resolve native module: TurboModule (New Arch) → NativeModules (Old Arch) → null
+const resolvedModule: Spec | null = (() => {
+  try {
+    // Try TurboModule first (New Architecture / bridgeless mode)
     const turboModule = TurboModuleRegistry.get<Spec>('OmikitPlugin');
-    if (turboModule) {
-      return turboModule;
-    }
+    if (turboModule) return turboModule;
+  } catch (_) {}
+
+  // Fallback to NativeModules (Old Architecture / bridge mode)
+  if (NativeModules.OmikitPlugin) {
+    return NativeModules.OmikitPlugin;
   }
 
-  // Old Architecture - fallback to NativeModule
-  return NativeModules.OmikitPlugin || new Proxy(
-    {},
-    {
-      get() {
-        throw new Error(LINKING_ERROR);
-      },
-    }
-  );
+  return null;
 })();
 
-// Setup omiEmitter for iOS and Android
-// In bridgeless mode, NativeModules is empty — use TurboModule instance instead
-const omiEmitter = Platform.OS === 'ios'
-  ? new NativeEventEmitter(
-      (NativeModules.OmikitPlugin ?? OmikitPlugin ?? {
-        addListener: () => {},
-        removeListeners: () => {},
-      }) as any
-    )
-  : DeviceEventEmitter;
+// Wrap in Proxy that throws LINKING_ERROR only when SDK methods are actually called
+const OmikitPlugin: Spec = resolvedModule || new Proxy(
+  {} as Spec,
+  {
+    get(_target, prop) {
+      if (prop === 'addListener' || prop === 'removeListeners') {
+        return () => {};
+      }
+      throw new Error(LINKING_ERROR);
+    },
+  }
+);
+
+// Setup omiEmitter — safe for Old Arch, New Arch, and bridgeless mode
+const omiEmitter = (() => {
+  if (Platform.OS !== 'ios') {
+    return DeviceEventEmitter;
+  }
+  try {
+    // Best case: NativeEventEmitter with resolved native module
+    if (resolvedModule) {
+      return new NativeEventEmitter(resolvedModule as any);
+    }
+    // New Arch without interop: NativeEventEmitter without module arg (RN 0.74+)
+    return new NativeEventEmitter();
+  } catch (_) {
+    // Last resort fallback
+    return DeviceEventEmitter;
+  }
+})();
 
 /**
  * Starts the Omikit services.

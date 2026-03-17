@@ -93,3 +93,4 @@ OMICALL-React-Native-SDK
 log_*
 plans/*
 /plans/*
+.claude/*

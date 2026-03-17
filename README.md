@@ -1218,6 +1218,7 @@ if (initialCall) {
 | NativeEventEmitter warning (iOS) | Old RN bridge issue | Upgrade to v4.0.x with New Architecture |
 | `Invalid local URI` in logs | Empty proxy/host in login | Pass `host` parameter in `initCallWithUserPassword` |
 | Build error with New Arch | Codegen not configured | Ensure `codegenConfig` exists in `package.json` |
+| iOS Simulator build fails (arm64) | OmiKit binary does not include simulator slice | **iOS Simulator is not supported.** OmiKit SDK is device-only (`arm64` real device). Always build and test on a physical iOS device |
 
 ---
 
