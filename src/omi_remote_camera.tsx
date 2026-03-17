@@ -1,16 +1,21 @@
 import type { HostComponent } from 'react-native';
 import { NativeModules, requireNativeComponent, ViewProps } from 'react-native';
 
-// Camera Views always use Paper (requireNativeComponent) because:
-// - iOS native code doesn't have Fabric ComponentView implementation yet
-// - Paper components work fine even when New Architecture is enabled
-// - This avoids undefined symbol errors (_FLRemoteCameraViewCls)
-const OmiRemoteCameraViewPaper: HostComponent<ViewProps> = requireNativeComponent(
-  'FLRemoteCameraView'
-);
+// Safe lazy loading — requireNativeComponent can throw in bridgeless mode
+// if the native view is not registered for Fabric
+let _remoteCameraView: HostComponent<ViewProps> | null = null;
+const getRemoteCameraView = (): HostComponent<ViewProps> => {
+  if (!_remoteCameraView) {
+    _remoteCameraView = requireNativeComponent('FLRemoteCameraView');
+  }
+  return _remoteCameraView;
+};
 
-// Export the Paper component
-export const OmiRemoteCameraView: HostComponent<ViewProps> = OmiRemoteCameraViewPaper;
+export const OmiRemoteCameraView = new Proxy({} as HostComponent<ViewProps>, {
+  get(_target, prop) {
+    return (getRemoteCameraView() as any)[prop];
+  },
+});
 
 // Module name separated from ViewManager name to avoid name collision
 const FLRemoteCamera = NativeModules.FLRemoteCameraModule || NativeModules.FLRemoteCameraView;

@@ -595,22 +595,32 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     return map
   }
 
-  @RequiresApi(Build.VERSION_CODES.M)
   @ReactMethod
   fun systemAlertWindow(promise: Promise) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      promise.resolve(true)
+      return
+    }
     val result = Settings.canDrawOverlays(reactApplicationContext)
     promise.resolve(result)
   }
 
-  @RequiresApi(Build.VERSION_CODES.M)
   @ReactMethod
   fun openSystemAlertSetting(promise: Promise) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      promise.resolve(true)
+      return
+    }
+    val ctx = reactApplicationContext ?: run {
+      promise.resolve(false)
+      return
+    }
     val intent = Intent(
       Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-      Uri.parse("package:" + reactApplicationContext.packageName)
+      Uri.parse("package:" + ctx.packageName)
     )
     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-    reactApplicationContext.startActivity(intent)
+    ctx.startActivity(intent)
     promise.resolve(true)
   }
 
@@ -638,7 +648,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
                 val audioNotificationDescription = data.getString("audioNotificationDescription") ?: "Cuộc gọi audio"
                 val videoNotificationDescription = data.getString("videoNotificationDescription") ?: "Cuộc gọi video"
                 val representName = data.getString("representName") ?: ""
-                val isUserBusy = data.getBoolean("isUserBusy")
+                val isUserBusy = if (data.hasKey("isUserBusy")) data.getBoolean("isUserBusy") else false
 
                 // Configure push notification with extracted parameters
                 OmiClient.getInstance(context).configPushNotification(
@@ -682,7 +692,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val password = data.getString("password")
       val realm = data.getString("realm")
       val host = data.getString("host").let { if (it.isNullOrEmpty()) "vh.omicrm.com" else it }
-      val isVideo = data.getBoolean("isVideo")
+      val isVideo = if (data.hasKey("isVideo")) data.getBoolean("isVideo") else false
       val firebaseToken = data.getString("fcmToken")
       val projectId = data.getString("projectId") ?: ""
       val isSkipDevices = if (data.hasKey("isSkipDevices")) data.getBoolean("isSkipDevices") else false
@@ -741,7 +751,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val usrName = data.getString("fullName") ?: ""
       val usrUuid = data.getString("usrUuid")  ?: ""
       val apiKey = data.getString("apiKey") ?: ""
-      val isVideo = data.getBoolean("isVideo") ?: false
+      val isVideo = if (data.hasKey("isVideo")) data.getBoolean("isVideo") else false
       val phone = data.getString("phone")
       val firebaseToken = data.getString("fcmToken") ?: ""
       val projectId = data.getString("projectId") ?: ""
@@ -898,7 +908,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           promise.reject("E_INVALID_PHONE", "Phone number is required")
           return@runOnUiThread
         }
-        val isVideo = data.getBoolean("isVideo")
+        val isVideo = if (data.hasKey("isVideo")) data.getBoolean("isVideo") else false
 
         val startCallResult =
           OmiClient.getInstance(reactApplicationContext!!).startCall(phoneNumber, isVideo)
@@ -930,7 +940,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     if (audio == PackageManager.PERMISSION_GRANTED) {
       mainScope.launch {
         val uuid = data.getString("usrUuid") ?: ""
-        val isVideo = data.getBoolean("isVideo")
+        val isVideo = if (data.hasKey("isVideo")) data.getBoolean("isVideo") else false
 
         val startCallResult =
           OmiClient.getInstance(reactApplicationContext!!).startCallWithUuid(uuid, isVideo)
@@ -1548,8 +1558,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       // Store promise for callback
       permissionPromise = promise
       
+      val activity = reactApplicationContext?.currentActivity ?: run {
+        promise.resolve(false)
+        return
+      }
       ActivityCompat.requestPermissions(
-        reactApplicationContext.currentActivity!!,
+        activity,
         missingPermissions.toTypedArray(),
         REQUEST_PERMISSIONS_CODE,
       )
@@ -1638,15 +1652,16 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         true
       }
       
-      permissionStatus["essentialGranted"] = grantedEssential
-      permissionStatus["essentialMissing"] = missingEssential
-      permissionStatus["canMakeVoipCalls"] = missingEssential.isEmpty()
-      permissionStatus["foregroundServicePermissions"] = foregroundServiceStatus
-      permissionStatus["canDrawOverlays"] = canDrawOverlays
-      permissionStatus["androidVersion"] = Build.VERSION.SDK_INT
-      permissionStatus["targetSdk"] = reactApplicationContext.applicationInfo.targetSdkVersion
-      
-      val map = Arguments.makeNativeMap(permissionStatus)
+      val map: WritableMap = WritableNativeMap()
+      map.putArray("essentialGranted", Arguments.fromList(grantedEssential.toList()))
+      map.putArray("essentialMissing", Arguments.fromList(missingEssential.toList()))
+      map.putBoolean("canMakeVoipCalls", missingEssential.isEmpty())
+      val fgServiceMap: WritableMap = WritableNativeMap()
+      foregroundServiceStatus.forEach { (k, v) -> fgServiceMap.putBoolean(k, v) }
+      map.putMap("foregroundServicePermissions", fgServiceMap)
+      map.putBoolean("canDrawOverlays", canDrawOverlays)
+      map.putInt("androidVersion", Build.VERSION.SDK_INT)
+      map.putInt("targetSdk", reactApplicationContext.applicationInfo.targetSdkVersion)
       promise.resolve(map)
       
     } catch (e: Exception) {
@@ -1721,8 +1736,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       // Store promise for callback
       permissionPromise = promise
       
+      val activity = reactApplicationContext?.currentActivity ?: run {
+        promise.reject("E_NULL_ACTIVITY", "Current activity is null")
+        return
+      }
       ActivityCompat.requestPermissions(
-        reactApplicationContext.currentActivity!!,
+        activity,
         permissionsToRequest.toTypedArray(),
         REQUEST_PERMISSIONS_CODE
       )
@@ -1734,19 +1753,20 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   private fun requestPermission(isVideo: Boolean) {
     val missingPermissions = getMissingPermissions(isVideo)
-    
+
     if (missingPermissions.isEmpty()) {
       return
     }
-    
+
+    val activity = reactApplicationContext?.currentActivity ?: return
     ActivityCompat.requestPermissions(
-      reactApplicationContext.currentActivity!!,
+      activity,
       missingPermissions.toTypedArray(),
       REQUEST_PERMISSIONS_CODE,
     )
   }
 
-  override fun onActivityResult(p0: Activity?, requestCode: Int, resultCode: Int, p3: Intent?) {
+  override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
     if (requestCode == REQUEST_OVERLAY_PERMISSION_CODE) {
       val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         Settings.canDrawOverlays(reactApplicationContext)
@@ -1758,14 +1778,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
-  override fun onNewIntent(p0: Intent?) {
-    if (p0 != null && p0.hasExtra(SipServiceConstants.PARAM_IS_MISSED_CALL)) {
-      //do your Stuff
-
-      if (p0.getBooleanExtra(SipServiceConstants.PARAM_IS_MISSED_CALL, false)) {
+  override fun onNewIntent(intent: Intent) {
+    if (intent.hasExtra(SipServiceConstants.PARAM_IS_MISSED_CALL)) {
+      if (intent.getBooleanExtra(SipServiceConstants.PARAM_IS_MISSED_CALL, false)) {
         val map: WritableMap = WritableNativeMap()
-        map.putString("callerNumber", p0.getStringExtra(SipServiceConstants.PARAM_NUMBER) ?: "")
-        map.putBoolean("isVideo", p0.getBooleanExtra(SipServiceConstants.PARAM_IS_VIDEO, false))
+        map.putString("callerNumber", intent.getStringExtra(SipServiceConstants.PARAM_NUMBER) ?: "")
+        map.putBoolean("isVideo", intent.getBooleanExtra(SipServiceConstants.PARAM_IS_VIDEO, false))
         sendEvent(CLICK_MISSED_CALL, map)
       }
     }
@@ -1916,11 +1934,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       val password = data.getString("password")
       val realm = data.getString("realm")
       val host = data.getString("host").let { if (it.isNullOrEmpty()) "vh.omicrm.com" else it }
-      val isVideo = data.getBoolean("isVideo")
+      val isVideo = if (data.hasKey("isVideo")) data.getBoolean("isVideo") else false
       val firebaseToken = data.getString("fcmToken")
       val projectId = data.getString("projectId") ?: ""
-      val showNotification = data.getBoolean("showNotification") ?: true
-      val enableAutoUnregister = data.getBoolean("enableAutoUnregister") ?: true
+      val showNotification = if (data.hasKey("showNotification")) data.getBoolean("showNotification") else true
+      val enableAutoUnregister = if (data.hasKey("enableAutoUnregister")) data.getBoolean("enableAutoUnregister") else true
 
       // Validate required parameters
       if (userName.isNullOrEmpty() || password.isNullOrEmpty() || realm.isNullOrEmpty() || firebaseToken.isNullOrEmpty()) {

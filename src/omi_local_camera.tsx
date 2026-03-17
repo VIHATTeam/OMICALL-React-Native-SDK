@@ -1,16 +1,21 @@
 import type { HostComponent } from 'react-native';
 import { NativeModules, requireNativeComponent, ViewProps } from 'react-native';
 
-// Camera Views always use Paper (requireNativeComponent) because:
-// - iOS native code doesn't have Fabric ComponentView implementation yet
-// - Paper components work fine even when New Architecture is enabled
-// - This avoids undefined symbol errors (_FLLocalCameraViewCls)
-const OmiLocalCameraViewPaper: HostComponent<ViewProps> = requireNativeComponent(
-  'FLLocalCameraView'
-);
+// Safe lazy loading — requireNativeComponent can throw in bridgeless mode
+// if the native view is not registered for Fabric
+let _localCameraView: HostComponent<ViewProps> | null = null;
+const getLocalCameraView = (): HostComponent<ViewProps> => {
+  if (!_localCameraView) {
+    _localCameraView = requireNativeComponent('FLLocalCameraView');
+  }
+  return _localCameraView;
+};
 
-// Export the Paper component
-export const OmiLocalCameraView: HostComponent<ViewProps> = OmiLocalCameraViewPaper;
+export const OmiLocalCameraView = new Proxy({} as HostComponent<ViewProps>, {
+  get(_target, prop) {
+    return (getLocalCameraView() as any)[prop];
+  },
+});
 
 // Module name separated from ViewManager name to avoid name collision
 const FLLocalCamera = NativeModules.FLLocalCameraModule || NativeModules.FLLocalCameraView;

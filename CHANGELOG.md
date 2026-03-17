@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.0.2 [17/03/2026]
+
+### Bug Fixes — Android Native
+- Fix build failure on RN 0.80+ / Kotlin 2.x / Gradle 8.14+ — removed `buildscript` block and `kotlin-bom:1.8.0` from library `build.gradle`
+- Fix `currentActivity!!` NPE crash in `checkAndRequestPermissions`, `requestPermissionsByCodes`, `requestPermission` — replaced with null safety
+- Fix `getBoolean()` crash when optional params omitted — added `hasKey()` guard (8 call sites)
+- Fix `checkPermissionStatus` crash from `Arguments.makeNativeMap` with nested collections — use `WritableNativeMap`
+- Fix `systemAlertWindow` / `openSystemAlertSetting` crash on pre-Marshmallow — added runtime API level guard
+- Migrate deprecated `lintOptions` → `lint`, `dataBinding` syntax for AGP 8+
+
+### Bug Fixes — JS
+- Fix `omiEmitter` undefined crash in New Architecture bridgeless mode — safe module resolution with try-catch fallback chain
+- Fix `requireNativeComponent` crash at import time in bridgeless mode — camera views (`OmiLocalCameraView`, `OmiRemoteCameraView`) now use lazy loading via Proxy
+- Fix FCM token fetch failure blocking login — wrapped in try-catch with empty string fallback
+
+### New Architecture Support
+- `omikit.tsx`: TurboModule → NativeModules → fallback resolution, safe for bridge + bridgeless mode
+- `omiEmitter`: `NativeEventEmitter(module)` → `NativeEventEmitter()` → `DeviceEventEmitter` fallback
+- Tested on RN 0.80.3 (Kotlin 2.1.20, Gradle 8.14.1) — both Old and New Architecture
+
+### Documentation
+- Add API Integration Guide for App-to-App service (`docs/api-integration-guide.md`)
+- README: Add App-to-App API section, `startServices()` usage note, VoIP/FCM setup link, Logout API warning
+- Add CHANGELOG for v4.0.2
+
+### Build & CI
+- Add GitHub Actions workflow for Android build validation on `main-v2`
+- Update `gradle.properties` defaults: compileSdk 33→35, Kotlin 1.8.20→2.0.21 (fallback only)
+
 ## 4.0.1 [09/03/2026]
 
 ### New Features
