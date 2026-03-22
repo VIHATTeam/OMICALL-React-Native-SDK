@@ -2,7 +2,7 @@
 
 The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SIP calling via the OMICALL platform with support for both Old and **New Architecture** (TurboModules + Fabric).
 
-**Status:** Active maintenance | **Version:** 4.0.1
+**Status:** Active maintenance | **Version:** 4.1.0
 
 ---
 
@@ -47,7 +47,36 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 | Platform | SDK | Version |
 |----------|-----|---------|
 | Android | OMIKIT | 2.6.4 |
-| iOS | OmiKit | 1.10.34 |
+| iOS | OmiKit | 1.11.4 |
+
+### Platform Requirements
+
+| | Android | iOS |
+|--|---------|-----|
+| **Min SDK** | API 24 (Android 7.0) | iOS 13.0 |
+| **Target SDK** | API 35 (Android 15) | — |
+| **Compile SDK** | API 35 | — |
+
+### Device Requirements
+
+| Requirement | Platform | Notes |
+|-------------|----------|-------|
+| **Physical device** | iOS (required) | iOS Simulator is **not supported** — OmiKit binary is arm64 device-only |
+| **Physical device** | Android (recommended) | Emulator works for basic UI testing but VoIP/audio routing is unreliable |
+| **Google Play Services** | Android (required) | Required for FCM push notifications |
+| **Microphone** | Both (required) | Required for all calls |
+| **Camera** | Both (optional) | Only required for video calls |
+| **Internet** | Both (required) | SIP registration + RTP media streaming |
+
+### Package Size
+
+| Component | Size |
+|-----------|------|
+| npm package (total) | ~353 KB |
+| Android native code | ~4.7 MB |
+| iOS native code | ~176 KB |
+
+> **Note:** These sizes are for the plugin only. The native SDKs (OmiKit/OMIKIT) are installed separately via CocoaPods/Maven and will add to the final app size.
 
 ---
 
@@ -945,43 +974,190 @@ omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (data) => {
 
 ## Video Calls
 
-### Setup
-
-```typescript
-import { OmiLocalCamera, OmiRemoteCamera } from 'omikit-plugin';
-```
+> **v4.1.0+**: Video call architecture rewritten for stability on both platforms. iOS: SDK manages Metal rendering lifecycle automatically. Android: Unified `Omi*` naming convention matching iOS — `requireNativeComponent` and `NativeModules` now resolve correctly. No manual view management needed. Background/foreground transitions handled internally (iOS).
 
 ### Video Components
 
 ```tsx
-// Local camera preview (your camera)
-<OmiLocalCamera style={{ width: 120, height: 160 }} />
-
-// Remote camera view (other party's video)
-<OmiRemoteCamera style={{ width: '100%', height: '100%' }} />
+import {
+  OmiLocalCameraView,   // Your camera preview
+  OmiRemoteCameraView,  // Remote party's video
+  registerVideoEvent,
+  removeVideoEvent,
+  refreshRemoteCamera,
+  refreshLocalCamera,
+  switchOmiCamera,
+  toggleOmiVideo,
+  toggleMute,
+  toggleSpeaker,
+  endCall,
+  OmiCallEvent,
+  OmiCallState,
+  omiEmitter,
+} from 'omikit-plugin';
 ```
 
-### Video Call Flow
+### Complete Video Call Screen Example
 
-```typescript
-// 1. Register for video events BEFORE starting call
-await registerVideoEvent();
+```tsx
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 
-// 2. Start video call
-await startCall({ phoneNumber: '0901234567', isVideo: true });
+export const VideoCallScreen = ({ navigation, route }) => {
+  const [status, setStatus] = useState(route.params?.status);
+  const [muted, setMuted] = useState(false);
+  const [cameraOn, setCameraOn] = useState(true);
 
-// 3. Toggle video during call
-await toggleOmiVideo();   // on/off video stream
-await switchOmiCamera();  // front/back camera
+  useEffect(() => {
+    // 1. Register video events (iOS needs explicit registration)
+    if (Platform.OS === 'ios') {
+      registerVideoEvent();
+    }
 
-// 4. Listen for remote video ready
-omiEmitter.addListener(OmiCallEvent.onRemoteVideoReady, () => {
-  // Remote video is now available - show OmiRemoteCamera
+    // 2. Listen for call state changes
+    const callSub = omiEmitter.addListener(
+      OmiCallEvent.onCallStateChanged,
+      (data) => {
+        setStatus(data.status);
+        if (data.status === OmiCallState.confirmed && Platform.OS === 'android') {
+          refreshRemoteCamera();
+          refreshLocalCamera();
+        }
+        if (data.status === OmiCallState.disconnected) {
+          navigation.goBack();
+        }
+      }
+    );
+
+    // 3. Listen for remote video ready (iOS only)
+    let videoSub;
+    if (Platform.OS === 'ios') {
+      videoSub = omiEmitter.addListener(
+        OmiCallEvent.onRemoteVideoReady,
+        () => {
+          refreshRemoteCamera();
+          refreshLocalCamera();
+        }
+      );
+    }
+
+    // 4. Cleanup on unmount
+    return () => {
+      callSub.remove();
+      videoSub?.remove();
+      if (Platform.OS === 'ios') {
+        removeVideoEvent();
+      }
+    };
+  }, [navigation]);
+
+  return (
+    <View style={styles.container}>
+      {/* Remote video — full screen background */}
+      <OmiRemoteCameraView style={styles.remoteVideo} />
+
+      {/* Local video — corner PiP */}
+      <OmiLocalCameraView style={styles.localVideo} />
+
+      {/* Controls */}
+      {status === OmiCallState.confirmed && (
+        <View style={styles.controls}>
+          <TouchableOpacity onPress={() => { toggleMute(); setMuted(m => !m); }}>
+            <Text style={styles.btn}>{muted ? '🔇' : '🎤'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => { toggleOmiVideo(); setCameraOn(c => !c); }}>
+            <Text style={styles.btn}>{cameraOn ? '📹' : '📷'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => switchOmiCamera()}>
+            <Text style={styles.btn}>🔄</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => { endCall(); navigation.goBack(); }}>
+            <Text style={[styles.btn, styles.hangup]}>📞</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000' },
+  remoteVideo: { flex: 1 },
+  localVideo: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    width: 120,
+    height: 180,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  controls: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+  },
+  btn: { fontSize: 28, padding: 12, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 30 },
+  hangup: { backgroundColor: 'rgba(255,0,0,0.6)' },
 });
-
-// 5. Cleanup when call ends
-await removeVideoEvent();
 ```
+
+### Custom Local Camera Styling
+
+The camera views accept standard React Native `style` props:
+
+```tsx
+{/* Rounded with border */}
+<OmiLocalCameraView
+  style={{
+    width: 120,
+    height: 180,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#fff',
+    overflow: 'hidden',    // Required for borderRadius to clip Metal view
+  }}
+/>
+
+{/* With overlay label */}
+<View style={{ position: 'absolute', top: 60, right: 16 }}>
+  <OmiLocalCameraView style={{ width: 120, height: 180, borderRadius: 12, overflow: 'hidden' }} />
+  <Text style={{ position: 'absolute', bottom: 4, left: 8, color: '#fff', fontSize: 12 }}>You</Text>
+</View>
+```
+
+### Video API Reference
+
+| Function | Description | Platform |
+|----------|-------------|----------|
+| `registerVideoEvent()` | Register for video notifications. Call before starting video call | iOS only |
+| `removeVideoEvent()` | Cleanup video notifications. Call when leaving video screen | iOS only |
+| `refreshRemoteCamera()` | Refresh remote video display | Both |
+| `refreshLocalCamera()` | Refresh local camera preview | Both |
+| `switchOmiCamera()` | Switch front/back camera | Both |
+| `toggleOmiVideo()` | Toggle camera on/off during call | Both |
+
+### Video Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `OmiCallEvent.onRemoteVideoReady` | `null` | Remote video stream is available. Call `refreshRemoteCamera()` |
+
+### Background/Foreground Handling
+
+**v4.1.0+**: SDK handles background/foreground transitions automatically:
+
+- **Background**: Metal rendering paused (CADisplayLink stopped), audio continues
+- **Foreground**: Metal rendering resumed, SDK sends PLI for fresh video frame
+- **No re-INVITE needed** — PJSIP media session stays alive during background
+
+> **Note**: For best results, avoid animating camera views with `width`/`height` changes. Use `transform` for animations instead, as layout changes can affect Metal rendering stability.
 
 ---
 

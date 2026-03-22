@@ -12,6 +12,14 @@ import SwiftUI
 import OmiKit
 import AVFoundation
 
+// UIWindow that passes all touches through to the window underneath
+class PassthroughWindow: UIWindow {
+  override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+    // Always return nil — all touches pass through to React window below
+    return nil
+  }
+}
+
 class CallManager {
 
   static private var instance: CallManager? = nil // Instance
@@ -19,12 +27,39 @@ class CallManager {
   private lazy var omiLib: OMISIPLib = {
     return OMISIPLib.sharedInstance()
   }()
-  var videoManager: OMIVideoViewManager?
   var isSpeaker = false
+  // Container views for video — created lazily, strong reference to keep alive
+  var remoteContainerView: UIView?
+  var localContainerView: UIView?
+  // Separate UIWindow for video (fallback only)
+  var videoWindow: UIWindow?
+  private var isVideoSetup = false
+  private var setupVideoRetryCount = 0
   private var guestPhone : String = ""
   private var lastStatusCall : String?
   private var tempCallInfo : [String: Any]?
   private var lastTimeCall : Date = Date()
+  // Store original backgrounds to restore after video cleanup
+  private var savedBackgrounds: [(UIView, UIColor?)] = []
+
+  // Recursively make all views transparent, saving original colors
+  static func makeViewHierarchyTransparent(_ view: UIView) {
+    let manager = CallManager.shareInstance()
+    manager.savedBackgrounds.append((view, view.backgroundColor))
+    view.backgroundColor = .clear
+    for child in view.subviews {
+      makeViewHierarchyTransparent(child)
+    }
+  }
+
+  // Restore saved backgrounds
+  func restoreSavedBackgrounds() {
+    for (view, color) in savedBackgrounds {
+      view.backgroundColor = color
+    }
+    savedBackgrounds.removeAll()
+  }
+
   /// Get instance
   static func shareInstance() -> CallManager {
     if (instance == nil) {
@@ -281,13 +316,29 @@ class CallManager {
                                              name: NSNotification.Name.OMICallVideoInfo,
                                              object: nil
       )
+      // Observe app foreground for video recovery (BG→FG)
+      NotificationCenter.default.addObserver(instance,
+                                             selector: #selector(self.appDidBecomeActive),
+                                             name: UIApplication.didBecomeActiveNotification,
+                                             object: nil
+      )
     }
   }
-  
+
   func removeVideoEvent() {
-    DispatchQueue.main.async {
+    DispatchQueue.main.async { [weak self] in
       guard let instance = CallManager.instance else { return }
       NotificationCenter.default.removeObserver(instance, name: NSNotification.Name.OMICallVideoInfo, object: nil)
+      NotificationCenter.default.removeObserver(instance, name: UIApplication.didBecomeActiveNotification, object: nil)
+      // Cleanup video when events are removed (screen dismissed)
+      self?.cleanupVideo()
+    }
+  }
+
+  @objc func appDidBecomeActive() {
+    // Recover video after background → foreground transition
+    if isVideoSetup {
+      OMIVideoCallManager.shared().prepareForVideoDisplay()
     }
   }
   
@@ -385,8 +436,8 @@ class CallManager {
     
     switch (callState) {
     case OMICallState.confirmed.rawValue:
-      if (videoManager == nil && call.isVideo) {
-        videoManager = OMIVideoViewManager.init()
+      if call.isVideo {
+        setupVideo()
       }
       isSpeaker = call.speaker
       lastStatusCall = "answered"
@@ -397,9 +448,7 @@ class CallManager {
       break
     case OMICallState.disconnected.rawValue:
       tempCallInfo = getCallInfo(call: call)
-      if (videoManager != nil) {
-        videoManager = nil
-      }
+      cleanupVideo()
       lastStatusCall = nil
       guestPhone = ""
       var combinedDictionary: [String: Any] = dataToSend
@@ -596,32 +645,53 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
     return OmiClient.getCurrentAudio()
   }
 
-  //video call
+  // MARK: - Video Call (OMIVideoCallManager API)
+
+  /// Setup video — only succeeds if containers are already set and in window.
+  /// Does NOT defer or retry. Call setupVideoWithContainers() to create + setup in one step.
+  @objc func setupVideo() {
+    guard !isVideoSetup else {
+      NSLog("📹 [RN-CallManager] setupVideo: already setup, skipping")
+      return
+    }
+    guard let remote = self.remoteContainerView,
+          let local = self.localContainerView,
+          remote.window != nil else {
+      NSLog("📹 [RN-CallManager] setupVideo: containers not ready or not in window")
+      return
+    }
+
+    NSLog("📹 [RN-CallManager] setupVideo: calling OMIVideoCallManager.setupWithRemoteView")
+    OMIVideoCallManager.shared().setup(withRemoteView: remote, localView: local)
+    self.isVideoSetup = true
+  }
+
+  /// Cleanup video resources
+  func cleanupVideo() {
+    if isVideoSetup {
+      OMIVideoCallManager.shared().cleanup()
+      isVideoSetup = false
+    }
+    // Remove containers from window and clear references
+    DispatchQueue.main.async { [weak self] in
+      self?.remoteContainerView?.removeFromSuperview()
+      self?.localContainerView?.removeFromSuperview()
+      self?.remoteContainerView = nil
+      self?.localContainerView = nil
+      NSLog("📹 [RN-CallManager] cleanupVideo: removed video views from window")
+    }
+  }
+
   func toggleCamera() {
-    if let videoManager = videoManager {
-      videoManager.toggleCamera()
-    }
+    OMIVideoCallManager.shared().toggleCamera()
   }
-  
+
   func getCameraStatus() -> Bool {
-    guard let videoManager = videoManager else { return false }
-    return videoManager.isCameraOn
+    return OMIVideoCallManager.shared().isCameraOn
   }
-  
+
   func switchCamera() {
-    if let videoManager = videoManager {
-      videoManager.switchCamera()
-    }
-  }
-  
-  func getLocalPreviewView(frame: CGRect) -> UIView? {
-    guard let videoManager = videoManager  else { return nil}
-    return videoManager.createView(forVideoLocal: frame)
-  }
-  
-  func getRemotePreviewView(frame: CGRect) -> UIView?  {
-    guard let videoManager = videoManager  else { return nil }
-    return videoManager.createView(forVideoRemote: frame)
+    OMIVideoCallManager.shared().switchCamera()
   }
   
   func logout() {

@@ -47,8 +47,8 @@ import { CustomLoading } from './components/custom_view/custom_loading';
 // Default credentials for testing
 const DEFAULT_CREDENTIALS = {
   realm: 'luuphuongmytrinh9a2',
-  userName: '101',
-  password: 'vivx2001@A',
+  userName: '100',
+  password: 'iT2OjDYA0H',
   host: 'vh.omicrm.com',
   projectId: '',
 };
@@ -227,8 +227,13 @@ export const LoginScreen = () => {
     try {
       // Get FCM token for push notifications
       console.log('[LOGIN] Step 1: Getting FCM token...');
-      const fcmToken = await token;
-      console.log('[LOGIN] Step 1 done - FCM Token:', fcmToken);
+      let fcmToken = '';
+      try {
+        fcmToken = (await token) || '';
+      } catch (e) {
+        console.log('[LOGIN] Step 1: FCM token failed, continuing without it:', e);
+      }
+      console.log('[LOGIN] Step 1 done - FCM Token:', fcmToken || '(empty)');
 
       // Prepare login info
       const loginInfo: LoginInfo = {

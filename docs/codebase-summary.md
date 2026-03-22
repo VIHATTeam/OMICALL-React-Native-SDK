@@ -21,10 +21,8 @@ OMICALL-React-Native-SDK/
 │   └── src/main/java/com/omikitplugin/
 │       ├── OmikitPluginModule.kt     # Main ReactNativeModule (bridge + TurboModule)
 │       ├── OmikitPluginPackage.kt    # Package registration
-│       ├── FLLocalCameraModule.kt    # Local camera view module
-│       ├── FLLocalCameraView.kt      # Local camera view implementation
-│       ├── FLRemoteCameraModule.kt   # Remote camera view module
-│       ├── FLRemoteCameraView.kt     # Remote camera view implementation
+│       ├── OmiLocalCameraView.kt     # Local camera ViewManager + refresh (unified)
+│       ├── OmiRemoteCameraView.kt    # Remote camera ViewManager + refresh (unified)
 │       ├── constants/                # Event name constants
 │       ├── state/
 │       │   └── CallState.kt         # Call state enum

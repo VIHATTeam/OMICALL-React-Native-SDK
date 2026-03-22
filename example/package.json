@@ -7,6 +7,7 @@
     "android:old": "react-native run-android",
     "android:new": "react-native run-android",
     "ios": "react-native run-ios",
+    "link_dev": "yarn install --force",
     "ios:old": "react-native run-ios",
     "ios:new": "RCT_NEW_ARCH_ENABLED=1 bundle exec pod install --project-directory=ios && react-native run-ios",
     "lint": "eslint .",

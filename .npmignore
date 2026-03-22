@@ -1,5 +1,13 @@
+node_modules
 example
 __tests__
 __fixtures__
 __mocks__
 .DS_Store
+.git
+.claude
+docs
+plans
+dev
+log_debug.log
+*.tgz

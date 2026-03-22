@@ -163,4 +163,47 @@ declare module 'omikit-plugin' {
   };
 
   export const omiEmitter: NativeEventEmitter;
+
+  // ============================================
+  // VIDEO COMPONENTS
+  // ============================================
+
+  import type { ComponentType } from 'react';
+  import type { ViewProps } from 'react-native';
+
+  /** Remote camera view — displays the other party's video */
+  export const OmiRemoteCameraView: ComponentType<ViewProps>;
+  /** Local camera view — displays your own camera preview */
+  export const OmiLocalCameraView: ComponentType<ViewProps>;
+
+  /** Refresh the remote camera display */
+  export function refreshRemoteCamera(): Promise<boolean>;
+  /** Refresh the local camera preview */
+  export function refreshLocalCamera(): Promise<boolean>;
+
+  /**
+   * Configure camera view style on iOS (Fabric — native window rendering).
+   * On Android, use style props on OmiLocalCameraView/OmiRemoteCameraView instead.
+   */
+  export function setCameraConfig(config: {
+    target: 'local' | 'remote';
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    borderRadius?: number;
+    borderWidth?: number;
+    borderColor?: string;
+    backgroundColor?: string;
+    opacity?: number;
+    hidden?: boolean;
+    scaleMode?: 'fill' | 'fit' | 'stretch';
+  }): Promise<boolean>;
+
+  /**
+   * Create video containers and add to window (iOS only).
+   * Call when video call screen mounts and call is active.
+   * On Android, this is a no-op (camera views are rendered via JSX).
+   */
+  export function setupVideoContainers(): Promise<boolean>;
 }

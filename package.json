@@ -1,6 +1,6 @@
 {
   "name": "omikit-plugin",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "description": "Omikit Plugin by ViHAT",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -14,6 +14,7 @@
     "ios",
     "cpp",
     "*.podspec",
+    "react-native.config.js",
     "!lib/typescript/example",
     "!ios/build",
     "!android/build",
@@ -126,15 +127,6 @@
       "commonjs",
       "module"
     ]
-  },
-  "react-native": {
-    "android": {
-      "sourceDir": "./android",
-      "packageImportPath": "import com.omikitplugin.OmikitPluginPackage;"
-    },
-    "ios": {
-      "podspecPath": "./omikit-plugin.podspec"
-    }
   },
   "directories": {
     "example": "example"

@@ -2,6 +2,62 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.0 [19/03/2026]
+
+### Video Call — Major Rewrite (iOS + Android)
+
+**Architecture change (iOS)**: Migrated from `OMIVideoViewManager` (manual Metal view management) to `OMIVideoCallManager` (SDK-managed lifecycle).
+
+- **Stable video rendering** — SDK manages Metal drawable pool, frame watchdog, and error recovery automatically
+- **Background/foreground recovery** — video resumes automatically when app returns from background
+- **Loading indicator** — SDK shows loading overlay while waiting for video frames
+- **Camera switch guard** — prevents race conditions during front/back camera switch
+
+**Android rename & unification**: Renamed all `FL*` prefixed video classes to `Omi*` to match iOS naming convention.
+
+- **Unified naming** — Both platforms now use `OmiLocalCameraView` / `OmiRemoteCameraView`
+- **Merged ViewManager + Module** — `refresh()` method now lives directly in ViewManager (matches iOS pattern), eliminating separate `*Module` classes
+- **Fixed native module registration** — `getName()` now returns `"OmiLocalCameraView"` / `"OmiRemoteCameraView"` matching JS `requireNativeComponent()` and `NativeModules.*` expectations
+- **Thread-safe refresh** — `refresh()` now dispatches to UI thread via `UiThreadUtil.runOnUiThread`
+
+### File Changes (Internal Only — JS API Unchanged)
+
+**iOS:**
+| Old (internal) | New (internal) |
+|---|---|
+| `FLLocalCameraView.swift` / `.m` | `OmiLocalCameraViewManager.swift` / `OmiLocalCameraViewBridge.m` |
+| `FLRemoteCameraView.swift` / `.m` | `OmiRemoteCameraViewManager.swift` / `OmiRemoteCameraViewBridge.m` |
+
+**Android:**
+| Old (4 files) | New (2 files) |
+|---|---|
+| `FLLocalCameraView.kt` + `FLLocalCameraModule.kt` | `OmiLocalCameraView.kt` (merged) |
+| `FLRemoteCameraView.kt` + `FLRemoteCameraModule.kt` | `OmiRemoteCameraView.kt` (merged) |
+
+### Improvements
+
+- Removed dependency on `OMIVideoViewManager` (deprecated old API)
+- Reduced view hierarchy: 2 views instead of 4 (iOS), 2 classes instead of 4 (Android)
+- Async video setup — no longer blocks JS thread during call connection
+- Camera views accept standard RN `style` props (borderRadius, borderWidth, etc.)
+- BG→FG observer in `CallManager` calls `prepareForVideoDisplay()` automatically (iOS)
+- Consistent `Omi` prefix across both platforms
+
+### Bug Fixes
+
+- Fixed video freeze when switching camera during active call (iOS)
+- Fixed memory leak from unreleased Metal views on call disconnect (iOS)
+- Fixed blank remote video on incoming call from background (iOS)
+- **Fixed Android video views not rendering** — `getName()` mismatch (`FL*` vs `Omi*`) caused `requireNativeComponent` and `NativeModules` to fail silently
+- **Fixed Android `refresh()` crash risk** — view layout ops now run on UI thread
+
+### Dependencies
+
+- OmiKit iOS SDK: 1.10.34 → 1.11.2
+- OmiSIP framework: Updated with CADisplayLink Metal renderer
+
+---
+
 ## 4.0.2 [17/03/2026]
 
 ### Bug Fixes — Android Native

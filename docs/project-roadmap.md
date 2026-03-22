@@ -11,7 +11,7 @@
 - [x] Getter functions: `getProjectId`, `getAppId`, `getDeviceId`, `getFcmToken`, `getSipInfo`, `getVoipToken`
 - [x] Fix iOS `getUserInfo` selector mismatch (typo `getUserInfor`)
 - [x] Fix `NativeEventEmitter` crash on iOS New Architecture
-- [x] Fix Android name collision between `FLLocalCameraModule` and `FLLocalCameraView`
+- [x] Fix Android name collision — renamed `FL*` → `Omi*`, merged Module into ViewManager
 - [x] Fix null guard for `refreshLocalCamera` / `refreshRemoteCamera` on iOS
 - [x] Update OmiKit iOS to 1.10.34
 - [x] Update OmiSDK Android to 2.6.4
@@ -114,6 +114,6 @@
 | iOS VoIP background wakeup time constraint (30s) | Platform limitation | N/A |
 | `getKeepAliveStatus` / `triggerKeepAlivePing` not documented | Documentation debt | Low |
 | `preventAutoUnregister`, `prepareForIncomingCall` deprecated but not removed | Technical debt | Low |
-| `FLLocalCameraModule` / `FLLocalCameraView` name similarity | Minor code smell | Low |
+| ~~`FLLocalCameraModule` / `FLLocalCameraView` name similarity~~ | **Resolved** in v4.1.0 — merged into `OmiLocalCameraView` | Done |
 | No automated tests for native modules | Testing gap | High |
 | Example app `GoogleService-Info.plist` in repo | Security hygiene | Medium |

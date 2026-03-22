@@ -8,28 +8,31 @@ import com.facebook.react.uimanager.ViewManager
 
 class OmikitPluginPackage : ReactPackage {
 
-  private var localView: FLLocalCameraView? = null
-  private var remoteView: FLRemoteCameraView? = null
+  private var localView: OmiLocalCameraView? = null
+  private var remoteView: OmiRemoteCameraView? = null
+
   override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
     if (localView == null) {
-      localView = FLLocalCameraView(reactContext)
+      localView = OmiLocalCameraView(reactContext)
     }
     if (remoteView == null) {
-      remoteView = FLRemoteCameraView(reactContext)
+      remoteView = OmiRemoteCameraView(reactContext)
     }
+    // ViewManagers are also NativeModules — refresh() is accessible via
+    // NativeModules.OmiLocalCameraView and NativeModules.OmiRemoteCameraView
     return listOf(
       OmikitPluginModule(reactContext),
-      FLLocalCameraModule(reactContext, localView!!),
-      FLRemoteCameraModule(reactContext, remoteView!!),
+      localView!!,
+      remoteView!!,
     )
   }
 
   override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
     if (localView == null) {
-      localView = FLLocalCameraView(reactContext)
+      localView = OmiLocalCameraView(reactContext)
     }
     if (remoteView == null) {
-      remoteView = FLRemoteCameraView(reactContext)
+      remoteView = OmiRemoteCameraView(reactContext)
     }
     return listOf(localView!!, remoteView!!)
   }

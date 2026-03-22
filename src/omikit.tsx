@@ -186,6 +186,57 @@ export function switchOmiCamera(): Promise<boolean> {
 }
 
 /**
+ * Configure camera view style on iOS (Fabric mode — native window rendering).
+ * On Android, use style props on OmiLocalCameraView/OmiRemoteCameraView instead.
+ *
+ * @param config.target - "local" or "remote"
+ * @param config.x - X position
+ * @param config.y - Y position
+ * @param config.width - View width
+ * @param config.height - View height
+ * @param config.borderRadius - Corner radius
+ * @param config.borderWidth - Border width
+ * @param config.borderColor - Border color (hex: "#FF0000" or "#FF000080")
+ * @param config.backgroundColor - Background color (hex)
+ * @param config.opacity - View opacity (0.0 - 1.0)
+ * @param config.hidden - Show/hide the view
+ * @param config.scaleMode - Video scale: "fill" (aspect fill), "fit" (aspect fit), "stretch"
+ * @returns {Promise<boolean>}
+ */
+export function setCameraConfig(config: {
+  target: 'local' | 'remote';
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  borderRadius?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  backgroundColor?: string;
+  opacity?: number;
+  hidden?: boolean;
+  scaleMode?: 'fill' | 'fit' | 'stretch';
+}): Promise<boolean> {
+  if (Platform.OS === 'ios') {
+    return OmikitPlugin.setCameraConfig(config);
+  }
+  return Promise.resolve(false);
+}
+
+/**
+ * Create video containers and add to window (iOS only).
+ * Call this when video call screen mounts and call is active.
+ * On Fabric, RCTViewManager.view() is not called, so containers must be created manually.
+ * @returns {Promise<boolean>}
+ */
+export function setupVideoContainers(): Promise<boolean> {
+  if (Platform.OS === 'ios') {
+    return OmikitPlugin.setupVideoContainers();
+  }
+  return Promise.resolve(true);
+}
+
+/**
  * Toggles the video stream on or off during a video call.
  * @returns {Promise<boolean>} A promise that resolves to `true` if the video is toggled successfully.
  */
@@ -207,6 +258,18 @@ export function logout(): Promise<boolean> {
  */
 export function registerVideoEvent(): Promise<boolean> {
   return OmikitPlugin.registerVideoEvent();
+}
+
+/**
+ * Setup video views by attaching native containers to React view tags.
+ * Required for New Architecture (Fabric) where ViewManager.view() is not called.
+ */
+export function setupVideoViews(
+  remoteTag: number,
+  localTag: number
+): Promise<boolean> {
+  if (!OmikitPlugin.setupVideoViews) return Promise.resolve(false);
+  return OmikitPlugin.setupVideoViews(remoteTag, localTag);
 }
 
 /**

@@ -30,8 +30,8 @@
 		C8FBCFCE29A5F49600AA4A22 /* CallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallManager.swift; sourceTree = "<group>"; };
 		C8FBCFCF29A5F49600AA4A22 /* StringUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringUtils.swift; sourceTree = "<group>"; };
 		C8FBCFD029A5F49600AA4A22 /* NSUserActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSUserActivity.swift; sourceTree = "<group>"; };
-		C8FBCFD229A5F49600AA4A22 /* FLLocalCameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLLocalCameraView.swift; sourceTree = "<group>"; };
-		C8FBCFD329A5F49600AA4A22 /* FLRemoteCameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FLRemoteCameraView.swift; sourceTree = "<group>"; };
+		C8FBCFD229A5F49600AA4A22 /* OmiLocalCameraViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmiLocalCameraViewManager.swift; sourceTree = "<group>"; };
+		C8FBCFD329A5F49600AA4A22 /* OmiRemoteCameraViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmiRemoteCameraViewManager.swift; sourceTree = "<group>"; };
 		C8FBCFD529A5F49600AA4A22 /* Constant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constant.swift; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* OmikitPlugin-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OmikitPlugin-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* OmikitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmikitPlugin.swift; sourceTree = "<group>"; };
@@ -83,8 +83,8 @@
 		C8FBCFD129A5F49600AA4A22 /* VideoCall */ = {
 			isa = PBXGroup;
 			children = (
-				C8FBCFD229A5F49600AA4A22 /* FLLocalCameraView.swift */,
-				C8FBCFD329A5F49600AA4A22 /* FLRemoteCameraView.swift */,
+				C8FBCFD229A5F49600AA4A22 /* OmiLocalCameraViewManager.swift */,
+				C8FBCFD329A5F49600AA4A22 /* OmiRemoteCameraViewManager.swift */,
 			);
 			path = VideoCall;
 			sourceTree = "<group>";
