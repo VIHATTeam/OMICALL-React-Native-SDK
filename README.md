@@ -974,7 +974,20 @@ omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (data) => {
 
 ## Video Calls
 
-> **v4.1.0+**: Video call architecture rewritten for stability on both platforms. iOS: SDK manages Metal rendering lifecycle automatically. Android: Unified `Omi*` naming convention matching iOS — `requireNativeComponent` and `NativeModules` now resolve correctly. No manual view management needed. Background/foreground transitions handled internally (iOS).
+> **Important:** To use video calls, you must login with `isVideo: true` in `initCallWithUserPassword()`. This enables camera support during SIP registration.
+
+### Prerequisites
+
+```typescript
+// Login with video support enabled
+await initCallWithUserPassword({
+  userName: 'sip_user',
+  password: 'sip_password',
+  realm: 'your_realm',
+  isVideo: true,       // Required for video call support
+  fcmToken: fcmToken,
+});
+```
 
 ### Video Components
 
@@ -988,176 +1001,175 @@ import {
   refreshLocalCamera,
   switchOmiCamera,
   toggleOmiVideo,
-  toggleMute,
-  toggleSpeaker,
-  endCall,
+  setupVideoContainers, // iOS Fabric only
+  setCameraConfig,      // iOS Fabric only
+  omiEmitter,
   OmiCallEvent,
   OmiCallState,
-  omiEmitter,
 } from 'omikit-plugin';
 ```
 
-### Complete Video Call Screen Example
+### Platform Differences
+
+| Feature | Android | iOS (Old Arch) | iOS (New Arch / Fabric) |
+|---------|---------|----------------|------------------------|
+| Video rendering | JSX components | JSX components | Native window containers |
+| Camera views | `<OmiRemoteCameraView>` in JSX | `<OmiRemoteCameraView>` in JSX | `setupVideoContainers()` from JS |
+| Style control | React `style` props | React `style` props | `setCameraConfig()` from JS |
+| Controls overlay | Overlay on video | Overlay on video | Below video (split layout) |
+
+### Android Video Call Example
+
+Camera views render via JSX — works on both Old and New Architecture:
 
 ```tsx
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
-
-export const VideoCallScreen = ({ navigation, route }) => {
-  const [status, setStatus] = useState(route.params?.status);
-  const [muted, setMuted] = useState(false);
-  const [cameraOn, setCameraOn] = useState(true);
+const VideoCallScreen = () => {
+  const [isCallActive, setIsCallActive] = useState(false);
 
   useEffect(() => {
-    // 1. Register video events (iOS needs explicit registration)
-    if (Platform.OS === 'ios') {
-      registerVideoEvent();
-    }
-
-    // 2. Listen for call state changes
-    const callSub = omiEmitter.addListener(
-      OmiCallEvent.onCallStateChanged,
-      (data) => {
-        setStatus(data.status);
-        if (data.status === OmiCallState.confirmed && Platform.OS === 'android') {
-          refreshRemoteCamera();
-          refreshLocalCamera();
-        }
-        if (data.status === OmiCallState.disconnected) {
-          navigation.goBack();
-        }
+    const sub = omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (data) => {
+      if (data.status === OmiCallState.confirmed) {
+        setIsCallActive(true);
+        // Connect video feeds to SDK
+        refreshRemoteCamera();
+        refreshLocalCamera();
       }
-    );
-
-    // 3. Listen for remote video ready (iOS only)
-    let videoSub;
-    if (Platform.OS === 'ios') {
-      videoSub = omiEmitter.addListener(
-        OmiCallEvent.onRemoteVideoReady,
-        () => {
-          refreshRemoteCamera();
-          refreshLocalCamera();
-        }
-      );
-    }
-
-    // 4. Cleanup on unmount
-    return () => {
-      callSub.remove();
-      videoSub?.remove();
-      if (Platform.OS === 'ios') {
-        removeVideoEvent();
+      if (data.status === OmiCallState.disconnected) {
+        navigation.goBack();
       }
-    };
-  }, [navigation]);
+    });
+    return () => sub.remove();
+  }, []);
 
   return (
-    <View style={styles.container}>
-      {/* Remote video — full screen background */}
-      <OmiRemoteCameraView style={styles.remoteVideo} />
-
-      {/* Local video — corner PiP */}
-      <OmiLocalCameraView style={styles.localVideo} />
-
-      {/* Controls */}
-      {status === OmiCallState.confirmed && (
-        <View style={styles.controls}>
-          <TouchableOpacity onPress={() => { toggleMute(); setMuted(m => !m); }}>
-            <Text style={styles.btn}>{muted ? '🔇' : '🎤'}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => { toggleOmiVideo(); setCameraOn(c => !c); }}>
-            <Text style={styles.btn}>{cameraOn ? '📹' : '📷'}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => switchOmiCamera()}>
-            <Text style={styles.btn}>🔄</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => { endCall(); navigation.goBack(); }}>
-            <Text style={[styles.btn, styles.hangup]}>📞</Text>
-          </TouchableOpacity>
-        </View>
+    <View style={{ flex: 1, backgroundColor: '#1E3050' }}>
+      {isCallActive && (
+        <>
+          <OmiRemoteCameraView style={StyleSheet.absoluteFillObject} />
+          <OmiLocalCameraView style={{
+            position: 'absolute', top: 60, right: 16,
+            width: 120, height: 180, borderRadius: 12, overflow: 'hidden',
+          }} />
+        </>
       )}
+      {/* Controls overlay on top of video */}
+      <View style={{ position: 'absolute', bottom: 40, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-evenly' }}>
+        <Button title="Mute" onPress={toggleMute} />
+        <Button title="Flip" onPress={switchOmiCamera} />
+        <Button title="End" onPress={endCall} />
+      </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  remoteVideo: { flex: 1 },
-  localVideo: {
-    position: 'absolute',
-    top: 60,
-    right: 16,
-    width: 120,
-    height: 180,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  controls: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-  },
-  btn: { fontSize: 28, padding: 12, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 30 },
-  hangup: { backgroundColor: 'rgba(255,0,0,0.6)' },
-});
 ```
 
-### Custom Local Camera Styling
+### iOS Video Call Example (New Architecture / Fabric)
 
-The camera views accept standard React Native `style` props:
+On iOS Fabric, `RCTViewManager.view()` is not called. Video renders via native window containers:
 
 ```tsx
-{/* Rounded with border */}
-<OmiLocalCameraView
-  style={{
-    width: 120,
-    height: 180,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#fff',
-    overflow: 'hidden',    // Required for borderRadius to clip Metal view
-  }}
-/>
+import { Dimensions, Platform } from 'react-native';
+const { width: SW, height: SH } = Dimensions.get('window');
 
-{/* With overlay label */}
-<View style={{ position: 'absolute', top: 60, right: 16 }}>
-  <OmiLocalCameraView style={{ width: 120, height: 180, borderRadius: 12, overflow: 'hidden' }} />
-  <Text style={{ position: 'absolute', bottom: 4, left: 8, color: '#fff', fontSize: 12 }}>You</Text>
-</View>
+const VideoCallScreen = () => {
+  const [isCallActive, setIsCallActive] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') registerVideoEvent();
+
+    const sub = omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (data) => {
+      if (data.status === OmiCallState.confirmed) {
+        setIsCallActive(true);
+        if (Platform.OS === 'ios') {
+          // Create native containers + setup SDK video
+          setupVideoContainers().then(() => {
+            // Adjust video position/style
+            setCameraConfig({
+              target: 'remote',
+              x: 0, y: 0, width: SW, height: SH * 0.65,
+              scaleMode: 'fill',
+            });
+            setCameraConfig({
+              target: 'local',
+              x: SW - 136, y: 60, width: 120, height: 180,
+              borderRadius: 12,
+              scaleMode: 'fill',
+            });
+          });
+        }
+      }
+      if (data.status === OmiCallState.disconnected) {
+        // Hide native video containers before navigating
+        if (Platform.OS === 'ios') {
+          setCameraConfig({ target: 'remote', hidden: true });
+          setCameraConfig({ target: 'local', hidden: true });
+        }
+        setTimeout(() => navigation.reset({ index: 0, routes: [{ name: 'Home' }] }), 100);
+      }
+    });
+
+    return () => {
+      sub.remove();
+      if (Platform.OS === 'ios') removeVideoEvent();
+    };
+  }, []);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#1E3050' }}>
+      {/* iOS: native video covers top ~65%, React controls below */}
+      <View style={{ flex: 1 }} />
+      <View style={{ padding: 20, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <Button title="Mute" onPress={toggleMute} />
+        <Button title="Flip" onPress={switchOmiCamera} />
+        <Button title="End" onPress={endCall} />
+      </View>
+    </View>
+  );
+};
+```
+
+### `setCameraConfig()` — iOS Fabric Only
+
+Control native video container style from JS:
+
+```typescript
+setCameraConfig({
+  target: 'local' | 'remote',
+  x?: number,              // X position
+  y?: number,              // Y position
+  width?: number,          // View width
+  height?: number,         // View height
+  borderRadius?: number,   // Corner radius
+  borderWidth?: number,    // Border width
+  borderColor?: string,    // Hex color (#RRGGBB or #RRGGBBAA)
+  backgroundColor?: string,
+  opacity?: number,        // 0.0 - 1.0
+  hidden?: boolean,        // Show/hide
+  scaleMode?: 'fill' | 'fit' | 'stretch',
+});
 ```
 
 ### Video API Reference
 
 | Function | Description | Platform |
 |----------|-------------|----------|
-| `registerVideoEvent()` | Register for video notifications. Call before starting video call | iOS only |
-| `removeVideoEvent()` | Cleanup video notifications. Call when leaving video screen | iOS only |
-| `refreshRemoteCamera()` | Refresh remote video display | Both |
-| `refreshLocalCamera()` | Refresh local camera preview | Both |
+| `registerVideoEvent()` | Register for video notifications | iOS only |
+| `removeVideoEvent()` | Cleanup video notifications | iOS only |
+| `refreshRemoteCamera()` | Connect remote video feed to surface | Both |
+| `refreshLocalCamera()` | Connect local camera feed to surface | Both |
 | `switchOmiCamera()` | Switch front/back camera | Both |
 | `toggleOmiVideo()` | Toggle camera on/off during call | Both |
+| `setupVideoContainers()` | Create native video containers on window | iOS Fabric only |
+| `setCameraConfig()` | Control video container style/position | iOS Fabric only |
 
-### Video Events
+### Known Limitations
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `OmiCallEvent.onRemoteVideoReady` | `null` | Remote video stream is available. Call `refreshRemoteCamera()` |
+- **iOS Fabric**: Controls cannot overlay on top of video (native window z-order). Use split layout — video top, controls bottom.
+- **iOS Fabric**: Camera switch has ~3-6s delay (SDK Metal stabilization).
+- **Android**: Must login with `isVideo: true` for camera to initialize. Without it, colorbar test pattern shows instead of camera.
+- **Simulator**: Video calls require physical device on both platforms.
 
-### Background/Foreground Handling
-
-**v4.1.0+**: SDK handles background/foreground transitions automatically:
-
-- **Background**: Metal rendering paused (CADisplayLink stopped), audio continues
-- **Foreground**: Metal rendering resumed, SDK sends PLI for fresh video frame
-- **No re-INVITE needed** — PJSIP media session stays alive during background
-
-> **Note**: For best results, avoid animating camera views with `width`/`height` changes. Use `transform` for animations instead, as layout changes can affect Metal rendering stability.
+See [Known Issues](./docs/known-issues.md) for full details.
 
 ---
 
@@ -1390,7 +1402,10 @@ if (initialCall) {
 | Incoming call on Android — no UI | Missing overlay permission | Call `requestSystemAlertWindowPermission()` |
 | `startCall` returns 450/451/452 | Missing runtime permissions | Call `requestPermissionsByCodes([code])` |
 | No audio during call | Audio route issue | Check `getAudio()` and `setAudio()` |
-| Video not showing | Video event not registered | Call `registerVideoEvent()` before the call |
+| Video not showing (iOS) | Video event not registered | Call `registerVideoEvent()` before the call |
+| Video shows colorbar (Android) | Login with `isVideo: false` | Login with `isVideo: true` to enable camera |
+| Video black screen (Android) | Feed not connected | Ensure `refreshRemoteCamera()` + `refreshLocalCamera()` called on confirmed |
+| iOS Fabric: controls hidden | Native video on UIWindow covers React | Use split layout — video top, controls bottom. See [Known Issues](./docs/known-issues.md) |
 | NativeEventEmitter warning (iOS) | Old RN bridge issue | Upgrade to v4.0.x with New Architecture |
 | `Invalid local URI` in logs | Empty proxy/host in login | Pass `host` parameter in `initCallWithUserPassword` |
 | Build error with New Arch | Codegen not configured | Ensure `codegenConfig` exists in `package.json` |
@@ -1403,6 +1418,7 @@ if (initialCall) {
 Full documentation in [`./docs/`](./docs/):
 
 - [API Integration Guide (App-to-App)](./docs/api-integration-guide.md)
+- [Known Issues & Limitations](./docs/known-issues.md)
 - [Project Overview & PDR](./docs/project-overview-pdr.md)
 - [Codebase Summary](./docs/codebase-summary.md)
 - [System Architecture](./docs/system-architecture.md)
