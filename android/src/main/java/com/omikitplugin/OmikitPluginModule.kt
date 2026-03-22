@@ -450,7 +450,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     moduleInstance = this
     reactApplicationContext!!.addActivityEventListener(this)
     Handler(Looper.getMainLooper()).post {
-      val client = OmiClient.getInstance(reactApplicationContext!!)
+      // Use applicationContext — pjsip video subsystem needs it for CameraManager access
+      val ctx = reactApplicationContext?.applicationContext ?: reactApplicationContext!!
+      val client = OmiClient.getInstance(ctx)
       client.addCallStateListener(this)
       client.addCallStateListener(autoUnregisterListener)
       client.setDebug(false)
@@ -463,10 +465,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     try {
       // ✅ Prepare audio system trước khi start services
       prepareAudioSystem()
-      
+
       OmiClient.getInstance(reactApplicationContext!!).addAccountListener(accountListener)
-      
-      // ✅ Start services - không cần prevent auto-unregister với Silent API
+
       OmiClient.getInstance(reactApplicationContext!!).setDebug(false)
       promise.resolve(true)
     } catch (e: Exception) {

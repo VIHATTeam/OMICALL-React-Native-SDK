@@ -1,6 +1,8 @@
 package com.omikitplugin
 
 import android.graphics.SurfaceTexture
+import android.util.Log
+import android.view.Surface
 import android.view.TextureView
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -10,6 +12,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
+import vn.vihat.omicall.omisdk.OmiClient
 import vn.vihat.omicall.omisdk.videoutils.ScaleManager
 import vn.vihat.omicall.omisdk.videoutils.Size
 
@@ -80,13 +83,29 @@ class OmiLocalCameraView(private val context: ReactApplicationContext) :
 
   private fun doRefresh(promise: Promise) {
     try {
-      ScaleManager.adjustAspectRatio(
-        cameraView,
-        Size(cameraView.width, cameraView.height),
-        Size(1280, 720)
-      )
+      val surface = Surface(cameraView.surfaceTexture)
+      val client = OmiClient.getInstance(context.applicationContext)
+
+      // Connect local camera feed — delay slightly to ensure camera subsystem ready
+      // (matches native SDK sample behavior with AppUtils.postDelay)
+      android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        try {
+          client.setupLocalVideoFeed(surface)
+          Log.d("OmiLocalCameraView", "Connected local video feed to surface")
+
+          ScaleManager.adjustAspectRatio(
+            cameraView,
+            Size(cameraView.width, cameraView.height),
+            Size(9, 16)
+          )
+        } catch (e: Exception) {
+          Log.e("OmiLocalCameraView", "Error setting up local feed: ${e.message}")
+        }
+      }, 300)
+
       promise.resolve(true)
     } catch (e: Exception) {
+      Log.e("OmiLocalCameraView", "Error refreshing: ${e.message}")
       promise.resolve(false)
     }
   }

@@ -92,7 +92,6 @@ public class OmikitPlugin: RCTEventEmitter {
         reject("INVALID_DATA", "Expected a dictionary with user credentials.", nil)
         return
       }
-      // ✅ Bước 2: Gọi initWithUserPasswordEndpoint() và kiểm tra kết quả
       let result = CallManager.shareInstance().initWithUserPasswordEndpoint(params: dataOmi)
       if result {
           resolve(true)

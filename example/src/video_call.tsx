@@ -351,21 +351,18 @@ export const VideoCallScreen = ({ route }: { route: { params: RouteParams } }) =
           </>
         )}
 
-        {/* iOS: spacer where native video renders on window (top area) */}
-        {Platform.OS === 'ios' && isCallActive && (
-          <View style={styles.videoSpacer} />
+        {/* Info bar — before confirmed shows on full screen, after confirmed below video */}
+        {!isCallActive && (
+          <View style={styles.infoBar}>
+            <UserView
+              full_name={guestUser?.extension}
+              avatar_url={guestUser?.avatar_url}
+            />
+            <Text style={styles.statusText}>{statusText}</Text>
+          </View>
         )}
 
-        {/* Info bar */}
-        <View style={styles.infoBar}>
-          <UserView
-            full_name={guestUser?.extension}
-            avatar_url={guestUser?.avatar_url}
-          />
-          <Text style={styles.statusText}>{statusText}</Text>
-          {isCallActive && <CustomTimer />}
-        </View>
-
+        {/* Spacer — pushes controls to bottom */}
         <View style={styles.spacer} />
 
         {isSoundPickerVisible && (

@@ -1,6 +1,8 @@
 package com.omikitplugin
 
 import android.graphics.SurfaceTexture
+import android.util.Log
+import android.view.Surface
 import android.view.TextureView
 import android.view.ViewGroup
 import com.facebook.react.bridge.Promise
@@ -9,6 +11,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
+import vn.vihat.omicall.omisdk.OmiClient
 import vn.vihat.omicall.omisdk.videoutils.ScaleManager
 import vn.vihat.omicall.omisdk.videoutils.Size
 
@@ -77,6 +80,11 @@ class OmiRemoteCameraView(private val context: ReactApplicationContext) :
 
   private fun doRefresh(promise: Promise) {
     try {
+      // Connect TextureView surface to SDK incoming video feed
+      val surface = Surface(remoteView.surfaceTexture)
+      OmiClient.getInstance(context.applicationContext).setupIncomingVideoFeed(surface)
+      Log.d("OmiRemoteCameraView", "Connected remote video feed to surface")
+
       ScaleManager.adjustAspectRatio(
         remoteView,
         Size(remoteView.width, remoteView.height),
@@ -84,6 +92,7 @@ class OmiRemoteCameraView(private val context: ReactApplicationContext) :
       )
       promise.resolve(true)
     } catch (e: Exception) {
+      Log.e("OmiRemoteCameraView", "Error refreshing: ${e.message}")
       promise.resolve(false)
     }
   }

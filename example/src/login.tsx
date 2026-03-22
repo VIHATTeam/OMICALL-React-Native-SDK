@@ -45,12 +45,19 @@ import { CustomLoading } from './components/custom_view/custom_loading';
 // ============================================================================
 
 // Default credentials for testing
+// const DEFAULT_CREDENTIALS = {
+//   realm: 'luuphuongmytrinh9a2',
+//   userName: '100',
+//   password: 'iT2OjDYA0H',
+//   host: 'vh.omicrm.com',
+//   projectId: '',
+// };
 const DEFAULT_CREDENTIALS = {
   realm: 'luuphuongmytrinh9a2',
-  userName: '100',
-  password: 'iT2OjDYA0H',
+  userName: '101',
+  password: 'vivx2001@A',
   host: 'vh.omicrm.com',
-  projectId: '',
+  projectId: 'omicrm-6558a',
 };
 
 // Error messages mapping for user-friendly display
