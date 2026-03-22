@@ -3,6 +3,12 @@
 #import <React/RCTBundleURLProvider.h>
 #import <OmiKit/OmiKit.h>
 #import <React/RCTDevMenu.h>
+
+// Fabric interop headers — use full module path since React-RCTFabric headers
+// are not in default search paths for the app target
+#import <React-RCTFabric/React/RCTComponentViewFactory.h>
+#import <React-RCTFabric/React/RCTLegacyViewManagerInteropComponentView.h>
+
 // Import OmikitNotification
 #if __has_include("OmikitNotification.h")
 #import "OmikitNotification.h"
@@ -37,6 +43,11 @@
   // ----- End OmiKit Config ------
   
   
+  // Register legacy ViewManagers for Fabric interop (New Architecture video views)
+  [RCTLegacyViewManagerInteropComponentView supportLegacyViewManagerWithName:@"OmiLocalCameraView"];
+  [RCTLegacyViewManagerInteropComponentView supportLegacyViewManagerWithName:@"OmiRemoteCameraView"];
+  NSLog(@"✅ Registered OmiCameraViews for Fabric interop");
+
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
@@ -99,10 +110,11 @@
 #endif
 }
 
-// Enable Bridgeless mode for full New Architecture support
+// Bridgeless mode DISABLED — RCTViewManager native views (OmiRemoteCameraView,
+// OmiLocalCameraView) require Bridge interop. Enable when migrated to Fabric components.
 - (BOOL)bridgelessEnabled
 {
-  return YES;
+  return NO;
 }
 
 @end
