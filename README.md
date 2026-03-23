@@ -54,8 +54,8 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 | | Android | iOS |
 |--|---------|-----|
 | **Min SDK** | API 24 (Android 7.0) | iOS 13.0 |
-| **Target SDK** | API 35 (Android 15) | — |
-| **Compile SDK** | API 35 | — |
+| **Target SDK** | API 36 (Android 16) | — |
+| **Compile SDK** | API 36 | — |
 
 ### Device Requirements
 
