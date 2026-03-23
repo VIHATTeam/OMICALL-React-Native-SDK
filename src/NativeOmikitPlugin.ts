@@ -67,6 +67,7 @@ export interface Spec extends TurboModule {
   switchOmiCamera(): Promise<boolean>;
   registerVideoEvent(): Promise<boolean>;
   removeVideoEvent(): Promise<boolean>;
+  setupVideoViews(remoteTag: number, localTag: number): Promise<boolean>;
 
   sendDTMF(data: {
     character: string;

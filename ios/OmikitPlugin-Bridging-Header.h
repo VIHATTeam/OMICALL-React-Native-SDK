@@ -11,6 +11,7 @@
 // ✅ Import React Native headers
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventEmitter.h>
+#import <React/RCTViewManager.h>
 
 // ✅ Import OmiKit framework (nếu cần thiết cho Objective-C code)
 // #import <OmiKit/OmiKit.h>

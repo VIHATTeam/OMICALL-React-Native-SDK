@@ -3,6 +3,18 @@ module.exports = {
     android: {
       sourceDir: './android',
       packageName: 'com.omikitpluginexample',
+      // Register legacy ViewManagers for Fabric interop (New Architecture)
+      unstable_reactLegacyComponentNames: [
+        'OmiLocalCameraView',
+        'OmiRemoteCameraView',
+      ],
+    },
+    ios: {
+      // Register legacy ViewManagers for Fabric interop (New Architecture)
+      unstable_reactLegacyComponentNames: [
+        'OmiLocalCameraView',
+        'OmiRemoteCameraView',
+      ],
     },
   },
   dependencies: {
@@ -11,7 +23,7 @@ module.exports = {
         android: null,
       },
     },
-    // Disable autolinking for omikit-plugin - manually added in MainApplication.kt
+    // Disable autolinking — manually added via pod 'omikit-plugin', :path in Podfile
     'omikit-plugin': {
       platforms: {
         android: null,

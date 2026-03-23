@@ -1,25 +1,22 @@
-import type { HostComponent } from 'react-native';
-import { NativeModules, requireNativeComponent, ViewProps } from 'react-native';
+import { NativeModules, Platform, View } from 'react-native';
 
-// Safe lazy loading — requireNativeComponent can throw in bridgeless mode
-// if the native view is not registered for Fabric
-let _remoteCameraView: HostComponent<ViewProps> | null = null;
-const getRemoteCameraView = (): HostComponent<ViewProps> => {
-  if (!_remoteCameraView) {
-    _remoteCameraView = requireNativeComponent('FLRemoteCameraView');
+// Safe requireNativeComponent — returns fallback View if native config not available
+let OmiRemoteCameraViewNative: any = View;
+try {
+  const { UIManager, requireNativeComponent } = require('react-native');
+  // Only attempt on Android or Old Arch iOS where ViewManager config exists
+  if (Platform.OS === 'android' || UIManager.getViewManagerConfig?.('OmiRemoteCameraView')) {
+    OmiRemoteCameraViewNative = requireNativeComponent('OmiRemoteCameraView');
   }
-  return _remoteCameraView;
-};
+} catch (_) {
+  // Fallback to plain View — iOS Fabric uses native window rendering instead
+}
 
-export const OmiRemoteCameraView = new Proxy({} as HostComponent<ViewProps>, {
-  get(_target, prop) {
-    return (getRemoteCameraView() as any)[prop];
-  },
-});
+export const OmiRemoteCameraView = OmiRemoteCameraViewNative;
 
-// Module name separated from ViewManager name to avoid name collision
-const FLRemoteCamera = NativeModules.FLRemoteCameraModule || NativeModules.FLRemoteCameraView;
+// Imperative refresh method
+const OmiRemoteCamera = NativeModules.OmiRemoteCameraView;
 export function refreshRemoteCamera(): Promise<boolean> {
-  if (!FLRemoteCamera) return Promise.resolve(false);
-  return FLRemoteCamera.refresh();
+  if (!OmiRemoteCamera) return Promise.resolve(false);
+  return OmiRemoteCamera.refresh();
 }

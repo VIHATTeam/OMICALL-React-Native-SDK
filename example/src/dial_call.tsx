@@ -22,6 +22,7 @@ import {
   getCurrentUser,
   getGuestUser,
   getInitialCall,
+  omiEmitter,
   OmiCallEvent,
   OmiCallState,
 } from 'omikit-plugin';
@@ -65,6 +66,7 @@ export const DialCallScreen = ({ route }: { route: { params: RouteParams } }) =>
 
   // Call state
   const [currentStatus, setCurrentStatus] = useState(initialStatus);
+  const [isEnding, setIsEnding] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
   // UI state
@@ -82,8 +84,8 @@ export const DialCallScreen = ({ route }: { route: { params: RouteParams } }) =>
 
   // Get status description text
   const statusText = useMemo(
-    () => STATUS_DESCRIPTIONS[currentStatus] || '',
-    [currentStatus]
+    () => isEnding ? 'Ending call...' : (STATUS_DESCRIPTIONS[currentStatus] || ''),
+    [currentStatus, isEnding]
   );
 
   // Check if call is in active state (confirmed or hold)
@@ -134,8 +136,10 @@ export const DialCallScreen = ({ route }: { route: { params: RouteParams } }) =>
     console.log('Call state changed:', status);
     setCurrentStatus(status);
 
-    if (status === OmiCallState.disconnected) {
-      navigation.goBack();
+    if (status === OmiCallState.disconnected || status === 6) {
+      setTimeout(() => {
+        navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+      }, 100);
     }
 
     if (status === OmiCallState.confirmed) {
@@ -236,8 +240,12 @@ export const DialCallScreen = ({ route }: { route: { params: RouteParams } }) =>
 
   // End current call
   const handleEndCall = useCallback(() => {
+    setIsEnding(true);
     endCall();
-    navigation.goBack();
+    // Fallback: navigate after 3s if disconnected event doesn't arrive
+    setTimeout(() => {
+      navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+    }, 3000);
   }, [navigation]);
 
   // Answer incoming call
@@ -248,13 +256,13 @@ export const DialCallScreen = ({ route }: { route: { params: RouteParams } }) =>
   // Register event listeners
   useEffect(() => {
     const listeners = [
-      DeviceEventEmitter.addListener(OmiCallEvent.onCallStateChanged, handleCallStateChanged),
-      DeviceEventEmitter.addListener(OmiCallEvent.onMuted, handleMuteChanged),
-      DeviceEventEmitter.addListener(OmiCallEvent.onHold, handleHoldChanged),
-      DeviceEventEmitter.addListener(OmiCallEvent.onCallQuality, handleCallQuality),
-      DeviceEventEmitter.addListener(OmiCallEvent.onAudioChange, handleAudioChanged),
-      DeviceEventEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, handleSwitchboardAnswer),
-      DeviceEventEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, handlePermissionRequest),
+      omiEmitter.addListener(OmiCallEvent.onCallStateChanged, handleCallStateChanged),
+      omiEmitter.addListener(OmiCallEvent.onMuted, handleMuteChanged),
+      omiEmitter.addListener(OmiCallEvent.onHold, handleHoldChanged),
+      omiEmitter.addListener(OmiCallEvent.onCallQuality, handleCallQuality),
+      omiEmitter.addListener(OmiCallEvent.onAudioChange, handleAudioChanged),
+      omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, handleSwitchboardAnswer),
+      omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, handlePermissionRequest),
     ];
 
     LiveData.isOpenedCall = true;

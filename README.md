@@ -2,7 +2,7 @@
 
 The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SIP calling via the OMICALL platform with support for both Old and **New Architecture** (TurboModules + Fabric).
 
-**Status:** Active maintenance | **Version:** 4.0.1
+**Status:** Active maintenance | **Version:** 4.1.0
 
 ---
 
@@ -47,7 +47,36 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 | Platform | SDK | Version |
 |----------|-----|---------|
 | Android | OMIKIT | 2.6.4 |
-| iOS | OmiKit | 1.10.34 |
+| iOS | OmiKit | 1.11.4 |
+
+### Platform Requirements
+
+| | Android | iOS |
+|--|---------|-----|
+| **Min SDK** | API 24 (Android 7.0) | iOS 13.0 |
+| **Target SDK** | API 35 (Android 15) | — |
+| **Compile SDK** | API 35 | — |
+
+### Device Requirements
+
+| Requirement | Platform | Notes |
+|-------------|----------|-------|
+| **Physical device** | iOS (required) | iOS Simulator is **not supported** — OmiKit binary is arm64 device-only |
+| **Physical device** | Android (recommended) | Emulator works for basic UI testing but VoIP/audio routing is unreliable |
+| **Google Play Services** | Android (required) | Required for FCM push notifications |
+| **Microphone** | Both (required) | Required for all calls |
+| **Camera** | Both (optional) | Only required for video calls |
+| **Internet** | Both (required) | SIP registration + RTP media streaming |
+
+### Package Size
+
+| Component | Size |
+|-----------|------|
+| npm package (total) | ~353 KB |
+| Android native code | ~4.7 MB |
+| iOS native code | ~176 KB |
+
+> **Note:** These sizes are for the plugin only. The native SDKs (OmiKit/OMIKIT) are installed separately via CocoaPods/Maven and will add to the final app size.
 
 ---
 
@@ -945,43 +974,258 @@ omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (data) => {
 
 ## Video Calls
 
-### Setup
+> **Important:** To use video calls, you must login with `isVideo: true` in `initCallWithUserPassword()`. This enables camera support during SIP registration.
+
+### Prerequisites
 
 ```typescript
-import { OmiLocalCamera, OmiRemoteCamera } from 'omikit-plugin';
+// Login with video support enabled
+await initCallWithUserPassword({
+  userName: 'sip_user',
+  password: 'sip_password',
+  realm: 'your_realm',
+  isVideo: true,       // Required for video call support
+  fcmToken: fcmToken,
+});
 ```
 
 ### Video Components
 
 ```tsx
-// Local camera preview (your camera)
-<OmiLocalCamera style={{ width: 120, height: 160 }} />
-
-// Remote camera view (other party's video)
-<OmiRemoteCamera style={{ width: '100%', height: '100%' }} />
+import {
+  OmiLocalCameraView,   // Your camera preview
+  OmiRemoteCameraView,  // Remote party's video
+  registerVideoEvent,
+  removeVideoEvent,
+  refreshRemoteCamera,
+  refreshLocalCamera,
+  switchOmiCamera,
+  toggleOmiVideo,
+  setupVideoContainers, // iOS Fabric only
+  setCameraConfig,      // iOS Fabric only
+  omiEmitter,
+  OmiCallEvent,
+  OmiCallState,
+} from 'omikit-plugin';
 ```
 
-### Video Call Flow
+### Platform Differences
+
+| Feature | Android | iOS (Old Arch) | iOS (New Arch / Fabric) |
+|---------|---------|----------------|------------------------|
+| Video rendering | JSX components | JSX components | Native window containers |
+| Camera views | `<OmiRemoteCameraView>` in JSX | `<OmiRemoteCameraView>` in JSX | `setupVideoContainers()` from JS |
+| Style control | React `style` props | React `style` props | `setCameraConfig()` from JS |
+| Controls overlay | Overlay on video | Overlay on video | Below video (split layout) |
+
+### Cross-Platform Video Call Example
+
+Complete example supporting both Android and iOS (Old + New Architecture):
+
+```tsx
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Dimensions } from 'react-native';
+import {
+  OmiRemoteCameraView, OmiLocalCameraView,
+  omiEmitter, OmiCallEvent, OmiCallState,
+  registerVideoEvent, removeVideoEvent,
+  refreshRemoteCamera, refreshLocalCamera,
+  setupVideoContainers, setCameraConfig,
+  switchOmiCamera, toggleOmiVideo, toggleMute, endCall,
+} from 'omikit-plugin';
+
+const { width: SW, height: SH } = Dimensions.get('window');
+
+export const VideoCallScreen = ({ navigation, route }) => {
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [cameraOn, setCameraOn] = useState(true);
+  const hasNavigated = useRef(false);
+
+  // iOS Fabric: configure native video container position/size
+  const configureIOSVideo = useCallback(() => {
+    setCameraConfig({
+      target: 'remote',
+      x: 0, y: 0, width: SW, height: SH * 0.65,
+      scaleMode: 'fill', backgroundColor: '#000',
+    });
+    setCameraConfig({
+      target: 'local',
+      x: SW - 136, y: 60, width: 120, height: 180,
+      borderRadius: 12, scaleMode: 'fill',
+    });
+  }, []);
+
+  useEffect(() => {
+    // iOS: register video events before call
+    if (Platform.OS === 'ios') registerVideoEvent();
+
+    const sub = omiEmitter.addListener(OmiCallEvent.onCallStateChanged, (data) => {
+      const { status } = data;
+
+      if (status === OmiCallState.confirmed) {
+        setIsCallActive(true);
+
+        if (Platform.OS === 'android') {
+          // Android: connect video feeds to TextureView surfaces
+          refreshRemoteCamera();
+          refreshLocalCamera();
+        } else {
+          // iOS Fabric: create native window containers + connect SDK
+          setupVideoContainers().then(() => configureIOSVideo());
+        }
+      }
+
+      if ((status === OmiCallState.disconnected || status === 6) && !hasNavigated.current) {
+        hasNavigated.current = true;
+        // iOS: hide native containers before navigating
+        if (Platform.OS === 'ios') {
+          setCameraConfig({ target: 'remote', hidden: true });
+          setCameraConfig({ target: 'local', hidden: true });
+        }
+        setTimeout(() => {
+          navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+        }, 100);
+      }
+    });
+
+    return () => {
+      sub.remove();
+      if (Platform.OS === 'ios') removeVideoEvent();
+    };
+  }, [navigation, configureIOSVideo]);
+
+  const handleEndCall = useCallback(() => {
+    if (hasNavigated.current) return;
+    hasNavigated.current = true;
+    if (Platform.OS === 'ios') {
+      setCameraConfig({ target: 'remote', hidden: true });
+      setCameraConfig({ target: 'local', hidden: true });
+    }
+    endCall();
+    setTimeout(() => {
+      navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+    }, 1000);
+  }, [navigation]);
+
+  return (
+    <View style={styles.container}>
+      {/* ============ VIDEO AREA ============ */}
+
+      {/* Android: camera views via JSX — controls can overlay on top */}
+      {Platform.OS === 'android' && isCallActive && (
+        <>
+          <OmiRemoteCameraView style={StyleSheet.absoluteFillObject} />
+          <OmiLocalCameraView style={styles.localPiP} />
+        </>
+      )}
+
+      {/* iOS Fabric: native video renders on window (top ~65%).
+          React controls render below video area. */}
+
+      {/* ============ CONTROLS AREA ============ */}
+
+      {/* Spacer — pushes controls to bottom */}
+      <View style={{ flex: 1 }} />
+
+      {/* Controls panel */}
+      {isCallActive && (
+        <View style={styles.controls}>
+          <TouchableOpacity onPress={() => { toggleMute(); setIsMuted(m => !m); }}>
+            <Text style={styles.btn}>{isMuted ? 'Unmute' : 'Mute'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => { toggleOmiVideo(); setCameraOn(c => !c); }}>
+            <Text style={styles.btn}>{cameraOn ? 'Cam Off' : 'Cam On'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={switchOmiCamera}>
+            <Text style={styles.btn}>Flip</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleEndCall}>
+            <Text style={[styles.btn, { backgroundColor: 'red' }]}>End</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Answer/Reject for incoming calls */}
+      {!isCallActive && (
+        <View style={styles.controls}>
+          <TouchableOpacity onPress={handleEndCall}>
+            <Text style={[styles.btn, { backgroundColor: 'red' }]}>Reject</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#1E3050' },
+  localPiP: {
+    position: 'absolute', top: 60, right: 16,
+    width: 120, height: 180, borderRadius: 12, overflow: 'hidden', zIndex: 10,
+  },
+  controls: {
+    flexDirection: 'row', justifyContent: 'space-evenly',
+    paddingVertical: 20, paddingHorizontal: 16,
+    backgroundColor: 'rgba(0,0,0,0.5)', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingBottom: 40,
+  },
+  btn: {
+    color: '#fff', fontSize: 14, paddingVertical: 12, paddingHorizontal: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 24, overflow: 'hidden',
+  },
+});
+```
+
+> **Key differences per platform:**
+> - **Android**: `<OmiRemoteCameraView>` + `<OmiLocalCameraView>` render in JSX. Call `refreshRemoteCamera()` + `refreshLocalCamera()` when confirmed. Controls overlay on video.
+> - **iOS (Old Arch)**: Same as Android — JSX camera views work normally.
+> - **iOS (New Arch/Fabric)**: `RCTViewManager.view()` not called. Use `setupVideoContainers()` to create native window containers, then `setCameraConfig()` to adjust position/style. Controls render below video (split layout).
+> - **Disconnect**: On iOS, call `setCameraConfig({ target: 'remote', hidden: true })` before navigating to prevent stale video overlay. Use `setTimeout` for navigation — native event callback may block immediate navigation.
+> - **End call**: Use `navigation.reset()` instead of `goBack()` to clear stacked screens. Guard with `useRef` to prevent multiple navigations.
+
+### `setCameraConfig()` — iOS Fabric Only
+
+Control native video container style from JS:
 
 ```typescript
-// 1. Register for video events BEFORE starting call
-await registerVideoEvent();
-
-// 2. Start video call
-await startCall({ phoneNumber: '0901234567', isVideo: true });
-
-// 3. Toggle video during call
-await toggleOmiVideo();   // on/off video stream
-await switchOmiCamera();  // front/back camera
-
-// 4. Listen for remote video ready
-omiEmitter.addListener(OmiCallEvent.onRemoteVideoReady, () => {
-  // Remote video is now available - show OmiRemoteCamera
+setCameraConfig({
+  target: 'local' | 'remote',
+  x?: number,              // X position
+  y?: number,              // Y position
+  width?: number,          // View width
+  height?: number,         // View height
+  borderRadius?: number,   // Corner radius
+  borderWidth?: number,    // Border width
+  borderColor?: string,    // Hex color (#RRGGBB or #RRGGBBAA)
+  backgroundColor?: string,
+  opacity?: number,        // 0.0 - 1.0
+  hidden?: boolean,        // Show/hide
+  scaleMode?: 'fill' | 'fit' | 'stretch',
 });
-
-// 5. Cleanup when call ends
-await removeVideoEvent();
 ```
+
+### Video API Reference
+
+| Function | Description | Platform |
+|----------|-------------|----------|
+| `registerVideoEvent()` | Register for video notifications | iOS only |
+| `removeVideoEvent()` | Cleanup video notifications | iOS only |
+| `refreshRemoteCamera()` | Connect remote video feed to surface | Both |
+| `refreshLocalCamera()` | Connect local camera feed to surface | Both |
+| `switchOmiCamera()` | Switch front/back camera | Both |
+| `toggleOmiVideo()` | Toggle camera on/off during call | Both |
+| `setupVideoContainers()` | Create native video containers on window | iOS Fabric only |
+| `setCameraConfig()` | Control video container style/position | iOS Fabric only |
+
+### Known Limitations
+
+- **iOS Fabric**: Controls cannot overlay on top of video (native window z-order). Use split layout — video top, controls bottom.
+- **iOS Fabric**: Camera switch has ~3-6s delay (SDK Metal stabilization).
+- **Android**: Must login with `isVideo: true` for camera to initialize. Without it, colorbar test pattern shows instead of camera.
+- **Simulator**: Video calls require physical device on both platforms.
+
+See [Known Issues](./docs/known-issues.md) for full details.
 
 ---
 
@@ -1214,7 +1458,10 @@ if (initialCall) {
 | Incoming call on Android — no UI | Missing overlay permission | Call `requestSystemAlertWindowPermission()` |
 | `startCall` returns 450/451/452 | Missing runtime permissions | Call `requestPermissionsByCodes([code])` |
 | No audio during call | Audio route issue | Check `getAudio()` and `setAudio()` |
-| Video not showing | Video event not registered | Call `registerVideoEvent()` before the call |
+| Video not showing (iOS) | Video event not registered | Call `registerVideoEvent()` before the call |
+| Video shows colorbar (Android) | Login with `isVideo: false` | Login with `isVideo: true` to enable camera |
+| Video black screen (Android) | Feed not connected | Ensure `refreshRemoteCamera()` + `refreshLocalCamera()` called on confirmed |
+| iOS Fabric: controls hidden | Native video on UIWindow covers React | Use split layout — video top, controls bottom. See [Known Issues](./docs/known-issues.md) |
 | NativeEventEmitter warning (iOS) | Old RN bridge issue | Upgrade to v4.0.x with New Architecture |
 | `Invalid local URI` in logs | Empty proxy/host in login | Pass `host` parameter in `initCallWithUserPassword` |
 | Build error with New Arch | Codegen not configured | Ensure `codegenConfig` exists in `package.json` |
@@ -1227,6 +1474,7 @@ if (initialCall) {
 Full documentation in [`./docs/`](./docs/):
 
 - [API Integration Guide (App-to-App)](./docs/api-integration-guide.md)
+- [Known Issues & Limitations](./docs/known-issues.md)
 - [Project Overview & PDR](./docs/project-overview-pdr.md)
 - [Codebase Summary](./docs/codebase-summary.md)
 - [System Architecture](./docs/system-architecture.md)

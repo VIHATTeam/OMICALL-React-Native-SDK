@@ -125,9 +125,9 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - OmiKit (1.10.34)
-  - omikit-plugin (4.0.1):
-    - OmiKit (= 1.10.34)
+  - OmiKit (1.11.4)
+  - omikit-plugin (4.1.0):
+    - OmiKit (= 1.11.4)
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -1836,6 +1836,7 @@ DEPENDENCIES:
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - GoogleUtilities
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - OmiKit (from `/Users/hsolutions/Documents/CODING/VIHAT/SDK/BUILD-IOS-SDK`)
   - omikit-plugin (from `../../`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
@@ -1918,7 +1919,6 @@ SPEC REPOS:
     - GoogleDataTransport
     - GoogleUtilities
     - nanopb
-    - OmiKit
     - PromisesObjC
     - React-Codegen
     - SocketRocket
@@ -1937,6 +1937,8 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2024-11-12-RNv0.76.2-5b4aa20c719830dcf5684832b89a6edb95ac3d64
+  OmiKit:
+    :path: "/Users/hsolutions/Documents/CODING/VIHAT/SDK/BUILD-IOS-SDK"
   omikit-plugin:
     :path: "../../"
   RCT-Folly:
@@ -2088,8 +2090,8 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   hermes-engine: 3852e37f6158a2fcfad23e31215ed495da3a6a40
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  OmiKit: 54b2e66ed43f3ca612edb733e81dcc00dbf48c0e
-  omikit-plugin: 40628fd6b925c2c019ba28e22340932579773a62
+  OmiKit: b2c99c00fd818f5a511a85f33b1388a24ca6d3cc
+  omikit-plugin: 4e0a3ebe344e0053f47fde93d189a1799dcd0b76
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCT-Folly: 84578c8756030547307e4572ab1947de1685c599
   RCTDeprecation: d575d28132f93e5deef4849d5afffb4ac4e63226
@@ -2159,6 +2161,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: c5b0e913b5b3b4cde588227c1402e747797061f3
 
-PODFILE CHECKSUM: b06beb435d51d194137d5275e3b47ca988d2117b
+PODFILE CHECKSUM: 0d28706ee33649a841bc639d9344fb193305969f
 
 COCOAPODS: 1.16.2

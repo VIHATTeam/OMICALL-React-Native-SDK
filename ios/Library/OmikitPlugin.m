@@ -65,6 +65,15 @@ RCT_EXTERN_METHOD(sendDTMF:(id)data
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+// Configure camera view style (iOS Fabric — native window rendering)
+RCT_EXTERN_METHOD(setCameraConfig:(NSDictionary *)data
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// Setup video containers (iOS Fabric — creates and adds to window)
+RCT_EXTERN_METHOD(setupVideoContainers:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 // Switch camera
 RCT_EXTERN_METHOD(switchOmiCamera:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
@@ -79,6 +88,15 @@ RCT_EXTERN_METHOD(logout:(RCTPromiseResolveBlock)resolve
 
 // Register video event
 RCT_EXTERN_METHOD(registerVideoEvent:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// Attach video containers to React views by nativeID (Fabric interop)
+RCT_EXTERN_METHOD(attachRemoteView:(NSString *)nativeID
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(attachLocalView:(NSString *)nativeID
+                  resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 // Remove video event

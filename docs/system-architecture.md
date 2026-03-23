@@ -104,7 +104,7 @@ const OmikitPlugin: Spec = (() => {
 
 ### 2.3 Fabric Video Components
 
-Video rendering components (`FLLocalCameraView`, `FLRemoteCameraView`) are compatible with Fabric via the interop layer. No custom Fabric implementation was needed - the existing ViewManager approach works through Fabric's backward compatibility mode.
+Video rendering components (`OmiLocalCameraView`, `OmiRemoteCameraView`) are compatible with Fabric via the interop layer. No custom Fabric implementation was needed - the existing ViewManager approach works through Fabric's backward compatibility mode. Both platforms now use unified `Omi*` naming convention.
 
 ### 2.4 NativeEventEmitter on New Architecture
 
@@ -359,17 +359,21 @@ JS: getVoipToken()
 
 ### 6.1 Video Components
 
+Both platforms use unified `Omi*` naming convention:
+
 ```
-FLLocalCameraModule  (Android: ViewGroupManager)
-FLLocalCameraView    (Android: FrameLayout)
+OmiLocalCameraView   (Android: SimpleViewManager<LinearLayout> + @ReactMethod refresh)
+                     (iOS: RCTViewManager + refresh)
      ↓
 OmiClient.initLocalCamera(view)
 
-FLRemoteCameraModule (Android: ViewGroupManager)
-FLRemoteCameraView   (Android: FrameLayout)
+OmiRemoteCameraView  (Android: SimpleViewManager<TextureView> + @ReactMethod refresh)
+                     (iOS: RCTViewManager + refresh)
      ↓
 OmiClient.initRemoteCamera(view)
 ```
+
+Android: ViewManager also registered as NativeModule — `refresh()` accessible via `NativeModules.OmiLocalCameraView.refresh()`.
 
 ### 6.2 Video Event Flow
 
@@ -382,7 +386,7 @@ Remote video stream becomes available
       ↓
 sendEvent(REMOTE_VIDEO_READY)
       ↓
-JS renders <FLRemoteCameraView>
+JS renders <OmiRemoteCameraView>
 ```
 
 ---

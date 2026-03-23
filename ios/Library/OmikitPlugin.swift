@@ -92,7 +92,6 @@ public class OmikitPlugin: RCTEventEmitter {
         reject("INVALID_DATA", "Expected a dictionary with user credentials.", nil)
         return
       }
-      // ✅ Bước 2: Gọi initWithUserPasswordEndpoint() và kiểm tra kết quả
       let result = CallManager.shareInstance().initWithUserPasswordEndpoint(params: dataOmi)
       if result {
           resolve(true)
@@ -203,6 +202,170 @@ public class OmikitPlugin: RCTEventEmitter {
   }
   
   
+  // Configure camera view style (iOS Fabric mode — native window rendering)
+  // target: "local" or "remote"
+  @objc(setCameraConfig:resolver:rejecter:)
+  func setCameraConfig(_ data: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let target = data["target"] as? String ?? "local"
+
+    DispatchQueue.main.async {
+      let callManager = CallManager.shareInstance()
+      let view: UIView?
+      if target == "remote" {
+        view = callManager.remoteContainerView
+      } else {
+        view = callManager.localContainerView
+      }
+
+      guard let targetView = view else {
+        resolve(false)
+        return
+      }
+
+      // Frame: x, y, width, height
+      if let x = data["x"] as? CGFloat,
+         let y = data["y"] as? CGFloat,
+         let width = data["width"] as? CGFloat,
+         let height = data["height"] as? CGFloat {
+        targetView.frame = CGRect(x: x, y: y, width: width, height: height)
+      }
+
+      // Border radius
+      if let borderRadius = data["borderRadius"] as? CGFloat {
+        targetView.layer.cornerRadius = borderRadius
+        targetView.clipsToBounds = true
+      }
+
+      // Border width + color
+      if let borderWidth = data["borderWidth"] as? CGFloat {
+        targetView.layer.borderWidth = borderWidth
+      }
+      if let borderColor = data["borderColor"] as? String {
+        targetView.layer.borderColor = Self.parseColor(borderColor).cgColor
+      }
+
+      // Background color
+      if let bgColor = data["backgroundColor"] as? String {
+        targetView.backgroundColor = Self.parseColor(bgColor)
+      }
+
+      // Opacity
+      if let opacity = data["opacity"] as? CGFloat {
+        targetView.alpha = opacity
+      }
+
+      // Hidden
+      if let hidden = data["hidden"] as? Bool {
+        targetView.isHidden = hidden
+      }
+
+      // Scale mode (contentMode for video sublayers)
+      // "fill" = aspect fill, "fit" = aspect fit, "stretch" = scale to fill
+      if let scaleMode = data["scaleMode"] as? String {
+        let mode: UIView.ContentMode
+        switch scaleMode {
+        case "fit":
+          mode = .scaleAspectFit
+        case "stretch":
+          mode = .scaleToFill
+        default: // "fill"
+          mode = .scaleAspectFill
+        }
+        targetView.contentMode = mode
+        // Apply to all sublayers/subviews (Metal/GL rendering layers)
+        for subview in targetView.subviews {
+          subview.contentMode = mode
+        }
+      }
+
+      resolve(true)
+    }
+  }
+
+  // Parse hex color string (#RRGGBB or #RRGGBBAA) to UIColor
+  private static func parseColor(_ hex: String) -> UIColor {
+    var hexStr = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+    if hexStr.hasPrefix("#") { hexStr.removeFirst() }
+    var rgbValue: UInt64 = 0
+    Scanner(string: hexStr).scanHexInt64(&rgbValue)
+    if hexStr.count == 8 {
+      return UIColor(
+        red: CGFloat((rgbValue >> 24) & 0xFF) / 255.0,
+        green: CGFloat((rgbValue >> 16) & 0xFF) / 255.0,
+        blue: CGFloat((rgbValue >> 8) & 0xFF) / 255.0,
+        alpha: CGFloat(rgbValue & 0xFF) / 255.0
+      )
+    }
+    return UIColor(
+      red: CGFloat((rgbValue >> 16) & 0xFF) / 255.0,
+      green: CGFloat((rgbValue >> 8) & 0xFF) / 255.0,
+      blue: CGFloat(rgbValue & 0xFF) / 255.0,
+      alpha: 1.0
+    )
+  }
+
+  // Create video containers and add to window — called from JS when video call screen mounts.
+  // On Fabric, RCTViewManager.view() is NOT called, so we create containers here.
+  // Remote covers top portion of screen, local is PiP. User can adjust via setCameraConfig().
+  @objc(setupVideoContainers:rejecter:)
+  func setupVideoContainers(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    NSLog("📹 [OmikitPlugin] setupVideoContainers: CALLED from JS")
+    DispatchQueue.main.async {
+      NSLog("📹 [OmikitPlugin] setupVideoContainers: on main thread")
+      let manager = CallManager.shareInstance()
+
+      guard let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) else {
+        resolve(false)
+        return
+      }
+
+      // Create remote container
+      if manager.remoteContainerView == nil {
+        let remote = UIView()
+        remote.backgroundColor = .black
+        remote.clipsToBounds = true
+        manager.remoteContainerView = remote
+      }
+      // Create local container
+      if manager.localContainerView == nil {
+        let local = UIView()
+        local.backgroundColor = UIColor(red: 0.118, green: 0.192, blue: 0.314, alpha: 1.0)
+        local.clipsToBounds = true
+        local.layer.cornerRadius = 12
+        manager.localContainerView = local
+      }
+
+      guard let remote = manager.remoteContainerView,
+            let local = manager.localContainerView else {
+        resolve(false)
+        return
+      }
+
+      // Add to window if not already
+      if remote.superview == nil {
+        let controlsHeight: CGFloat = 200
+        remote.frame = CGRect(x: 0, y: 0, width: window.bounds.width, height: window.bounds.height - controlsHeight)
+        remote.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
+        remote.isUserInteractionEnabled = false
+        window.addSubview(remote)
+        NSLog("📹 [OmikitPlugin] setupVideoContainers: added remote to window")
+      }
+      if local.superview == nil {
+        let pipW: CGFloat = 120
+        let pipH: CGFloat = 160
+        local.frame = CGRect(x: window.bounds.width - pipW - 16, y: 56, width: pipW, height: pipH)
+        local.autoresizingMask = [.flexibleLeftMargin, .flexibleBottomMargin]
+        local.isUserInteractionEnabled = false
+        window.addSubview(local)
+        NSLog("📹 [OmikitPlugin] setupVideoContainers: added local to window")
+      }
+
+      // Trigger SDK video setup
+      manager.setupVideo()
+      resolve(true)
+    }
+  }
+
   @objc(switchOmiCamera:rejecter:)
   func switchOmiCamera(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
     CallManager.shareInstance().switchCamera()
@@ -227,6 +390,75 @@ public class OmikitPlugin: RCTEventEmitter {
   func registerVideoEvent(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
     CallManager.shareInstance().registerVideoEvent()
     resolve(true)
+  }
+
+  /// Find a UIView by nativeID in the view hierarchy
+  private func findViewByNativeID(_ nativeID: String, in root: UIView?) -> UIView? {
+    guard let root = root else { return nil }
+    if root.accessibilityIdentifier == nativeID {
+      return root
+    }
+    for subview in root.subviews {
+      if let found = findViewByNativeID(nativeID, in: subview) {
+        return found
+      }
+    }
+    return nil
+  }
+
+  @objc(attachRemoteView:resolver:rejecter:)
+  func attachRemoteView(_ nativeID: String, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    DispatchQueue.main.async {
+      let manager = CallManager.shareInstance()
+      guard let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }),
+            let targetView = self.findViewByNativeID(nativeID, in: window) else {
+        NSLog("📹 [OmikitPlugin] attachRemoteView: view with nativeID=\(nativeID) not found")
+        resolve(false)
+        return
+      }
+      let container = manager.remoteContainerView ?? {
+        let v = UIView()
+        v.backgroundColor = .black
+        v.clipsToBounds = true
+        manager.remoteContainerView = v
+        return v
+      }()
+      container.removeFromSuperview()
+      container.frame = targetView.bounds
+      container.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+      targetView.addSubview(container)
+      NSLog("📹 [OmikitPlugin] Attached remote container to view nativeID=\(nativeID)")
+      manager.setupVideo()
+      resolve(true)
+    }
+  }
+
+  @objc(attachLocalView:resolver:rejecter:)
+  func attachLocalView(_ nativeID: String, resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    DispatchQueue.main.async {
+      let manager = CallManager.shareInstance()
+      guard let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }),
+            let targetView = self.findViewByNativeID(nativeID, in: window) else {
+        NSLog("📹 [OmikitPlugin] attachLocalView: view with nativeID=\(nativeID) not found")
+        resolve(false)
+        return
+      }
+      let container = manager.localContainerView ?? {
+        let v = UIView()
+        v.backgroundColor = UIColor(red: 0.118, green: 0.192, blue: 0.314, alpha: 1.0)
+        v.clipsToBounds = true
+        v.layer.cornerRadius = 12
+        manager.localContainerView = v
+        return v
+      }()
+      container.removeFromSuperview()
+      container.frame = targetView.bounds
+      container.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+      targetView.addSubview(container)
+      NSLog("📹 [OmikitPlugin] Attached local container to view nativeID=\(nativeID)")
+      manager.setupVideo()
+      resolve(true)
+    }
   }
   
   @objc(removeVideoEvent:rejecter:)

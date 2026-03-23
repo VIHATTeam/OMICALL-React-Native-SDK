@@ -152,6 +152,9 @@ export const HomeScreen = () => {
       const { status, callerNumber, isVideo } = data;
 
       if (status === OmiCallState.incoming) {
+        // Skip if already on a call screen — prevents double navigation
+        // (SDK may fire incoming twice: first with isVideo=false, then isVideo=true)
+        if (LiveData.isOpenedCall) return;
         navigateToCallScreen(callerNumber, status, false, isVideo === true);
       }
 
@@ -159,9 +162,8 @@ export const HomeScreen = () => {
         navigateToCallScreen(callerNumber, status, false, isVideo === true);
       }
 
-      if (status === OmiCallState.disconnected) {
-        navigation.goBack();
-      }
+      // Disconnected handled by call screens (VideoCall/DialCall) — not here
+      // Home only handles incoming/confirmed navigation
     },
     [navigation, navigateToCallScreen]
   );
@@ -193,12 +195,12 @@ export const HomeScreen = () => {
   useEffect(() => {
     console.log('Registering call event listeners');
 
-    DeviceEventEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
-    omiEmitter.addListener(OmiCallEvent.onClickMissedCall, onClickMissedCall);
+    const callStateSub = omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
+    const missedCallSub = omiEmitter.addListener(OmiCallEvent.onClickMissedCall, onClickMissedCall);
 
     return () => {
-      omiEmitter.removeAllListeners(OmiCallEvent.onClickMissedCall);
-      DeviceEventEmitter.removeAllListeners(OmiCallEvent.onCallStateChanged);
+      callStateSub.remove();
+      missedCallSub.remove();
     };
   }, [onCallStateChanged, onClickMissedCall]);
 
