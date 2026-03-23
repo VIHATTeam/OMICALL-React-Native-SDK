@@ -364,6 +364,8 @@ declare module 'omikit-plugin' {
     confirmed = 5,
     disconnected = 6,
     hold = 7,
+    /** Call is being disconnected (BYE sent, waiting for response) */
+    disconnecting = 12,
   }
 
   /**
