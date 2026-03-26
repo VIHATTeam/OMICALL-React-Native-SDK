@@ -121,6 +121,11 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   private var isIncoming: Boolean = false
   private var isAnswerCall: Boolean = false
   @Volatile private var permissionPromise: Promise? = null
+
+  // Helper for bridgeless mode (Expo/RN 0.81+) where currentActivity
+  // is not directly available as inherited property
+  private val safeActivity: Activity?
+    get() = reactApplicationContext?.currentActivity
   
   // Call state management to prevent concurrent calls
   private var isCallInProgress: Boolean = false
@@ -409,7 +414,8 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   override fun onVideoSize(width: Int, height: Int) {
-
+    // PJSIP reports actual remote video dimensions — update aspect ratio dynamically
+    OmiRemoteCameraView.instance?.updateAspectRatio(width, height)
   }
 
   private val accountListener = object : OmiAccountListener {
@@ -633,7 +639,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
             return
         }
 
-        currentActivity?.runOnUiThread {
+        safeActivity?.runOnUiThread {
             try {
                 // Extract parameters from data with proper defaults
                 val notificationIcon = data.getString("notificationIcon") ?: "ic_notification"
@@ -898,7 +904,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       )
     val map: WritableMap = WritableNativeMap()
     if (audio == PackageManager.PERMISSION_GRANTED) {
-      val activity = currentActivity
+      val activity = safeActivity
       if (activity == null) {
         promise.reject("E_NO_ACTIVITY", "Current activity is null")
         return
@@ -966,7 +972,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun joinCall(promise: Promise) {
       val appContext = reactApplicationContext.applicationContext
-      val activity = currentActivity
+      val activity = safeActivity
 
       if (appContext == null) { 
           promise.reject("E_NULL_CONTEXT", "Application context is null")
@@ -1075,7 +1081,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun toggleSpeaker(promise: Promise) {
-    val activity = currentActivity
+    val activity = safeActivity
     if (activity == null) { promise.resolve(null); return }
     activity.runOnUiThread {
       val newStatus = OmiClient.getInstance(reactApplicationContext!!).toggleSpeaker()
@@ -1086,7 +1092,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun sendDTMF(data: ReadableMap, promise: Promise) {
-    val activity = currentActivity
+    val activity = safeActivity
     if (activity == null) { promise.resolve(false); return }
     activity.runOnUiThread {
       val character = data.getString("character")
@@ -1106,7 +1112,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun switchOmiCamera(promise: Promise) {
-    val activity = currentActivity
+    val activity = safeActivity
     if (activity == null) { promise.resolve(false); return }
     activity.runOnUiThread {
       OmiClient.getInstance(reactApplicationContext!!).switchCamera()
@@ -1116,7 +1122,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun toggleOmiVideo(promise: Promise) {
-    val activity = currentActivity
+    val activity = safeActivity
     if (activity == null) { promise.resolve(false); return }
     activity.runOnUiThread {
       OmiClient.getInstance(reactApplicationContext!!).toggleCamera()
@@ -1354,7 +1360,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun transferCall(data: ReadableMap, promise: Promise) {
-    val activity = currentActivity
+    val activity = safeActivity
     if (activity == null) { promise.resolve(false); return }
     activity.runOnUiThread {
       val phone = data.getString("phoneNumber")
@@ -1559,7 +1565,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       // Store promise for callback
       permissionPromise = promise
       
-      val activity = reactApplicationContext?.currentActivity ?: run {
+      val activity = safeActivity ?: run {
         promise.resolve(false)
         return
       }
@@ -1681,7 +1687,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           Uri.parse("package:${reactApplicationContext.packageName}")
         )
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        reactApplicationContext.currentActivity?.startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION_CODE)
+        safeActivity?.startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION_CODE)
       } else {
         promise.resolve(true)
       }
@@ -1737,7 +1743,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       // Store promise for callback
       permissionPromise = promise
       
-      val activity = reactApplicationContext?.currentActivity ?: run {
+      val activity = safeActivity ?: run {
         promise.reject("E_NULL_ACTIVITY", "Current activity is null")
         return
       }
@@ -1759,7 +1765,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
       return
     }
 
-    val activity = reactApplicationContext?.currentActivity ?: return
+    val activity = safeActivity ?: return
     ActivityCompat.requestPermissions(
       activity,
       missingPermissions.toTypedArray(),
