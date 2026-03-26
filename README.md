@@ -2,7 +2,7 @@
 
 The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SIP calling via the OMICALL platform with support for both Old and **New Architecture** (TurboModules + Fabric).
 
-**Status:** Active maintenance | **Version:** 4.1.0
+**Status:** Active maintenance | **Version:** 4.1.1
 
 ---
 
@@ -46,7 +46,7 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | Platform | SDK | Version |
 |----------|-----|---------|
-| Android | OMIKIT | 2.6.5 |
+| Android | OMIKIT | 2.6.6 |
 | iOS | OmiKit | 1.11.4 |
 
 ### Platform Requirements
@@ -263,12 +263,351 @@ Enable **Push Notifications** capability in Xcode for VoIP push (PushKit).
 
 ### 4. AppDelegate Setup
 
-In your `AppDelegate.mm` (or `.m`):
+The AppDelegate template differs depending on your React Native version. Choose the one that matches your project:
+
+#### RN 0.74 – 0.78 (RCTAppDelegate pattern)
+
+<details>
+<summary>AppDelegate.h</summary>
 
 ```objc
-#import <OmiKit/OmiKit-umbrella.h>
-#import <OmiKit/Constants.h>
+#import <RCTAppDelegate.h>
+#import <UIKit/UIKit.h>
+#import <UserNotifications/UserNotifications.h>
+#import <OmiKit/OmiKit.h>
+
+@interface AppDelegate : RCTAppDelegate <UIApplicationDelegate, RCTBridgeDelegate, UNUserNotificationCenterDelegate>
+
+@property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, strong) PushKitManager *pushkitManager;
+@property (nonatomic, strong) CallKitProviderDelegate *provider;
+@property (nonatomic, strong) PKPushRegistry *voipRegistry;
+
+@end
 ```
+
+</details>
+
+<details>
+<summary>AppDelegate.mm</summary>
+
+```objc
+#import "AppDelegate.h"
+#import <Firebase.h>
+#import <React/RCTBundleURLProvider.h>
+#import <OmiKit/OmiKit.h>
+
+#if __has_include("OmikitNotification.h")
+#import "OmikitNotification.h"
+#else
+#import <omikit_plugin/OmikitNotification.h>
+#endif
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+  self.moduleName = @"YourAppName"; // Replace with your app name
+
+  // ----- OmiKit Config ------
+  [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX
+                userNameKey:@"full_name"
+                    maxCall:2
+               callKitImage:@"call_image"
+              typePushVoip:TYPE_PUSH_CALLKIT_DEFAULT];
+
+  self.provider = [[CallKitProviderDelegate alloc]
+      initWithCallManager:[OMISIPLib sharedInstance].callManager];
+  self.voipRegistry = [[PKPushRegistry alloc]
+      initWithQueue:dispatch_get_main_queue()];
+  self.pushkitManager = [[PushKitManager alloc]
+      initWithVoipRegistry:self.voipRegistry];
+
+  if (@available(iOS 10.0, *)) {
+    [UNUserNotificationCenter currentNotificationCenter].delegate =
+        (id<UNUserNotificationCenterDelegate>)self;
+  }
+
+  if ([FIRApp defaultApp] == nil) {
+    [FIRApp configure];
+  }
+  // ----- End OmiKit Config ------
+
+  return [super application:application didFinishLaunchingWithOptions:launchOptions];
+}
+
+// Handle foreground notifications
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler
+{
+  completionHandler(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge);
+}
+
+// Handle missed call notification tap
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+didReceiveNotificationResponse:(UNNotificationResponse *)response
+         withCompletionHandler:(void (^)())completionHandler
+{
+  NSDictionary *userInfo = response.notification.request.content.userInfo;
+  if (userInfo && [userInfo valueForKey:@"omisdkCallerNumber"]) {
+    [OmikitNotification didRecieve:userInfo];
+  }
+  completionHandler();
+}
+
+// Register push notification token
+- (void)application:(UIApplication *)app
+    didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)devToken
+{
+  const unsigned char *data = (const unsigned char *)[devToken bytes];
+  NSMutableString *token = [NSMutableString string];
+  for (NSUInteger i = 0; i < [devToken length]; i++) {
+    [token appendFormat:@"%02.2hhX", data[i]];
+  }
+  [OmiClient setUserPushNotificationToken:[token copy]];
+}
+
+// Terminate all calls when app is killed
+- (void)applicationWillTerminate:(UIApplication *)application {
+  @try {
+    [OmiClient OMICloseCall];
+  } @catch (NSException *exception) {}
+}
+
+- (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
+{
+  return [self bundleURL];
+}
+
+- (NSURL *)bundleURL
+{
+#if DEBUG
+  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
+#else
+  return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+#endif
+}
+
+@end
+```
+
+</details>
+
+#### RN 0.79+ (RCTReactNativeFactory pattern)
+
+RN 0.79+ uses `RCTReactNativeFactory` instead of `RCTAppDelegate`. Add OmiKit setup in your existing AppDelegate:
+
+<details>
+<summary>AppDelegate.swift (Swift template)</summary>
+
+```swift
+import UIKit
+import React
+import ReactAppDependencyProvider
+import OmiKit
+
+@main
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+  var window: UIWindow?
+  var provider: CallKitProviderDelegate?
+  var pushkitManager: PushKitManager?
+  var voipRegistry: PKPushRegistry?
+
+  func application(_ application: UIApplication,
+                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    // React Native setup
+    let delegate = ReactNativeDelegate()
+    let factory = RCTReactNativeFactory(delegate: delegate)
+    delegate.dependencyProvider = RCTAppDependencyProvider()
+
+    window = UIWindow(frame: UIScreen.main.bounds)
+    factory.startReactNative(
+      withModuleName: "YourAppName",
+      in: window,
+      launchOptions: launchOptions
+    )
+
+    // ----- OmiKit Config ------
+    #ifdef DEBUG
+    OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_SANDBOX,
+                            userNameKey: "full_name",
+                            maxCall: 1,
+                            callKitImage: "call_image",
+                            typePushVoip: TYPE_PUSH_CALLKIT_DEFAULT)
+    #else
+    OmiClient.setEnviroment(KEY_OMI_APP_ENVIROMENT_PRODUCTION,
+                            userNameKey: "full_name",
+                            maxCall: 1,
+                            callKitImage: "call_image",
+                            typePushVoip: TYPE_PUSH_CALLKIT_DEFAULT)
+    #endif
+
+    provider = CallKitProviderDelegate(callManager: OMISIPLib.sharedInstance().callManager)
+    voipRegistry = PKPushRegistry(queue: .main)
+    pushkitManager = PushKitManager(voipRegistry: voipRegistry!)
+
+    UNUserNotificationCenter.current().delegate = self
+    FirebaseApp.configure()
+    // ----- End OmiKit Config ------
+
+    return true
+  }
+
+  // Handle missed call notification tap
+  func userNotificationCenter(_ center: UNUserNotificationCenter,
+                              didReceive response: UNNotificationResponse,
+                              withCompletionHandler completionHandler: @escaping () -> Void) {
+    let userInfo = response.notification.request.content.userInfo
+    if userInfo["omisdkCallerNumber"] != nil {
+      OmikitNotification.didRecieve(userInfo)
+    }
+    completionHandler()
+  }
+
+  // Register push notification token
+  func application(_ application: UIApplication,
+                   didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    let token = deviceToken.map { String(format: "%02.2hhX", $0) }.joined()
+    OmiClient.setUserPushNotificationToken(token)
+  }
+
+  // Terminate all calls when app is killed
+  func applicationWillTerminate(_ application: UIApplication) {
+    try? OmiClient.omiCloseCall()
+  }
+}
+
+class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
+  override func sourceURL(for bridge: RCTBridge) -> URL? {
+    return bundleURL()
+  }
+
+  override func bundleURL() -> URL? {
+    #if DEBUG
+    return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+    #else
+    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    #endif
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>AppDelegate.mm (Objective-C template)</summary>
+
+```objc
+#import "AppDelegate.h"
+#import <Firebase.h>
+#import <React/RCTBundleURLProvider.h>
+#import <React/RCTReactNativeFactory.h>
+#import <ReactAppDependencyProvider/RCTAppDependencyProvider.h>
+#import <OmiKit/OmiKit.h>
+
+#if __has_include("OmikitNotification.h")
+#import "OmikitNotification.h"
+#else
+#import <omikit_plugin/OmikitNotification.h>
+#endif
+
+@interface ReactNativeDelegate : RCTDefaultReactNativeFactoryDelegate
+@end
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+  ReactNativeDelegate *delegate = [ReactNativeDelegate new];
+  RCTReactNativeFactory *factory = [[RCTReactNativeFactory alloc] initWithDelegate:delegate];
+  delegate.dependencyProvider = [RCTAppDependencyProvider new];
+
+  self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+  [factory startReactNativeWithModuleName:@"YourAppName" in:self.window launchOptions:launchOptions];
+
+  // ----- OmiKit Config ------
+  #ifdef DEBUG
+        [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_SANDBOX userNameKey:@"full_name" maxCall:1 callKitImage:@"icYourApp" typePushVoip:@"background"];
+  #else
+        [OmiClient setEnviroment:KEY_OMI_APP_ENVIROMENT_PRODUCTION userNameKey:@"full_name" maxCall:1 callKitImage:@"icYourApp" typePushVoip:@"background"];
+  #endif
+
+  self.provider = [[CallKitProviderDelegate alloc]
+      initWithCallManager:[OMISIPLib sharedInstance].callManager];
+  self.voipRegistry = [[PKPushRegistry alloc]
+      initWithQueue:dispatch_get_main_queue()];
+  self.pushkitManager = [[PushKitManager alloc]
+      initWithVoipRegistry:self.voipRegistry];
+
+  if (@available(iOS 10.0, *)) {
+    [UNUserNotificationCenter currentNotificationCenter].delegate =
+        (id<UNUserNotificationCenterDelegate>)self;
+  }
+
+  if ([FIRApp defaultApp] == nil) {
+    [FIRApp configure];
+  }
+  // ----- End OmiKit Config ------
+
+  return YES;
+}
+
+// Handle missed call notification tap
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+didReceiveNotificationResponse:(UNNotificationResponse *)response
+         withCompletionHandler:(void (^)())completionHandler
+{
+  NSDictionary *userInfo = response.notification.request.content.userInfo;
+  if (userInfo && [userInfo valueForKey:@"omisdkCallerNumber"]) {
+    [OmikitNotification didRecieve:userInfo];
+  }
+  completionHandler();
+}
+
+// Register push notification token
+- (void)application:(UIApplication *)app
+    didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)devToken
+{
+  const unsigned char *data = (const unsigned char *)[devToken bytes];
+  NSMutableString *token = [NSMutableString string];
+  for (NSUInteger i = 0; i < [devToken length]; i++) {
+    [token appendFormat:@"%02.2hhX", data[i]];
+  }
+  [OmiClient setUserPushNotificationToken:[token copy]];
+}
+
+// Terminate all calls when app is killed
+- (void)applicationWillTerminate:(UIApplication *)application {
+  @try {
+    [OmiClient OMICloseCall];
+  } @catch (NSException *exception) {}
+}
+
+@end
+
+@implementation ReactNativeDelegate
+
+- (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
+{
+  return [self bundleURL];
+}
+
+- (NSURL *)bundleURL
+{
+#if DEBUG
+  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
+#else
+  return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+#endif
+}
+
+@end
+```
+
+</details>
+
+> **Note:** Replace `YourAppName` with your app's module name. For production, change `KEY_OMI_APP_ENVIROMENT_SANDBOX` to `KEY_OMI_APP_ENVIROMENT_PRODUCTION`.
 
 ### 5. New Architecture (Optional)
 
@@ -278,14 +617,19 @@ In your `Podfile`:
 ENV['RN_NEW_ARCH_ENABLED'] = '1'
 ```
 
-For **full bridgeless mode**, in `AppDelegate.mm`:
+For **New Architecture with video call support**, add Fabric interop registration in `AppDelegate.mm` inside `didFinishLaunchingWithOptions`, **before** `return [super ...]`:
 
 ```objc
-- (BOOL)bridgelessEnabled
-{
-  return YES;
-}
+// Required imports at the top of AppDelegate.mm
+#import <React-RCTFabric/React/RCTComponentViewFactory.h>
+#import <React-RCTFabric/React/RCTLegacyViewManagerInteropComponentView.h>
+
+// Inside didFinishLaunchingWithOptions, before return:
+[RCTLegacyViewManagerInteropComponentView supportLegacyViewManagerWithName:@"OmiLocalCameraView"];
+[RCTLegacyViewManagerInteropComponentView supportLegacyViewManagerWithName:@"OmiRemoteCameraView"];
 ```
+
+> **Important:** Bridgeless mode is **not yet supported** for video call views. If you use New Architecture, keep bridge mode enabled (do **not** add `bridgelessEnabled` returning `YES`).
 
 Then run `cd ios && pod install`.
 
