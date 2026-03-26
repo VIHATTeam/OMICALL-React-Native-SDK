@@ -5,7 +5,7 @@ import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.view.ViewGroup
-import android.widget.LinearLayout
+import android.widget.FrameLayout
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
@@ -17,24 +17,25 @@ import vn.vihat.omicall.omisdk.videoutils.ScaleManager
 import vn.vihat.omicall.omisdk.videoutils.Size
 
 class OmiLocalCameraView(private val context: ReactApplicationContext) :
-  SimpleViewManager<LinearLayout>() {
+  SimpleViewManager<FrameLayout>() {
 
-  val localView: LinearLayout = LinearLayout(context)
+  val localView: FrameLayout = FrameLayout(context)
   private val cameraView: TextureView = TextureView(context)
 
-  // Track whether the surface is ready for rendering
   @Volatile
   private var isSurfaceReady = false
-
-  // Queued refresh — executed when surface becomes available
   private var pendingRefreshPromise: Promise? = null
 
   init {
-    localView.addView(cameraView)
+    // TextureView fills container — RN styles (width/height) control the FrameLayout
+    localView.addView(cameraView, FrameLayout.LayoutParams(
+      FrameLayout.LayoutParams.MATCH_PARENT,
+      FrameLayout.LayoutParams.MATCH_PARENT
+    ))
+
     cameraView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
       override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
         isSurfaceReady = true
-        // Execute queued refresh if any
         pendingRefreshPromise?.let { promise ->
           pendingRefreshPromise = null
           doRefresh(promise)
@@ -46,36 +47,28 @@ class OmiLocalCameraView(private val context: ReactApplicationContext) :
       override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
         isSurfaceReady = false
         pendingRefreshPromise = null
-        return true
+        return false
       }
 
       override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
     }
   }
 
-  override fun getName(): String {
-    return "OmiLocalCameraView"
-  }
+  override fun getName(): String = "OmiLocalCameraView"
 
-  override fun createViewInstance(p0: ThemedReactContext): LinearLayout {
-    // Detach from previous parent if remounted
-    // (avoids "The specified child already has a parent" crash)
+  override fun createViewInstance(p0: ThemedReactContext): FrameLayout {
     (localView.parent as? ViewGroup)?.removeView(localView)
     return localView
   }
 
-  fun localViewInstance(): LinearLayout {
-    return localView
-  }
+  fun localViewInstance(): FrameLayout = localView
 
-  // Exposed to JS via NativeModules.OmiLocalCameraView.refresh()
   @ReactMethod
   fun refresh(promise: Promise) {
     UiThreadUtil.runOnUiThread {
       if (isSurfaceReady && cameraView.surfaceTexture != null) {
         doRefresh(promise)
       } else {
-        // Surface not ready yet — queue and execute when available
         pendingRefreshPromise = promise
       }
     }
@@ -84,25 +77,14 @@ class OmiLocalCameraView(private val context: ReactApplicationContext) :
   private fun doRefresh(promise: Promise) {
     try {
       val surface = Surface(cameraView.surfaceTexture)
-      val client = OmiClient.getInstance(context.applicationContext)
+      OmiClient.getInstance(context.applicationContext).setupLocalVideoFeed(surface)
+      Log.d("OmiLocalCameraView", "Connected local video feed to surface")
 
-      // Connect local camera feed — delay slightly to ensure camera subsystem ready
-      // (matches native SDK sample behavior with AppUtils.postDelay)
-      android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-        try {
-          client.setupLocalVideoFeed(surface)
-          Log.d("OmiLocalCameraView", "Connected local video feed to surface")
-
-          ScaleManager.adjustAspectRatio(
-            cameraView,
-            Size(cameraView.width, cameraView.height),
-            Size(9, 16)
-          )
-        } catch (e: Exception) {
-          Log.e("OmiLocalCameraView", "Error setting up local feed: ${e.message}")
-        }
-      }, 300)
-
+      ScaleManager.adjustAspectRatioCrop(
+        cameraView,
+        Size(cameraView.width, cameraView.height),
+        Size(3, 4)
+      )
       promise.resolve(true)
     } catch (e: Exception) {
       Log.e("OmiLocalCameraView", "Error refreshing: ${e.message}")

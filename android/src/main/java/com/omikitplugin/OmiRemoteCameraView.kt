@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
@@ -16,22 +17,30 @@ import vn.vihat.omicall.omisdk.videoutils.ScaleManager
 import vn.vihat.omicall.omisdk.videoutils.Size
 
 class OmiRemoteCameraView(private val context: ReactApplicationContext) :
-  SimpleViewManager<TextureView>() {
+  SimpleViewManager<FrameLayout>() {
 
-  val remoteView: TextureView = TextureView(context)
+  companion object {
+    @Volatile
+    var instance: OmiRemoteCameraView? = null
+  }
 
-  // Track whether the surface is ready for rendering
+  val remoteContainer: FrameLayout = FrameLayout(context)
+  private val remoteView: TextureView = TextureView(context)
+
   @Volatile
   private var isSurfaceReady = false
-
-  // Queued refresh — executed when surface becomes available
   private var pendingRefreshPromise: Promise? = null
 
   init {
+    instance = this
+    remoteContainer.addView(remoteView, FrameLayout.LayoutParams(
+      FrameLayout.LayoutParams.MATCH_PARENT,
+      FrameLayout.LayoutParams.MATCH_PARENT
+    ))
+
     remoteView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
       override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
         isSurfaceReady = true
-        // Execute queued refresh if any
         pendingRefreshPromise?.let { promise ->
           pendingRefreshPromise = null
           doRefresh(promise)
@@ -43,36 +52,28 @@ class OmiRemoteCameraView(private val context: ReactApplicationContext) :
       override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
         isSurfaceReady = false
         pendingRefreshPromise = null
-        return true
+        return false
       }
 
       override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
     }
   }
 
-  override fun getName(): String {
-    return "OmiRemoteCameraView"
+  override fun getName(): String = "OmiRemoteCameraView"
+
+  override fun createViewInstance(p0: ThemedReactContext): FrameLayout {
+    (remoteContainer.parent as? ViewGroup)?.removeView(remoteContainer)
+    return remoteContainer
   }
 
-  override fun createViewInstance(p0: ThemedReactContext): TextureView {
-    // Detach from previous parent if remounted
-    // (avoids "The specified child already has a parent" crash)
-    (remoteView.parent as? ViewGroup)?.removeView(remoteView)
-    return remoteView
-  }
+  fun remoteViewInstance(): FrameLayout = remoteContainer
 
-  fun remoteViewInstance(): TextureView {
-    return remoteView
-  }
-
-  // Exposed to JS via NativeModules.OmiRemoteCameraView.refresh()
   @ReactMethod
   fun refresh(promise: Promise) {
     UiThreadUtil.runOnUiThread {
       if (isSurfaceReady && remoteView.surfaceTexture != null) {
         doRefresh(promise)
       } else {
-        // Surface not ready yet — queue and execute when available
         pendingRefreshPromise = promise
       }
     }
@@ -80,20 +81,37 @@ class OmiRemoteCameraView(private val context: ReactApplicationContext) :
 
   private fun doRefresh(promise: Promise) {
     try {
-      // Connect TextureView surface to SDK incoming video feed
       val surface = Surface(remoteView.surfaceTexture)
       OmiClient.getInstance(context.applicationContext).setupIncomingVideoFeed(surface)
       Log.d("OmiRemoteCameraView", "Connected remote video feed to surface")
 
+      // Default landscape; updated by onVideoSize when PJSIP reports actual dimensions
       ScaleManager.adjustAspectRatio(
         remoteView,
         Size(remoteView.width, remoteView.height),
-        Size(1280, 720)
+        Size(640, 480)
       )
       promise.resolve(true)
     } catch (e: Exception) {
       Log.e("OmiRemoteCameraView", "Error refreshing: ${e.message}")
       promise.resolve(false)
+    }
+  }
+
+  /**
+   * Called from OmikitPluginModule.onVideoSize() when PJSIP reports
+   * actual remote video dimensions. Re-applies correct aspect ratio.
+   */
+  fun updateAspectRatio(videoWidth: Int, videoHeight: Int) {
+    UiThreadUtil.runOnUiThread {
+      if (remoteView.width > 0 && remoteView.height > 0 && videoWidth > 0 && videoHeight > 0) {
+        Log.d("OmiRemoteCameraView", "updateAspectRatio: video=${videoWidth}x${videoHeight}")
+        ScaleManager.adjustAspectRatio(
+          remoteView,
+          Size(remoteView.width, remoteView.height),
+          Size(videoWidth, videoHeight)
+        )
+      }
     }
   }
 }

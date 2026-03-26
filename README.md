@@ -46,7 +46,7 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | Platform | SDK | Version |
 |----------|-----|---------|
-| Android | OMIKIT | 2.6.4 |
+| Android | OMIKIT | 2.6.5 |
 | iOS | OmiKit | 1.11.4 |
 
 ### Platform Requirements
@@ -131,7 +131,32 @@ Add to `android/app/src/main/AndroidManifest.xml`:
 >
 > Make sure to add the `tools` namespace to your manifest tag: `xmlns:tools="http://schemas.android.com/tools"`
 
-### 2. Firebase Cloud Messaging (FCM)
+### 2. Incoming Call Activity (Required)
+
+Your main Activity must handle incoming call intents from the SDK. Add the following `intent-filter` to your `MainActivity` in `AndroidManifest.xml`:
+
+```xml
+<activity
+  android:name=".MainActivity"
+  android:showWhenLocked="true"
+  android:turnScreenOn="true"
+  android:launchMode="singleTask"
+  ...>
+
+  <!-- Incoming call intent-filter (required for lock screen) -->
+  <intent-filter>
+    <action android:name="${applicationId}.ACTION_INCOMING_CALL" />
+    <action android:name="android.intent.action.CALL" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <data android:host="incoming_call" android:scheme="omisdk" />
+  </intent-filter>
+</activity>
+```
+
+> **Important:** The `${applicationId}.ACTION_INCOMING_CALL` action ensures incoming calls show correctly on **lock screen** for Android 9-14. Without this, the default dialer may intercept the intent instead of your app.
+
+### 3. Firebase Cloud Messaging (FCM)
+
 
 Add your `google-services.json` to `android/app/`.
 
@@ -141,7 +166,7 @@ In `android/app/build.gradle`:
 apply plugin: 'com.google.gms.google-services'
 ```
 
-### 3. Maven Repository
+### 4. Maven Repository
 
 **Option A — `settings.gradle.kts` (recommended for new projects)**
 
@@ -201,7 +226,7 @@ OMI_TOKEN=omi_github_access_token
 
 > **Note:** Contact the OMICall development team to get `OMI_USER` and `OMI_TOKEN` credentials.
 
-### 4. New Architecture (Optional)
+### 5. New Architecture (Optional)
 
 To enable New Architecture on Android, in `android/gradle.properties`:
 
@@ -293,7 +318,7 @@ Then run `cd ios && pod install`.
    │      │      │                  │      │       │
    │      ▼      │                  │      ▼       │
    │  OMIKIT SDK │                  │  OmiKit SDK  │
-   │  (v2.6.4)   │                  │  (v1.10.34)  │
+   │  (v2.6.5)   │                  │  (v1.11.4)  │
    │      │      │                  │      │       │
    │      ▼      │                  │      ▼       │
    │  SIP Stack  │                  │  SIP Stack   │

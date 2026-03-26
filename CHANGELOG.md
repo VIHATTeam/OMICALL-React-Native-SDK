@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.1 [26/03/2026]
+
+### Video Call Optimization
+- **Fix video delay 9-10 seconds** (Android → iOS/Web) — real-time video, HD quality
+- **Fix switch camera failure** (`PJ_EINVAL` error)
+- **Android video auto-scale** — remote video fills screen with correct aspect ratio for app-to-app and app-to-web calls
+- **Android video borderRadius** — `OmiLocalCameraView` / `OmiRemoteCameraView` now respect `borderRadius`, `overflow: 'hidden'` from React style props via native `ViewOutlineProvider` + `clipToOutline`
+
+### Expo / RN 0.81+ Compatibility
+- **Fix `Unresolved reference: currentActivity`** on Expo 54+ / RN 0.81 bridgeless mode — replaced all direct `currentActivity` access (15+ call sites) with `safeActivity` helper that uses `reactApplicationContext?.currentActivity`
+- **Fix `Unresolved reference: runOnUiThread`** — same root cause, `runOnUiThread` accessed via `safeActivity?.runOnUiThread`
+- Fully compatible with Old Architecture (bridge), New Architecture (bridgeless), and Expo managed workflow
+
+### iOS Video Call (Fabric / New Architecture)
+- **Native window video rendering** for Fabric mode — video containers added to key window with `isUserInteractionEnabled = false` (touch passthrough)
+- **Split layout**: remote video top, React controls bottom (Fabric limitation — legacy ViewManager `view()` not called in Fabric)
+- **`setupVideoContainers()`** — native method to initialize video when call confirmed
+- **`cleanupVideoContainers()`** — native method to remove video views on disconnect
+- **`setCameraConfig()`** — native method to adjust remote/local camera position, size, borderRadius, borderColor, scaleMode from JS
+- Old Architecture: `<OmiRemoteCameraView>` / `<OmiLocalCameraView>` in JSX works as before
+
+### Example App Updates
+- **Video call screen** — full rewrite with proper call state management, mute/speaker/camera toggle, switch camera, call timer, end call navigation
+- **Dial call screen** — audio call with hold, transfer, DTMF support
+- **Incoming call routing** — auto-detect audio vs video call, navigate to correct screen
+- **Disconnect handling** — `cleanupVideoContainers()` on iOS before navigation to prevent ghost video layer
+
+### TypeScript Definitions
+- Add missing exports: `OmiLocalCameraView`, `OmiRemoteCameraView`, `setupVideoContainers`, `cleanupVideoContainers`, `setCameraConfig`
+- Add `OmiCallState.disconnecting = 12`
+- Update all function signatures with proper return types
+
+### Dependencies
+- Upgrade OMICore Android SDK: 2.6.4 → 2.6.5
+- Upgrade OmiKit iOS SDK: 1.11.2 → 1.11.4
+
+### CI/CD
+- Fix `@types/react-native` resolution error — remove deprecated package (built-in since RN 0.76)
+- Regenerate `yarn.lock` without stale entries
+
+
 ## 4.1.0 [19/03/2026]
 
 ### Video Call — Major Rewrite (iOS + Android)
