@@ -1639,73 +1639,90 @@ PBX ──► FCM ──► App receives data message
 - Foreground service keeps the app alive during the call
 - Full-screen intent for lock screen call UI
 
-### Notification Management
-
-```typescript
-// Hide the system notification without affecting SIP registration
-await hideSystemNotificationSafely();
-
-// Hide notification only
-await hideSystemNotificationOnly();
-
-// Hide notification and unregister SIP (with reason for analytics)
-await hideSystemNotificationAndUnregister('user_dismissed');
-```
-
 ---
 
-## Permissions (Android)
+## Permissions
 
-Android 15+ requires explicit runtime permissions for VoIP functionality.
+Runtime permissions must be granted before making or receiving calls. We recommend using [`react-native-permissions`](https://github.com/zoontek/react-native-permissions) for a consistent cross-platform experience.
 
-### Quick Setup
+### Install
 
-```typescript
-import {
-  checkAndRequestPermissions,
-  checkPermissionStatus,
-  requestPermissionsByCodes,
-  requestSystemAlertWindowPermission,
-  openSystemAlertSetting,
-} from 'omikit-plugin';
-
-// Check and request all permissions at once
-const granted = await checkAndRequestPermissions(isVideo);
-
-// Check current permission status
-const status = await checkPermissionStatus();
-// Returns: { microphone: boolean, camera: boolean, overlay: boolean, ... }
+```bash
+npm install react-native-permissions
+# iOS
+cd ios && pod install
 ```
 
-### Handle Permission Errors from startCall
+### Android Runtime Permissions
 
 ```typescript
-const result = await startCall({ phoneNumber, isVideo: false });
+import { check, request, PERMISSIONS, RESULTS, Platform } from 'react-native-permissions';
 
-switch (result.status) {
-  case 450: // OmiStartCallStatus.permissionMicrophone
-    await requestPermissionsByCodes([450]);
-    break;
-  case 451: // OmiStartCallStatus.permissionCamera
-    await requestPermissionsByCodes([451]);
-    break;
-  case 452: // OmiStartCallStatus.permissionOverlay
-    await requestSystemAlertWindowPermission();
-    // or open system settings directly:
-    await openSystemAlertSetting();
-    break;
+async function requestCallPermissions(isVideo: boolean) {
+  if (Platform.OS !== 'android') return true;
+
+  // Voice call permissions
+  const permissions = [
+    PERMISSIONS.ANDROID.RECORD_AUDIO,
+    PERMISSIONS.ANDROID.CALL_PHONE,
+    PERMISSIONS.ANDROID.POST_NOTIFICATIONS, // Android 13+
+  ];
+
+  // Video call — add camera
+  if (isVideo) {
+    permissions.push(PERMISSIONS.ANDROID.CAMERA);
+  }
+
+  const results = await Promise.all(permissions.map((p) => request(p)));
+  return results.every((r) => r === RESULTS.GRANTED);
 }
 ```
 
-### Permission Codes
+### iOS Runtime Permissions
 
-| Code | Permission | Required for |
-|------|-----------|--------------|
-| 450 | Microphone | All calls |
-| 451 | Camera | Video calls |
-| 452 | Overlay (SYSTEM_ALERT_WINDOW) | Incoming call popup on lock screen |
+```typescript
+import { request, PERMISSIONS, RESULTS, Platform } from 'react-native-permissions';
 
-> **Note:** On iOS, permissions are handled via `Info.plist` and system prompts. The above functions return `true` on iOS.
+async function requestCallPermissions(isVideo: boolean) {
+  if (Platform.OS !== 'ios') return true;
+
+  const micResult = await request(PERMISSIONS.IOS.MICROPHONE);
+  if (micResult !== RESULTS.GRANTED) return false;
+
+  if (isVideo) {
+    const camResult = await request(PERMISSIONS.IOS.CAMERA);
+    if (camResult !== RESULTS.GRANTED) return false;
+  }
+
+  return true;
+}
+```
+
+### Overlay Permission (Android only)
+
+To show incoming call UI on lock screen, overlay permission is required:
+
+```typescript
+import { requestSystemAlertWindowPermission, openSystemAlertSetting } from 'omikit-plugin';
+
+// Request overlay permission
+await requestSystemAlertWindowPermission();
+
+// Or open system settings directly
+await openSystemAlertSetting();
+```
+
+### Permission Summary
+
+| Permission | Platform | Required for |
+|-----------|----------|--------------|
+| Microphone (`RECORD_AUDIO`) | Android & iOS | All calls |
+| Camera (`CAMERA`) | Android & iOS | Video calls only |
+| Phone (`CALL_PHONE`) | Android | VoIP calls |
+| Notification (`POST_NOTIFICATIONS`) | Android 13+ | Incoming call notifications |
+| Overlay (`SYSTEM_ALERT_WINDOW`) | Android | Incoming call popup on lock screen |
+
+> **Note:** On iOS, microphone and camera permissions are handled via `Info.plist` descriptions and system prompts. Overlay permission is not applicable on iOS.
 
 ---
 
