@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.2 [07/04/2026]
+
+### New Architecture (React Native 0.76+)
+- **Fix "supports new architecture: false" warning** — podspec now uses `install_modules_dependencies` (RN 0.71+ standard) instead of manual `ENV['RCT_NEW_ARCH_ENABLED']` check
+- **iOS TurboModule declaration** — `OmikitPlugin` conforms to codegen-generated `NativeOmikitPluginSpec` protocol when `RCT_NEW_ARCH_ENABLED=1` via Swift extension
+- **Android TurboReactPackage** — migrated `OmikitPluginPackage` from `ReactPackage` to `TurboReactPackage` with lazy module loading via `getModule()` + `getReactModuleInfoProvider()`
+- Fully compatible with Old Architecture, New Architecture (interop layer), and bridgeless mode
+
+### Bug Fixes
+- **Fix `ClassCastException` on Android (Old Architecture)** — `getInitialCall` was declared as `fun getInitialCall(counter: Int, promise)` but JS passes `{ counter: N }` as a `ReadableMap`; refactored to accept `ReadableMap` and extract `counter` correctly
+- **Fix ViewManager instance sharing** — `OmiLocalCameraView` / `OmiRemoteCameraView` are now guaranteed to be the same instance when registered as both NativeModule and ViewManager (prevents `NativeModules.OmiLocalCameraView.refresh()` from affecting a different object than the rendered view)
+
+### TurboModule Spec
+- Add missing iOS-only methods to `NativeOmikitPlugin.ts` spec: `setCameraConfig`, `setupVideoContainers`, `attachRemoteView`, `attachLocalView`
+- Add missing exports to `omikit.tsx`: `getKeepAliveStatus`, `triggerKeepAlivePing`
+
+### Dependencies
+- Upgrade OMICore Android SDK: 2.6.5 → 2.6.8
+- Upgrade OmiKit iOS SDK: 1.11.4 → 1.11.9
+
 ## 4.1.1 [26/03/2026]
 
 ### Video Call Optimization

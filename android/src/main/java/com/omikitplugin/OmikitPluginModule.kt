@@ -820,7 +820,14 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   @ReactMethod
-  fun getInitialCall(counter: Int = 1, promise: Promise) {
+  fun getInitialCall(data: ReadableMap, promise: Promise) {
+      // JS passes { counter: N } as ReadableMap — extract the counter value.
+      // Default to 4 (Android) to allow retries while SIP registers.
+      val counter = if (data.hasKey("counter")) data.getInt("counter") else 4
+      getInitialCallWithCounter(counter, promise)
+  }
+
+  private fun getInitialCallWithCounter(counter: Int, promise: Promise) {
       val context = reactApplicationContext ?: run {
           promise.resolve(false)
           return
@@ -833,7 +840,7 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
           } else {
               mainScope.launch {
                   delay(1000) // Wait 1 second before retry
-                  getInitialCall(counter - 1, promise) // Retry recursively
+                  getInitialCallWithCounter(counter - 1, promise)
               }
           }
           return
