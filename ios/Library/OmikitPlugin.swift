@@ -16,13 +16,6 @@ public class OmikitPlugin: RCTEventEmitter {
     OmikitPlugin.instance = self
   }
 
-  // TurboModule conformance
-  #if RCT_NEW_ARCH_ENABLED
-  @objc public static func moduleName() -> String {
-    return "OmikitPlugin"
-  }
-  #endif
-
   @objc public override static func moduleName() -> String! {
     return "OmikitPlugin"
   }
@@ -733,3 +726,10 @@ public class OmikitPlugin: RCTEventEmitter {
     resolve(true)
   }
 }
+
+// Declare conformance to codegen-generated TurboModule spec when New Architecture is enabled.
+// All required methods are already implemented in the class above — this extension is
+// the correct Swift pattern for conditional protocol conformance.
+#if RCT_NEW_ARCH_ENABLED
+extension OmikitPlugin: NativeOmikitPluginSpec {}
+#endif

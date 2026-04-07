@@ -518,3 +518,19 @@ export function getVoipToken(): Promise<string | null> {
   return OmikitPlugin.getVoipToken();
 }
 
+/**
+ * Gets the current keep-alive connection status.
+ * @returns {Promise<any>} Keep-alive status object.
+ */
+export function getKeepAliveStatus(): Promise<any> {
+  return OmikitPlugin.getKeepAliveStatus();
+}
+
+/**
+ * Manually triggers a keep-alive ping to maintain the SIP connection.
+ * @returns {Promise<boolean>} True if the ping was sent successfully.
+ */
+export function triggerKeepAlivePing(): Promise<boolean> {
+  return OmikitPlugin.triggerKeepAlivePing();
+}
+

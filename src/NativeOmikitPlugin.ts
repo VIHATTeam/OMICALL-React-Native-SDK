@@ -139,6 +139,12 @@ export interface Spec extends TurboModule {
   getFcmToken(): Promise<string | null>;
   getVoipToken(): Promise<string | null>;
 
+  // iOS-only video view helpers (not available on Android)
+  setCameraConfig(data: Object): Promise<boolean>;
+  setupVideoContainers(): Promise<boolean>;
+  attachRemoteView(nativeID: string): Promise<boolean>;
+  attachLocalView(nativeID: string): Promise<boolean>;
+
   // Event emitter methods (required for bridgeless mode)
   addListener(eventName: string): void;
   removeListeners(count: number): void;
