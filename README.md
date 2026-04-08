@@ -128,6 +128,14 @@ Add to `android/app/src/main/AndroidManifest.xml`:
 > <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"
 >     tools:node="remove" />
 > ```
+
+> **Note:** By default, the SDK declares `WRITE_CALL_LOG` permission to save calls to the device's call history. If your app does **NOT** want calls saved to the device call log, add the following to remove it:
+>
+> ```xml
+> <!-- Remove if you do NOT want calls saved to device call history -->
+> <uses-permission android:name="android.permission.WRITE_CALL_LOG"
+>     tools:node="remove" />
+> ```
 >
 > Make sure to add the `tools` namespace to your manifest tag: `xmlns:tools="http://schemas.android.com/tools"`
 

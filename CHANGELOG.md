@@ -14,6 +14,9 @@ All notable changes to this project will be documented in this file.
 - **Fix `ClassCastException` on Android (Old Architecture)** — `getInitialCall` was declared as `fun getInitialCall(counter: Int, promise)` but JS passes `{ counter: N }` as a `ReadableMap`; refactored to accept `ReadableMap` and extract `counter` correctly
 - **Fix ViewManager instance sharing** — `OmiLocalCameraView` / `OmiRemoteCameraView` are now guaranteed to be the same instance when registered as both NativeModule and ViewManager (prevents `NativeModules.OmiLocalCameraView.refresh()` from affecting a different object than the rendered view)
 
+### Documentation
+- Document `tools:node="remove"` for `WRITE_CALL_LOG` permission — users who do not want calls saved to device call history can opt out via `AndroidManifest.xml`
+
 ### TurboModule Spec
 - Add missing iOS-only methods to `NativeOmikitPlugin.ts` spec: `setCameraConfig`, `setupVideoContainers`, `attachRemoteView`, `attachLocalView`
 - Add missing exports to `omikit.tsx`: `getKeepAliveStatus`, `triggerKeepAlivePing`
