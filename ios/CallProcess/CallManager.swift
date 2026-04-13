@@ -198,7 +198,7 @@ class CallManager {
 
       // Use host as SIP proxy (matching Android behavior)
       let host = (params["host"] as? String) ?? ""
-      let proxy = host.isEmpty ? "" : host
+      let proxy = host.isEmpty ? "vh.omicrm.com" : host
 
       // Set FCM project ID if provided
       if let projectID = params["projectId"] as? String, !projectID.isEmpty {
