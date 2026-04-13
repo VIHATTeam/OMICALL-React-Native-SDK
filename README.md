@@ -2,7 +2,7 @@
 
 The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SIP calling via the OMICALL platform with support for both Old and **New Architecture** (TurboModules + Fabric).
 
-**Status:** Active maintenance | **Version:** 4.1.2
+**Status:** Active maintenance | **Version:** 4.1.3
 
 ---
 

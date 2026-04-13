@@ -1153,12 +1153,21 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun getCurrentUser(promise: Promise) {
+    Log.d("OmikitPlugin", "📍 getCurrentUser called")
+    Log.d("OmikitPlugin", "📍 reactApplicationContext is null? ${reactApplicationContext == null}")
     mainScope.launch {
       var callResult: Any? = null
       withContext(Dispatchers.Default) {
         try {
-          // ✅ Gọi trực tiếp getCurrentUser() trong coroutine context
-          callResult = OmiClient.getInstance(reactApplicationContext!!).getCurrentUser()
+          val omiClient = OmiClient.getInstance(reactApplicationContext!!)
+          Log.d("OmikitPlugin", "📍 OmiClient instance: $omiClient")
+          callResult = omiClient.getCurrentUser()
+          Log.d("OmikitPlugin", "📍 getCurrentUser raw result: $callResult")
+          Log.d("OmikitPlugin", "📍 result type: ${callResult?.javaClass?.name ?: "null"}")
+          if (callResult is Map<*, *>) {
+            Log.d("OmikitPlugin", "📍 result keys: ${(callResult as Map<*, *>).keys}")
+            Log.d("OmikitPlugin", "📍 result values: ${(callResult as Map<*, *>).values}")
+          }
         } catch (e: Throwable) {
           Log.e("OmikitPlugin", "❌ getCurrentUser error: ${e.message}", e)
         }
@@ -1174,8 +1183,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
         map.putString("fullName", call["full_name"] as String?)
         map.putString("avatarUrl", call["avatar_url"] as String?)
 
+        Log.d("OmikitPlugin", "✅ getCurrentUser resolved: extension=${call["extension"]}, uuid=${call["uuid"]}, full_name=${call["full_name"]}")
         promise.resolve(map)
       } else {
+        Log.w("OmikitPlugin", "⚠️ getCurrentUser resolved NULL — callResult=$callResult, isMap=${callResult is Map<*, *>}")
         promise.resolve(null);
       }
     }

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.3 [13/04/2026]
+
+### Bug Fixes
+- **Fix `getCurrentUser` returning `null`/`undefined`** — added debug logging on both iOS and Android to diagnose timing issues where `getCurrentUser` is called before SIP registration completes
+- **Fix iOS `getCurrentUser` returning empty object `{}`** — now returns `nil` instead of `[:]` when user not found, so JS receives `undefined` instead of misleading empty object
+
+
 ## 4.1.2 [07/04/2026]
 
 ### New Architecture (React Native 0.76+)

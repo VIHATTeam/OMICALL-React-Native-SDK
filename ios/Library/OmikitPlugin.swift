@@ -462,8 +462,18 @@ public class OmikitPlugin: RCTEventEmitter {
   
   @objc(getCurrentUser:rejecter:)
   func getCurrentUser(resolve: @escaping RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    let currentSip = OmiClient.getCurrentSip()
+    NSLog("📍 [RN-getCurrentUser] called — currentSip: \(currentSip ?? "nil")")
     CallManager.shareInstance().getCurrentUser { user in
-      resolve(user)
+      NSLog("📍 [RN-getCurrentUser] callback result: \(user)")
+      NSLog("📍 [RN-getCurrentUser] isEmpty: \(user.isEmpty), keys: \(Array(user.keys))")
+      if user.isEmpty {
+        NSLog("⚠️ [RN-getCurrentUser] resolved empty dict — user not found for sip: \(currentSip ?? "nil")")
+        resolve(nil)
+      } else {
+        NSLog("✅ [RN-getCurrentUser] resolved: extension=\(user["extension"] ?? "nil"), uuid=\(user["uuid"] ?? "nil")")
+        resolve(user)
+      }
     }
   }
   
