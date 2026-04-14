@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.5 [14/04/2026]
+
+### Bug Fixes
+- **Fix iOS `codeEndCall` intermittently missing** — `callDealloc` now extracts `OMINotificationEndCauseKey` from the `OMICallDealloc` notification (matching native app behavior) instead of relying on `call.lastStatus` which may not be set at disconnect time
+- **Fix iOS `tempCallInfo` cleared too early** — `callStateChanged` no longer resets `tempCallInfo` after disconnect event; `callDealloc` retains and clears it after use, ensuring `codeEndCall` is always available regardless of notification order
+
 ## 4.1.4 [14/04/2026]
 
 ### Bug Fixes
