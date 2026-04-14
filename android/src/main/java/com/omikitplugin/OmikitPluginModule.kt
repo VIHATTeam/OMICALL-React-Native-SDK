@@ -1153,21 +1153,12 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   @ReactMethod
   fun getCurrentUser(promise: Promise) {
-    Log.d("OmikitPlugin", "📍 getCurrentUser called")
-    Log.d("OmikitPlugin", "📍 reactApplicationContext is null? ${reactApplicationContext == null}")
     mainScope.launch {
       var callResult: Any? = null
       withContext(Dispatchers.Default) {
         try {
           val omiClient = OmiClient.getInstance(reactApplicationContext!!)
-          Log.d("OmikitPlugin", "📍 OmiClient instance: $omiClient")
           callResult = omiClient.getCurrentUser()
-          Log.d("OmikitPlugin", "📍 getCurrentUser raw result: $callResult")
-          Log.d("OmikitPlugin", "📍 result type: ${callResult?.javaClass?.name ?: "null"}")
-          if (callResult is Map<*, *>) {
-            Log.d("OmikitPlugin", "📍 result keys: ${(callResult as Map<*, *>).keys}")
-            Log.d("OmikitPlugin", "📍 result values: ${(callResult as Map<*, *>).values}")
-          }
         } catch (e: Throwable) {
           Log.e("OmikitPlugin", "❌ getCurrentUser error: ${e.message}", e)
         }
