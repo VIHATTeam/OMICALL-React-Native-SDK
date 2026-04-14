@@ -394,9 +394,27 @@ class CallManager {
   }
   
   @objc func callDealloc(_ notification: NSNotification) {
-    if (tempCallInfo != nil) {
-      tempCallInfo!["status"] = OMICallState.disconnected.rawValue
-      OmikitPlugin.instance?.sendEvent(withName: CALL_STATE_CHANGED, body: tempCallInfo!)
+    // Extract endCause from OMICallDealloc notification — this is the reliable source
+    // for the SIP end code (486=busy, 603=decline, 408=timeout, etc.)
+    let endCause = notification.userInfo?[OMINotificationEndCauseKey] as? Int
+
+    if var info = tempCallInfo, !info.isEmpty {
+      info["status"] = OMICallState.disconnected.rawValue
+      if let endCause = endCause {
+        info["code_end_call"] = endCause
+        info["codeEndCall"] = endCause
+      }
+      OmikitPlugin.instance?.sendEvent(withName: CALL_STATE_CHANGED, body: info)
+      tempCallInfo = [:]
+    } else if let endCause = endCause {
+      // No tempCallInfo (callStateChanged fired first and cleared it),
+      // but we still have an endCause — send minimal event so JS gets the code
+      let fallback: [String: Any] = [
+        "status": OMICallState.disconnected.rawValue,
+        "code_end_call": endCause,
+        "codeEndCall": endCause
+      ]
+      OmikitPlugin.instance?.sendEvent(withName: CALL_STATE_CHANGED, body: fallback)
     }
   }
   
@@ -457,7 +475,7 @@ class CallManager {
       }
       OmikitPlugin.instance?.sendEvent(withName: CALL_STATE_CHANGED, body: combinedDictionary )
       lastTimeCall = Date()
-      tempCallInfo = [:]
+      // Keep tempCallInfo for callDealloc — it will clear after use
       break
     default:
       break

@@ -1,20 +1,22 @@
-MIT License
+OMICALL SDK License
 
-Copyright (c) 2022 ViHAT Group
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Copyright (c) 2022-2026 ViHAT Group (VIHAT JSC). All rights reserved.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This SDK is provided exclusively for customers of the OMICALL platform
+(https://omicall.com). By using this SDK, you agree to the following terms:
+
+PERMITTED:
+- Use the SDK to integrate OMICALL services into your applications
+- Include the SDK in applications distributed to your end users
+
+PROHIBITED:
+- Use the SDK without an active OMICALL account or subscription
+- Redistribute, sublicense, or sell the SDK as a standalone product
+- Use the SDK to build competing communication platforms
+- Reverse engineer, decompile, or disassemble the SDK
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+IMPLIED. IN NO EVENT SHALL VIHAT GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+
+Contact: support@omicall.com

@@ -1,8 +1,16 @@
 # OMICALL SDK for React Native
 
+[![npm version](https://img.shields.io/npm/v/omikit-plugin.svg)](https://www.npmjs.com/package/omikit-plugin)
+[![npm downloads](https://img.shields.io/npm/dm/omikit-plugin.svg)](https://www.npmjs.com/package/omikit-plugin)
+[![license](https://img.shields.io/badge/license-proprietary-red.svg)](./LICENSE)
+
+```bash
+npm install omikit-plugin
+```
+
 The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SIP calling via the OMICALL platform with support for both Old and **New Architecture** (TurboModules + Fabric).
 
-**Status:** Active maintenance | **Version:** 4.1.4
+> **⚠️ Expo is not supported.** This SDK requires native modules (SIP/VoIP, CallKit, PushKit) that are not compatible with Expo managed workflow. Please use React Native CLI.
 
 ---
 
@@ -33,8 +41,8 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | omikit-plugin | React Native | Architecture | Installation |
 |---------------|--------------|--------------|--------------|
-| **4.0.x** (latest) | 0.74+ | Old + New (auto-detect) | `npm install omikit-plugin@latest` |
-| 3.3.x | 0.60 – 0.73 | Old Architecture only | `npm install omikit-plugin@3.3.29` |
+| **4.x** (latest) | 0.74+ | Old + New (auto-detect) | `npm install omikit-plugin` |
+| 3.3.x (legacy) | 0.60 – 0.73 | Old Architecture only | `npm install omikit-plugin@3.3.29` |
 
 **v4.0.x highlights:**
 - **TurboModules (JSI)** — 4-10x faster native method calls via direct C++ bridge
