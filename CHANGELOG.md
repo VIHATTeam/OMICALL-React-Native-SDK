@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.6 [14/04/2026]
+
+### Bug Fixes
+- **Fix Android Kotlin 2.0 compile error (all versions)** — refactored `getCurrentUser`, `getGuestUser`, `getUserInfo` to use `val` return from `withContext` + shared `resolveUserResult()` helper, eliminating `if`-as-expression issue compatible with all Kotlin versions
+
 ## 4.1.5 [14/04/2026]
 
 ### Bug Fixes

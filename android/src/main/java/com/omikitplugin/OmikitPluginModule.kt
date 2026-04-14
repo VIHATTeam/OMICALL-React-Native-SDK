@@ -1154,88 +1154,57 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun getCurrentUser(promise: Promise) {
     mainScope.launch {
-      var callResult: Any? = null
-      withContext(Dispatchers.Default) {
+      val callResult = withContext(Dispatchers.Default) {
         try {
-          val omiClient = OmiClient.getInstance(reactApplicationContext!!)
-          callResult = omiClient.getCurrentUser()
-        } catch (e: Throwable) {
-          Log.e("OmikitPlugin", "❌ getCurrentUser error: ${e.message}", e)
+          OmiClient.getInstance(reactApplicationContext!!).getCurrentUser()
+        } catch (_: Throwable) {
+          null
         }
       }
-      if (callResult != null && callResult is Map<*, *>) {
-        val call = callResult as Map<*, *>
-        val map: WritableMap = WritableNativeMap()
-        map.putString("extension", call["extension"] as String?)
-        map.putString("uuid", call["uuid"] as String?)
-        map.putString("full_name", call["full_name"] as String?)
-        map.putString("avatar_url", call["avatar_url"] as String?)
+      resolveUserResult(callResult, promise)
+    }
+  }
 
-        map.putString("fullName", call["full_name"] as String?)
-        map.putString("avatarUrl", call["avatar_url"] as String?)
-
-        Log.d("OmikitPlugin", "✅ getCurrentUser resolved: extension=${call["extension"]}, uuid=${call["uuid"]}, full_name=${call["full_name"]}")
-        promise.resolve(map)
-      } else {
-        Log.w("OmikitPlugin", "⚠️ getCurrentUser resolved NULL — callResult=$callResult, isMap=${callResult is Map<*, *>}")
-        promise.resolve(null);
-      }
+  private fun resolveUserResult(callResult: Any?, promise: Promise) {
+    if (callResult is Map<*, *>) {
+      val map: WritableMap = WritableNativeMap()
+      map.putString("extension", callResult["extension"] as String?)
+      map.putString("uuid", callResult["uuid"] as String?)
+      map.putString("full_name", callResult["full_name"] as String?)
+      map.putString("avatar_url", callResult["avatar_url"] as String?)
+      map.putString("fullName", callResult["full_name"] as String?)
+      map.putString("avatarUrl", callResult["avatar_url"] as String?)
+      promise.resolve(map)
+    } else {
+      promise.resolve(null)
     }
   }
 
   @ReactMethod
   fun getGuestUser(promise: Promise) {
     mainScope.launch {
-      var callResult: Any? = null
-      withContext(Dispatchers.Default) {
+      val callResult = withContext(Dispatchers.Default) {
         try {
-          callResult = OmiClient.getInstance(reactApplicationContext!!).getIncomingCallUser()
+          OmiClient.getInstance(reactApplicationContext!!).getIncomingCallUser()
         } catch (_: Throwable) {
-
+          null
         }
       }
-      if (callResult != null && callResult is Map<*, *>) {
-        val call = callResult as Map<*, *>
-        val map: WritableMap = WritableNativeMap()
-        map.putString("extension", call["extension"] as String?)
-        map.putString("uuid", call["uuid"] as String?)
-        map.putString("full_name", call["full_name"] as String?)
-        map.putString("avatar_url", call["avatar_url"] as String?)
-
-        map.putString("fullName", call["full_name"] as String?)
-        map.putString("avatarUrl", call["avatar_url"] as String?)
-
-        promise.resolve(map)
-      } else {
-        promise.resolve(null);
-      }
+      resolveUserResult(callResult, promise)
     }
   }
 
   @ReactMethod
   fun getUserInfo(phone: String, promise: Promise) {
     mainScope.launch {
-      var callResult: Any? = null
-      withContext(Dispatchers.Default) {
+      val callResult = withContext(Dispatchers.Default) {
         try {
-          callResult = OmiClient.getInstance(reactApplicationContext!!).getUserInfo(phone)
+          OmiClient.getInstance(reactApplicationContext!!).getUserInfo(phone)
         } catch (_: Throwable) {
+          null
         }
       }
-      if (callResult != null && callResult is Map<*, *>) {
-        val call = callResult as Map<*, *>
-        val map: WritableMap = WritableNativeMap()
-        map.putString("extension", call["extension"] as String?)
-        map.putString("uuid", call["uuid"] as String?)
-        map.putString("full_name", call["full_name"] as String?)
-        map.putString("avatar_url", call["avatar_url"] as String?)
-
-        map.putString("fullName", call["full_name"] as String?)
-        map.putString("avatarUrl", call["avatar_url"] as String?)
-        promise.resolve(map)
-      } else {
-        promise.resolve(null)
-      }
+      resolveUserResult(callResult, promise)
     }
   }
 
