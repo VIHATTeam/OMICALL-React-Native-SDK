@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.4 [14/04/2026]
+
+### Bug Fixes
+- **Fix Android build error on Kotlin 2.0+** — `if` without `else` in `withContext` block caused `'if' must have both main and 'else' branches if used as an expression` compile error in `getCurrentUser`
+
+### Dependencies
+- Upgrade OMICore Android SDK: 2.6.8 → 2.6.9
+
+
 ## 4.1.3 [13/04/2026]
 
 ### Bug Fixes
