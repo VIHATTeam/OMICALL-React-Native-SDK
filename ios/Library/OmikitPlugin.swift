@@ -158,12 +158,13 @@ public class OmikitPlugin: RCTEventEmitter {
   }
 
   @objc(toggleMute:rejecter:)
-  func toggleMute(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
-    CallManager.shareInstance().toggleMute()
-    if let call = CallManager.shareInstance().getAvailableCall() {
-      resolve(call.muted)
+  func toggleMute(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    CallManager.shareInstance().toggleMute { [weak self] _ in
+      // Read call.muted AFTER CallKit completes — value is authoritative at this point.
+      let muted = CallManager.shareInstance().getAvailableCall()?.muted ?? false
+      resolve(muted)
+      self?.sendMuteStatus()
     }
-    sendMuteStatus()
   }
   
   @objc(toggleSpeaker:rejecter:)
@@ -377,6 +378,21 @@ public class OmikitPlugin: RCTEventEmitter {
     CallManager.shareInstance().logout()
     resolve(true)
   }
+
+  /// Logout and wait for the SDK to fully clean up.
+  /// Uses OmiKit 1.11.x `logoutWithCompletion:` which fires on main thread
+  /// after HTTP devices/remove returns AND local SIP state (`currentSip`) is
+  /// reset. Safe to call `initCallWithUserPassword` immediately after this resolves.
+  ///
+  /// Resolves with the `success` flag from the SDK (true = backend confirmed
+  /// remove, false = local cleanup happened but server call failed — either
+  /// way the local state is now sane).
+  @objc(logoutAndWait:rejecter:)
+  func logoutAndWait(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    OmiClient.logout { success in
+      resolve(success)
+    }
+  }
   
   
   @objc(registerVideoEvent:rejecter:)
@@ -537,6 +553,44 @@ public class OmikitPlugin: RCTEventEmitter {
     resolve(OmiClient.getVoipToken())
   }
 
+  // MARK: - Backend Device Registration Check APIs (OmiKit 1.11.19)
+
+  /// Fetch the list of devices currently registered on OMI backend for active SIP user.
+  /// Runs on a background queue because OmiKit performs a synchronous HTTP request.
+  @objc(getOmiDevices:rejecter:)
+  func getOmiDevices(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    DispatchQueue.global(qos: .userInitiated).async {
+      let devices = OmiClient.getOmiDevices()
+      DispatchQueue.main.async {
+        resolve(devices)
+      }
+    }
+  }
+
+  /// Verify whether THIS device is registered on backend for the current SIP user.
+  /// Hits the network (via getOmiDevices) — dispatch off main thread.
+  @objc(isCurrentDeviceRegistered:rejecter:)
+  func isCurrentDeviceRegistered(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    DispatchQueue.global(qos: .userInitiated).async {
+      let registered = OmiClient.isCurrentDeviceRegistered()
+      DispatchQueue.main.async {
+        resolve(registered)
+      }
+    }
+  }
+
+  /// Convenience guard built on top of isCurrentDeviceRegistered. Returns true
+  /// when a SIP user is set locally but no matching device exists on backend.
+  @objc(needsReLogin:rejecter:)
+  func needsReLogin(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    DispatchQueue.global(qos: .userInitiated).async {
+      let needs = OmiClient.needsReLogin()
+      DispatchQueue.main.async {
+        resolve(needs)
+      }
+    }
+  }
+
   // MARK: - Audio Methods
   @objc(getAudio:rejecter:)
   func getAudio(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
@@ -636,6 +690,70 @@ public class OmikitPlugin: RCTEventEmitter {
       AUDIO_CHANGE,
       REQUEST_PERMISSION
     ]
+  }
+
+  // Event emitter — works across Old Architecture, New Architecture (Fabric),
+  // and bridgeless modes.
+  //
+  // Why the custom override:
+  //   In NewArch, the JS side talks to the codegen TurboModule wrapper, which
+  //   does NOT forward `addListener`/`removeListeners` to this Swift instance.
+  //   RCTEventEmitter's private `_listenerCount` therefore stays at 0, and
+  //   the default `sendEvent` short-circuits ("Sending X with no listeners
+  //   registered") — dropping every event.
+  //
+  // The fix:
+  //   1. Forward `addListener`/`removeListeners` to super so the legacy
+  //      counter is incremented when JS subscribes via the interop bridge.
+  //   2. Track an independent counter as a safety net for paths where super
+  //      cannot increment (pure bridgeless callableJSModules-only mode).
+  //   3. In `sendEvent`, try `super.sendEvent` first (uses RN-wired dispatch
+  //      for the current architecture), then fall back to direct calls to
+  //      `RCTDeviceEventEmitter` via bridge or callableJSModules. JS code
+  //      subscribes through the global `DeviceEventEmitter`, which is the
+  //      same channel.
+  private var jsListenerCount: Int = 0
+
+  @objc public override func addListener(_ eventName: String!) {
+    super.addListener(eventName)
+    jsListenerCount += 1
+    if jsListenerCount == 1 {
+      startObserving()
+    }
+  }
+
+  @objc public override func removeListeners(_ count: Double) {
+    super.removeListeners(count)
+    jsListenerCount = max(0, jsListenerCount - Int(count))
+    if jsListenerCount == 0 {
+      stopObserving()
+    }
+  }
+
+  @objc public override func sendEvent(withName name: String!, body: Any!) {
+    // Preferred: super uses RN's wired dispatch for the active architecture.
+    // Requires the counter to be non-zero, which is guaranteed by our
+    // `addListener` forwarding above whenever the legacy bridge is involved.
+    if jsListenerCount > 0 {
+      super.sendEvent(withName: name, body: body)
+      return
+    }
+    // Fallback 1: bridge route — works on Old Arch and NewArch interop bridge.
+    if let bridge = self.bridge {
+      bridge.enqueueJSCall(
+        "RCTDeviceEventEmitter",
+        method: "emit",
+        args: body != nil ? [name as Any, body as Any] : [name as Any],
+        completion: nil
+      )
+      return
+    }
+    // Fallback 2: bridgeless mode — only callableJSModules is available.
+    self.callableJSModules?.invokeModule(
+      "RCTDeviceEventEmitter",
+      method: "emit",
+      withArgs: body != nil ? [name as Any, body as Any] : [name as Any]
+    )
   }
 
   // MARK: - Stub Methods for TurboModule Compatibility

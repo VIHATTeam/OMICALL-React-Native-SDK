@@ -1,4 +1,4 @@
-import { NativeModules, Platform, NativeEventEmitter, DeviceEventEmitter, TurboModuleRegistry } from 'react-native';
+import { NativeModules, Platform, DeviceEventEmitter, TurboModuleRegistry } from 'react-native';
 import type { Spec } from './NativeOmikitPlugin';
 
 const LINKING_ERROR =
@@ -36,23 +36,30 @@ const OmikitPlugin: Spec = resolvedModule || new Proxy(
   }
 );
 
-// Setup omiEmitter — safe for Old Arch, New Arch, and bridgeless mode
-const omiEmitter = (() => {
-  if (Platform.OS !== 'ios') {
-    return DeviceEventEmitter;
-  }
-  try {
-    // Best case: NativeEventEmitter with resolved native module
-    if (resolvedModule) {
-      return new NativeEventEmitter(resolvedModule as any);
-    }
-    // New Arch without interop: NativeEventEmitter without module arg (RN 0.74+)
-    return new NativeEventEmitter();
-  } catch (_) {
-    // Last resort fallback
-    return DeviceEventEmitter;
-  }
-})();
+// Setup omiEmitter — works across Old Arch, New Arch (Fabric), and bridgeless.
+//
+// Why DeviceEventEmitter on BOTH platforms (instead of NativeEventEmitter on iOS)?
+//
+// `new NativeEventEmitter(module)` was designed for the legacy bridge where
+// the JS-side emitter explicitly calls `module.addListener(eventName)` and
+// `module.removeListeners(count)` to track listener count on the same Obj-C
+// instance that calls `sendEvent`. In NewArch + Fabric, the JS side resolves
+// the module through the codegen TurboModule wrapper, but listener tracking
+// often does NOT round-trip back to the underlying `RCTEventEmitter`
+// instance, so `sendEvent` short-circuits with "no listeners registered" and
+// drops the event.
+//
+// `DeviceEventEmitter` is the global JS-side counterpart of the native
+// `RCTDeviceEventEmitter` JS module. The native side reaches it via either:
+//   - `super.sendEvent(...)` (RCTEventEmitter routes through this module
+//     internally — works once RN has wired the dispatch path), OR
+//   - `bridge.enqueueJSCall("RCTDeviceEventEmitter", "emit", ...)`, OR
+//   - `callableJSModules.invokeModule("RCTDeviceEventEmitter", "emit", ...)`.
+//
+// All three eventually feed `DeviceEventEmitter` on the JS side, so
+// subscribing here always sees the event regardless of architecture.
+// This matches what the Android side has been doing successfully all along.
+const omiEmitter = DeviceEventEmitter;
 
 /**
  * Starts the Omikit services.
@@ -246,10 +253,40 @@ export function toggleOmiVideo(): Promise<boolean> {
 
 /**
  * Logs the user out of the Omikit services.
+ *
+ * Resolves as soon as the native SDK call returns — does NOT wait for the
+ * HTTP `devices/remove` request or the local SIP state reset. Safe to use
+ * when you don't need to log in again immediately.
+ *
+ * If you plan to call {@link initCallWithUserPassword} or
+ * {@link initCallWithApiKey} right after, use {@link logoutAndWait} instead
+ * to avoid a race between devices/remove and devices/add.
+ *
  * @returns {Promise<boolean>} A promise that resolves to `true` if logout is successful.
  */
 export function logout(): Promise<boolean> {
   return OmikitPlugin.logout();
+}
+
+/**
+ * Logs out and waits for the SDK to fully finish its cleanup before resolving.
+ *
+ * Uses the SDK's native completion callback (iOS `logoutWithCompletion:`,
+ * Android `OmiClient.logout(onCompleted)`) and only resolves once BOTH the
+ * HTTP `devices/remove` round-trip AND the local SIP state reset have fired.
+ * Use this whenever you plan to re-login immediately.
+ *
+ * @returns {Promise<boolean>} Resolves with the backend success flag. Even
+ *   when the backend call fails (network error, timeout) the local state has
+ *   still been cleaned up — you can safely proceed to re-login.
+ *
+ * @example
+ * // Switch extensions cleanly
+ * await logoutAndWait();
+ * await initCallWithUserPassword(newCredentials);
+ */
+export function logoutAndWait(): Promise<boolean> {
+  return OmikitPlugin.logoutAndWait();
 }
 
 /**
@@ -516,6 +553,131 @@ export function getFcmToken(): Promise<string | null> {
  */
 export function getVoipToken(): Promise<string | null> {
   return OmikitPlugin.getVoipToken();
+}
+
+// MARK: - Backend Device Registration Check APIs
+// Mirrors OmiKit iOS 1.11.19 / OmiSDK Android 2.6.20+
+
+/**
+ * Single device entry returned by {@link getOmiDevices}.
+ * Native bridge returns snake_case (matches SDK raw shape on both platforms);
+ * this JS layer normalizes to camelCase so consumers don't deal with two cases.
+ *
+ * `deviceType` is normalized to `"ios"` / `"android"` (server raw int converted).
+ * `sipNumber` is injected from the local session, not from the server payload.
+ */
+export type OmiDeviceInfo = {
+  deviceId?: string;
+  token?: string;
+  deviceType?: 'ios' | 'android' | string;
+  voipToken?: string;
+  appId?: string;
+  createdTime?: number;
+  projectId?: string;
+  sipNumber?: string;
+};
+
+/**
+ * Raw native payload — snake_case as returned by the iOS/Android SDKs.
+ * Kept private to this module; consumers receive the camelCase {@link OmiDeviceInfo}.
+ */
+type OmiDeviceInfoNative = {
+  device_id?: string;
+  token?: string;
+  device_type?: 'ios' | 'android' | string;
+  voip_token?: string;
+  app_id?: string;
+  created_time?: number;
+  project_id?: string;
+  sipNumber?: string;
+};
+
+function normalizeDevice(d: OmiDeviceInfoNative): OmiDeviceInfo {
+  return {
+    deviceId: d.device_id,
+    token: d.token,
+    deviceType: d.device_type,
+    voipToken: d.voip_token,
+    appId: d.app_id,
+    createdTime: d.created_time,
+    projectId: d.project_id,
+    sipNumber: d.sipNumber,
+  };
+}
+
+/**
+ * Fetch the list of devices currently registered on the OMI backend for the
+ * active SIP user. Returns an empty array when not logged in, on network
+ * failure, or on parse error — never throws.
+ *
+ * Recommended usage: call once after login or on app foreground — do NOT
+ * call in tight loops (each call performs a fresh HTTP request, no caching).
+ *
+ * @returns {Promise<OmiDeviceInfo[]>} Devices registered on backend (camelCase).
+ */
+export async function getOmiDevices(): Promise<OmiDeviceInfo[]> {
+  const raw = (await OmikitPlugin.getOmiDevices()) as OmiDeviceInfoNative[] | null;
+  if (!Array.isArray(raw)) return [];
+  return raw.map(normalizeDevice);
+}
+
+/**
+ * Verify whether THIS device (local `device_id` + `app_id`) is registered on
+ * the OMI backend for the current SIP user. Returns `false` early when not
+ * logged in, avoiding an unnecessary HTTP round trip.
+ *
+ * Use this to detect divergence between local session and backend state —
+ * e.g. after app reinstall, backend cleanup, or device migration.
+ */
+export function isCurrentDeviceRegistered(): Promise<boolean> {
+  return OmikitPlugin.isCurrentDeviceRegistered();
+}
+
+/**
+ * Convenience guard built on top of {@link isCurrentDeviceRegistered}.
+ * Returns `true` when a SIP user is set locally but no matching device exists
+ * on the backend — i.e. the local session is stale and the user must logout
+ * + login again to re-register.
+ *
+ * Returns `false` when not logged in (nothing to recover) or when the
+ * registration is intact. Recommended call sites: app foreground, before
+ * critical operations.
+ */
+export function needsReLogin(): Promise<boolean> {
+  return OmikitPlugin.needsReLogin();
+}
+
+/**
+ * Look up the SIP number associated with a given `deviceId` in a devices list
+ * returned by {@link getOmiDevices}.
+ *
+ * Use case: after fetching the backend device list, verify which SIP extension
+ * is currently bound to THIS device — useful when one user can hold multiple
+ * extensions, or when troubleshooting a wrong-extension issue.
+ *
+ * @param devices - Array returned by {@link getOmiDevices}.
+ * @param deviceId - Local device identifier (typically from {@link getDeviceId}).
+ * @returns The `sipNumber` of the matched entry, or `null` if no device in the
+ *   list has that `deviceId` (or if inputs are missing/empty).
+ *
+ * @example
+ * const devices = await getOmiDevices();
+ * const localDeviceId = await getDeviceId();
+ * const sip = findSipNumberByDeviceId(devices, localDeviceId);
+ * if (sip == null) {
+ *   // backend has no record of this device — session stale, ask user to re-login
+ * } else if (sip !== expectedExtension) {
+ *   // device is bound to a different extension than expected
+ * }
+ */
+export function findSipNumberByDeviceId(
+  devices: OmiDeviceInfo[] | null | undefined,
+  deviceId: string | null | undefined
+): string | null {
+  if (!Array.isArray(devices) || devices.length === 0) return null;
+  if (!deviceId) return null;
+  const match = devices.find((d) => d.deviceId === deviceId);
+  return match?.sipNumber ?? null;
 }
 
 /**

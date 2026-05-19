@@ -1151,6 +1151,36 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
+  /// Logout and wait for the SDK to fully clean up before resolving.
+  ///
+  /// `OmiClient.logout(onCompleted)` is a `suspend fun` that:
+  ///   - Fires HTTP `devices/remove` (fire-and-forget background)
+  ///   - Clears local SharedPreferences
+  ///   - Stops SipService and polls for PJSIP shutdown (up to 5s internally)
+  ///   - Invokes `onCompleted` only after the stack is fully down
+  ///
+  /// We pass an empty callback purely to opt into the SDK's internal wait
+  /// loop — without it the SDK skips waiting and returns immediately.
+  /// The plugin's coroutine `await`s the suspend call, so the JS promise
+  /// resolves only once the SDK signals completion (or its 5s internal
+  /// timeout elapses).
+  @ReactMethod
+  fun logoutAndWait(promise: Promise) {
+    val ctx = reactApplicationContext
+    if (ctx == null) {
+      promise.resolve(true)
+      return
+    }
+    mainScope.launch {
+      try {
+        OmiClient.getInstance(ctx).logout { /* opt-in to internal wait */ }
+      } catch (_: Throwable) {
+        // ignored — local state still cleaned by the SDK, safe to proceed
+      }
+      promise.resolve(true)
+    }
+  }
+
   @ReactMethod
   fun getCurrentUser(promise: Promise) {
     mainScope.launch {
@@ -1230,13 +1260,22 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun getAppId(promise: Promise) {
     try {
+      // Prefer SDK public API (OmiSDK 2.6.21+) — guarantees same value used when
+      // adding device to backend, so consumers can match against getOmiDevices().
+      val ctx = reactApplicationContext
+      if (ctx != null) {
+        val sdkAppId = OmiClient.getInstance(ctx).getAppId()
+        if (sdkAppId.isNotEmpty()) {
+          promise.resolve(sdkAppId)
+          return
+        }
+      }
       val info = OmiClient.registrationInfo
       if (info?.appId != null) {
         promise.resolve(info.appId)
         return
       }
-      // Fallback: get package name of the host app
-      promise.resolve(reactApplicationContext?.packageName)
+      promise.resolve(ctx?.packageName)
     } catch (e: Throwable) {
       promise.resolve(null)
     }
@@ -1245,15 +1284,24 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun getDeviceId(promise: Promise) {
     try {
+      // Prefer SDK public API (OmiSDK 2.6.21+) — guarantees same value used when
+      // adding device to backend, so consumers can match against getOmiDevices().
+      val ctx = reactApplicationContext
+      if (ctx != null) {
+        val sdkDeviceId = OmiClient.getInstance(ctx).getDeviceId()
+        if (sdkDeviceId.isNotEmpty()) {
+          promise.resolve(sdkDeviceId)
+          return
+        }
+      }
       val info = OmiClient.registrationInfo
       if (info?.deviceId != null) {
         promise.resolve(info.deviceId)
         return
       }
-      // Fallback: get Android ID directly
       val androidId = try {
         Settings.Secure.getString(
-          reactApplicationContext?.contentResolver,
+          ctx?.contentResolver,
           Settings.Secure.ANDROID_ID
         )
       } catch (e: Exception) { null }
@@ -1303,6 +1351,87 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   fun getVoipToken(promise: Promise) {
     // VoIP token is iOS only, Android returns null
     promise.resolve(null)
+  }
+
+  // MARK: - Backend Device Registration Check APIs (OmiSDK 2.6.20+)
+
+  /// Fetch the list of devices currently registered on OMI backend for the
+  /// active SIP user. Returns empty array on logout / network failure.
+  @ReactMethod
+  fun getOmiDevices(promise: Promise) {
+    val ctx = reactApplicationContext
+    if (ctx == null) {
+      promise.resolve(WritableNativeArray())
+      return
+    }
+    mainScope.launch {
+      val devices = withContext(Dispatchers.IO) {
+        try {
+          OmiClient.getInstance(ctx).getOmiDevices()
+        } catch (_: Throwable) {
+          emptyList()
+        }
+      }
+      val array: WritableArray = WritableNativeArray()
+      for (d in devices) {
+        val map: WritableMap = WritableNativeMap()
+        map.putString("device_id", d.deviceId)
+        map.putString("token", d.token)
+        map.putString("device_type", d.deviceType)
+        map.putString("voip_token", d.voipToken)
+        map.putString("app_id", d.appId)
+        // created_time may overflow Int — use Double for cross-bridge safety.
+        if (d.createdTime != null) {
+          map.putDouble("created_time", d.createdTime!!.toDouble())
+        }
+        map.putString("project_id", d.projectId)
+        map.putString("sipNumber", d.sipNumber)
+        array.pushMap(map)
+      }
+      promise.resolve(array)
+    }
+  }
+
+  /// Verify whether THIS device is registered on backend for the current SIP
+  /// user. Returns false early when not logged in.
+  @ReactMethod
+  fun isCurrentDeviceRegistered(promise: Promise) {
+    val ctx = reactApplicationContext
+    if (ctx == null) {
+      promise.resolve(false)
+      return
+    }
+    mainScope.launch {
+      val registered = withContext(Dispatchers.IO) {
+        try {
+          OmiClient.getInstance(ctx).isCurrentDeviceRegistered()
+        } catch (_: Throwable) {
+          false
+        }
+      }
+      promise.resolve(registered)
+    }
+  }
+
+  /// Returns true when a SIP user is set locally but no matching device exists
+  /// on backend — i.e. user must logout + login again to re-register.
+  @ReactMethod
+  fun needsReLogin(promise: Promise) {
+    val ctx = reactApplicationContext
+    if (ctx == null) {
+      promise.resolve(false)
+      return
+    }
+    mainScope.launch {
+      val needs = withContext(Dispatchers.IO) {
+        try {
+          OmiClient.getInstance(ctx).needsReLogin()
+        } catch (_: Throwable) {
+          false
+        }
+      }
+      promise.resolve(needs)
+    }
   }
 
   @ReactMethod

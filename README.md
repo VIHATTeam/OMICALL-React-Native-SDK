@@ -54,8 +54,8 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | Platform | SDK | Version |
 |----------|-----|---------|
-| Android | OMIKIT | 2.6.9 |
-| iOS | OmiKit | 1.11.9 |
+| Android | OMICore | 2.6.21 |
+| iOS | OmiKit | 1.11.19 |
 
 ### Platform Requirements
 
@@ -1086,6 +1086,7 @@ await initCallWithUserPassword({
 | `initCallWithUserPassword(data)` | `Promise<boolean>` | Login with SIP username/password |
 | `initCallWithApiKey(data)` | `Promise<boolean>` | Login with API key |
 | `logout()` | `Promise<boolean>` | Logout and unregister SIP |
+| `logoutAndWait()` | `Promise<boolean>` | (v4.1.7+) Logout that **resolves only after** the SDK finishes the backend `devices/remove` HTTP call and clears local state. Use before an immediate re-login to avoid race conditions |
 
 ### Call Control
 
@@ -1135,11 +1136,64 @@ await initCallWithUserPassword({
 | Function | Returns | Description |
 |----------|---------|-------------|
 | `getProjectId()` | `Promise<string\|null>` | Current project ID |
-| `getAppId()` | `Promise<string\|null>` | Current app ID |
-| `getDeviceId()` | `Promise<string\|null>` | Current device ID |
+| `getAppId()` | `Promise<string\|null>` | Current app ID. (v4.1.7+ Android) Sourced from `OmiClient.getAppId()` to match `getOmiDevices()` payload |
+| `getDeviceId()` | `Promise<string\|null>` | Current device ID. (v4.1.7+ Android) Sourced from `OmiClient.getDeviceId()` to match `getOmiDevices()` payload |
 | `getFcmToken()` | `Promise<string\|null>` | FCM push token |
 | `getSipInfo()` | `Promise<string\|null>` | SIP info (`user@realm`) |
 | `getVoipToken()` | `Promise<string\|null>` | VoIP token (iOS only) |
+
+### Backend Device Registration Check (v4.1.7+)
+
+> Read-only diagnostics for verifying the local device record still exists on the OMI backend. Useful after app reinstall, account migration, or backend cleanup. The SDK **never** auto-logouts — your app decides the recovery action.
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `getOmiDevices()` | `Promise<OmiDeviceInfo[]>` | Fetch all devices registered on the OMI backend for the active SIP user. Empty array when not logged in / network error / parse error — never rejects |
+| `isCurrentDeviceRegistered()` | `Promise<boolean>` | `true` if the local `deviceId` + `appId` is in the backend list. Returns `false` early when not logged in (no HTTP call) |
+| `needsReLogin()` | `Promise<boolean>` | `true` when SIP user is set locally but the backend has no matching device (stale session — user must logout + login again) |
+| `findSipNumberByDeviceId(devices, deviceId)` | `string \| null` | Pure JS helper. Returns the `sipNumber` for the given device ID in the array, or `null` if not found |
+
+**`OmiDeviceInfo` shape (camelCase, normalized at JS layer):**
+
+```typescript
+type OmiDeviceInfo = {
+  deviceId: string;
+  token: string;
+  deviceType: 'ios' | 'android' | string;
+  voipToken: string;
+  appId: string;
+  createdTime: string;
+  projectId: string;
+  sipNumber: string;
+};
+```
+
+**Recommended usage:**
+
+```typescript
+import {
+  getOmiDevices,
+  needsReLogin,
+  findSipNumberByDeviceId,
+  getDeviceId,
+  logoutAndWait,
+} from 'omikit-plugin';
+
+
+// Or: verify the SIP account matches the one bound to this device
+const devices = await getOmiDevices();
+const myDeviceId = await getDeviceId();
+const boundSip = findSipNumberByDeviceId(devices, myDeviceId ?? '');
+if (boundSip !== expectedUsername) {
+  await logoutAndWait();
+  // Then re-login with correct credentials
+}
+```
+
+**Notes:**
+
+- Each call performs a fresh HTTP request — no caching. Call once after login / on foreground, not in tight loops.
+- Requires native SDK: iOS `OmiKit ≥ 1.11.19`, Android `OMICore ≥ 2.6.21`.
 
 ### Notification Control
 
