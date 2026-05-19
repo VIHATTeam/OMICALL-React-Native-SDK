@@ -68,8 +68,20 @@ declare module 'omikit-plugin' {
     projectId?: string;
   }): Promise<boolean>;
 
-  /** Logout and unregister SIP */
+  /**
+   * Logout and unregister SIP.
+   * Resolves before HTTP `devices/remove` completes — use {@link logoutAndWait}
+   * if you plan to re-login immediately.
+   */
   export function logout(): Promise<boolean>;
+
+  /**
+   * Logout and wait for the SDK to fully clean up.
+   * Resolves only after HTTP `devices/remove` AND the local SIP state reset
+   * have finished. Use this before re-login to avoid races between
+   * `devices/remove` and `devices/add`.
+   */
+  export function logoutAndWait(): Promise<boolean>;
 
   // ============================================
   // CALL CONTROL
@@ -274,6 +286,60 @@ declare module 'omikit-plugin' {
 
   /** Get VoIP push token (iOS only, returns null on Android) */
   export function getVoipToken(): Promise<string | null>;
+
+  // ============================================
+  // BACKEND DEVICE REGISTRATION CHECK (v4.1.8+)
+  // OmiKit iOS 1.11.19 / OmiSDK Android 2.6.20+
+  // ============================================
+
+  /**
+   * Single device entry returned by {@link getOmiDevices}.
+   * Native bridge returns snake_case; the JS layer normalizes to camelCase.
+   * `deviceType` is normalized to `"ios"` / `"android"`.
+   * `sipNumber` is injected from the local session, not from the server payload.
+   */
+  export type OmiDeviceInfo = {
+    deviceId?: string;
+    token?: string;
+    deviceType?: 'ios' | 'android' | string;
+    voipToken?: string;
+    appId?: string;
+    createdTime?: number;
+    projectId?: string;
+    sipNumber?: string;
+  };
+
+  /**
+   * Fetch the list of devices currently registered on the OMI backend for the
+   * active SIP user. Returns `[]` when not logged in or on any failure — never throws.
+   * No caching — call once after login or on app foreground, not in loops.
+   */
+  export function getOmiDevices(): Promise<OmiDeviceInfo[]>;
+
+  /**
+   * Verify whether THIS device (local `device_id` + `app_id`) is registered on
+   * the OMI backend for the current SIP user. Returns `false` early when not logged in.
+   */
+  export function isCurrentDeviceRegistered(): Promise<boolean>;
+
+  /**
+   * Returns `true` when a SIP user is set locally but no matching device exists on
+   * the backend — i.e. the local session is stale and the user must logout + login
+   * again to re-register. Returns `false` when not logged in or registration is intact.
+   */
+  export function needsReLogin(): Promise<boolean>;
+
+  /**
+   * Look up the SIP number associated with a given `deviceId` in a devices list
+   * returned by {@link getOmiDevices}. Returns `null` if no match (or inputs empty).
+   *
+   * Useful for verifying which extension THIS device is bound to on the backend,
+   * especially when one user can hold multiple extensions.
+   */
+  export function findSipNumberByDeviceId(
+    devices: OmiDeviceInfo[] | null | undefined,
+    deviceId: string | null | undefined
+  ): string | null;
 
   // ============================================
   // NOTIFICATION CONTROL

@@ -86,6 +86,11 @@ RCT_EXTERN_METHOD(toggleOmiVideo:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(logout:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+// Logout and wait — resolves ONLY after the SDK has finished its async cleanup
+// (HTTP devices/remove + local state reset). Use this before re-login.
+RCT_EXTERN_METHOD(logoutAndWait:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 // Register video event
 RCT_EXTERN_METHOD(registerVideoEvent:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
@@ -133,6 +138,16 @@ RCT_EXTERN_METHOD(getAppId:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getVoipToken:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+// Backend device registration check APIs (OmiKit iOS 1.11.19 / OmiSDK Android 2.6.20)
+RCT_EXTERN_METHOD(getOmiDevices:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(isCurrentDeviceRegistered:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(needsReLogin:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 // Get audio

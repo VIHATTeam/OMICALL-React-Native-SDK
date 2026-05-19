@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   # OmiKit binary dependency — arm64 simulator excluded due to binary compatibility
-  s.dependency "OmiKit", "1.11.9"
+  s.dependency "OmiKit", "1.11.19"
 
   # Base xcconfig applied regardless of architecture
   base_xcconfig = {

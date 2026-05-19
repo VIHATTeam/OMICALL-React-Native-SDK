@@ -2,6 +2,81 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.7 [19/05/2026]
+
+### Feature — Backend device registration check APIs (iOS 1.11.19 / Android 2.6.21)
+
+**Files:** `ios/Library/OmikitPlugin.m`, `ios/Library/OmikitPlugin.swift`, `android/src/main/java/com/omikitplugin/OmikitPluginModule.kt`, `src/NativeOmikitPlugin.ts`, `src/omikit.tsx`, `src/types/index.d.ts`
+
+- **[FEATURE] `getOmiDevices()`** — New public API that fetches the list of devices currently registered on the OMI backend for the active SIP user. Returns `Promise<OmiDeviceInfo[]>` with normalized camelCase shape per device: `deviceId`, `token`, `deviceType` (`"ios"` / `"android"`), `voipToken`, `appId`, `createdTime`, `projectId`, `sipNumber`. Returns empty array on logout, network failure, or parse error — never rejects. Use to verify the local device record was not lost on the backend (e.g. after reinstall or backend cleanup).
+- **[FEATURE] `isCurrentDeviceRegistered()`** — Verifies whether the local `deviceId` + `appId` pair appears in `getOmiDevices()` payload. Returns `false` early when not logged in, avoiding unnecessary HTTP.
+- **[FEATURE] `needsReLogin()`** — Convenience guard built on `isCurrentDeviceRegistered`. Returns `true` when a SIP user is set locally but no matching device exists on backend — i.e. the local session is stale and the user must logout + login again to re-register. Recommended call sites: app foreground, before critical operations.
+- **[FEATURE] `findSipNumberByDeviceId(devices, deviceId)`** — Pure JS helper that returns the `sipNumber` for a given `deviceId` in the devices array (or `null` if not found). Useful for comparing the active SIP account against the local device entry.
+- **[FEATURE] `logoutAndWait()`** — Callback-aware logout that resolves **only after** the SDK finishes the backend `devices/remove` HTTP call and clears local state. Eliminates race conditions when the next operation (e.g. `initCallWithUserPassword`) needs to issue `devices/add` immediately. iOS uses `OmiClient.logoutWithCompletion:`; Android uses `OmiClient.logout(onCompleted)` with the SDK's internal 5-second wait window.
+
+### Feature — JS event emitter unified on `DeviceEventEmitter` (Old Arch + New Arch)
+
+**Files:** `ios/Library/OmikitPlugin.swift`, `src/omikit.tsx`
+
+**Root cause:** In React Native New Architecture / bridgeless mode, the codegen TurboModule wrapper does not forward `addListener` / `removeListeners` calls to the underlying `RCTEventEmitter` instance, so its internal `_listenerCount` stays at `0`. `super.sendEvent` then short-circuits with *"sending event with no listeners registered"* and silently drops every event reaching JS — breaking `onCallStateChanged`, `onMuted`, `onSpeaker`, `onHold`, `onCallQuality`, etc. The previous per-module `NativeEventEmitter(module)` JS-side wrapper also did not receive events that the native bridge routed through `RCTDeviceEventEmitter`.
+
+**Fix (iOS):** `OmikitPlugin.swift` now overrides `addListener` / `removeListeners` / `sendEvent` with a 3-tier dispatch strategy:
+1. **Tier 1** — `super.sendEvent` when JS listener count > 0 (uses RN-wired path for the active architecture; works on both Old & New Arch).
+2. **Tier 2** — `bridge.enqueueJSCall("RCTDeviceEventEmitter", "emit", …)` for Old Arch / interop bridge fallback.
+3. **Tier 3** — `callableJSModules.invokeModule(...)` for bridgeless / pure New Arch fallback.
+
+A local `jsListenerCount` mirrors the listener state via overridden `addListener` / `removeListeners`, guaranteeing `startObserving` / `stopObserving` fire at the right boundaries even when the codegen wrapper does not forward to `super`.
+
+**Fix (JS):** `omiEmitter` is now exported as the global `DeviceEventEmitter` on both platforms (iOS & Android, Old Arch & New Arch). This matches the native bridge's `RCTDeviceEventEmitter` dispatch — every event emitted natively is now observable in JS regardless of architecture.
+
+### Improvement — `getDeviceId` / `getAppId` now match `getOmiDevices` payload (Android)
+
+- **[CHANGE] Android `getDeviceId` / `getAppId`** now prefer the new SDK public APIs `OmiClient.getDeviceId()` / `OmiClient.getAppId()` (OmiSDK 2.6.21+) over `OmiClient.registrationInfo` cache. Guarantees the returned values match the `device_id` / `app_id` returned by `getOmiDevices()` so client code can match its own device entry without knowing the internal pattern (`Settings.Secure.ANDROID_ID` / `context.packageName`). Falls back to `registrationInfo` → direct OS lookup on older SDKs.
+
+### Bug Fix (iOS): toggleMute bypasses CallKit — lock screen / banner never updates
+
+**Files:** `ios/CallProcess/CallManager.swift`, `ios/Library/OmikitPlugin.swift`
+
+**Root cause:** `CallManager.toggleMute()` called `call.toggleMute()` directly on the `OMICall` object, bypassing `OMISIPLib.callManager.toggleMute(for:completion:)`. Audio-level mute worked (OMISIP conference bridge connected/disconnected correctly) but CallKit was never notified via `CXSetMutedCallAction` → lock screen mic icon and native call banner always showed mic active. `sendMuteStatus()` and `resolve()` were also called immediately after the direct call, before OMISIP had finished the operation — `call.muted` could be read before it was flipped.
+
+**Fix:**
+- `CallManager.toggleMute()` now calls `omiLib.callManager.toggleMute(for:completion:)` — routes through `CXSetMutedCallAction` → CallKit updates native UI → `performSetMutedCallAction:` → OMISIP → `OMICallMediaStateChangedNotification`.
+- `OmikitPlugin.toggleMute` moves `resolve()` and `sendMuteStatus()` inside the completion block — `call.muted` is authoritative at that point.
+- `toggleMute` resolve/reject params now declared `@escaping` to allow capture inside async completion block.
+
+### Developer Workflow
+
+- **[ADD] `scripts/sync-to-example.sh`** — Syncs `lib/`, `src/`, `ios/`, `android/`, `*.podspec` from the plugin root into `example/node_modules/omikit-plugin/`. Bridges the gap from yarn `file:..` protocol (which copies instead of symlinking) so plugin changes are reflected in the example app without a full `yarn install`.
+- **[ADD] npm scripts** in root `package.json`: `yarn sync`, `yarn dev:ios`, `yarn dev:android`, `yarn dev:metro` — sync + run example app in one command.
+
+### Notes
+
+- No caching implemented in this version — each `getOmiDevices` / `isCurrentDeviceRegistered` / `needsReLogin` call performs a fresh HTTP request. Recommended usage: call once after login or on app foreground, not in tight loops.
+- These APIs are read-only diagnostics: the SDK never auto-logouts or auto-cleans up backend records. Client apps must decide the recovery action (typically: show alert → `logoutAndWait()` → prompt user to login again).
+- On iOS, SDK device-list API is synchronous (blocking HTTP) — bridge wraps in background `DispatchQueue` to keep the JS thread responsive. On Android, the SDK API is `suspend fun` already — bridge uses `Dispatchers.IO`.
+- Native side returns snake_case keys on both iOS & Android for backward compatibility with existing internal pipelines; the JS layer normalizes to camelCase via `normalizeDevice()` before returning to client code.
+
+### Dependencies
+
+- Upgrade OmiKit iOS SDK: `1.11.18` → `1.11.19`
+- Upgrade OMICore Android SDK: `2.6.20` → `2.6.21`
+
+---
+
+## 4.1.7-mute [04/05/2026] _(superseded — merged into 4.1.7 above)_
+
+### Bug Fix (iOS): toggleMute bypasses CallKit — lock screen / banner never updates
+
+**Files:** `ios/CallProcess/CallManager.swift`, `ios/Library/OmikitPlugin.swift`
+
+**Root cause:** `CallManager.toggleMute()` called `call.toggleMute()` directly on the `OMICall` object, bypassing `OMISIPLib.callManager.toggleMute(for:completion:)`. Audio-level mute worked (OMISIP conference bridge connected/disconnected correctly) but CallKit was never notified via `CXSetMutedCallAction` → lock screen mic icon and native call banner always showed mic active. `sendMuteStatus()` and `resolve()` were also called immediately after the direct call, before OMISIP had finished the operation — `call.muted` could be read before it was flipped.
+
+**Fix:**
+- `CallManager.toggleMute()` now calls `omiLib.callManager.toggleMute(for:completion:)` — routes through `CXSetMutedCallAction` → CallKit updates native UI → `performSetMutedCallAction:` → OMISIP → `OMICallMediaStateChangedNotification`.
+- `OmikitPlugin.toggleMute` moves `resolve()` and `sendMuteStatus()` inside the completion block — `call.muted` is authoritative at that point.
+
+---
+
 ## 4.1.6 [14/04/2026]
 
 ### Bug Fixes

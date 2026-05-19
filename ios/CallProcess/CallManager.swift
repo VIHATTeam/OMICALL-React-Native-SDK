@@ -621,12 +621,16 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
     try? call.sendDTMF(character)
   }
   
-  /// Toogle mtue
-  func toggleMute() {
+  /// Toggle mute via CallKit so the native call UI (lock screen, banner) stays in sync.
+  /// Completion fires after performSetMutedCallAction: updates call.muted — safe to read there.
+  func toggleMute(completion: ((Error?) -> Void)? = nil) {
     guard let call = getAvailableCall() else {
+      completion?(nil)
       return
     }
-    try? call.toggleMute()
+    omiLib.callManager.toggleMute(for: call) { error in
+      completion?(error)
+    }
   }
   
   /// Toogle hold

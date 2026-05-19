@@ -131,6 +131,10 @@ export interface Spec extends TurboModule {
   // Logout
   logout(): Promise<boolean>;
 
+  // Logout and wait for SDK to fully clean up (HTTP devices/remove + local
+  // state reset). Resolves with the backend success flag.
+  logoutAndWait(): Promise<boolean>;
+
   // Getter Functions (6 methods)
   getProjectId(): Promise<string | null>;
   getSipInfo(): Promise<string | null>;
@@ -138,6 +142,11 @@ export interface Spec extends TurboModule {
   getDeviceId(): Promise<string | null>;
   getFcmToken(): Promise<string | null>;
   getVoipToken(): Promise<string | null>;
+
+  // Backend device registration check (OmiKit iOS 1.11.19 / OmiSDK Android 2.6.21)
+  getOmiDevices(): Promise<Array<Object>>;
+  isCurrentDeviceRegistered(): Promise<boolean>;
+  needsReLogin(): Promise<boolean>;
 
   // iOS-only video view helpers (not available on Android)
   setCameraConfig(data: Object): Promise<boolean>;

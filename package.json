@@ -1,6 +1,6 @@
 {
   "name": "omikit-plugin",
-  "version": "4.1.6",
+  "version": "4.1.7",
   "description": "Omikit Plugin by ViHAT",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -34,7 +34,11 @@
     "release": "release-it",
     "example": "yarn --cwd example",
     "bootstrap": "yarn example && yarn install && yarn example pods",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build"
+    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
+    "sync": "./scripts/sync-to-example.sh",
+    "dev:ios": "yarn sync && cd example && yarn ios",
+    "dev:android": "yarn sync && cd example && yarn android",
+    "dev:metro": "yarn sync && cd example && yarn start --reset-cache"
   },
   "keywords": [
     "react-native",
