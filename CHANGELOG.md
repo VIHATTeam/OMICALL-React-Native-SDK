@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## 4.1.7 [19/05/2026]
 
-### Feature — Backend device registration check APIs (iOS 1.11.19 / Android 2.6.21)
+### Feature — Backend device registration check APIs (iOS 1.11.19 / Android 2.6.22)
 
 **Files:** `ios/Library/OmikitPlugin.m`, `ios/Library/OmikitPlugin.swift`, `android/src/main/java/com/omikitplugin/OmikitPluginModule.kt`, `src/NativeOmikitPlugin.ts`, `src/omikit.tsx`, `src/types/index.d.ts`
 
