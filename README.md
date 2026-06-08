@@ -54,8 +54,8 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | Platform | SDK | Version |
 |----------|-----|---------|
-| Android | OMICore | 2.6.21 |
-| iOS | OmiKit | 1.11.19 |
+| Android | OMICore | 2.7.0 |
+| iOS | OmiKit | 1.11.23 |
 
 ### Platform Requirements
 
@@ -1141,6 +1141,106 @@ await initCallWithUserPassword({
 | `getFcmToken()` | `Promise<string\|null>` | FCM push token |
 | `getSipInfo()` | `Promise<string\|null>` | SIP info (`user@realm`) |
 | `getVoipToken()` | `Promise<string\|null>` | VoIP token (iOS only) |
+
+### On-Premise Endpoint Configuration (v4.1.8+) — Native Only
+
+> For enterprise customers self-hosting OMI infrastructure. Override SDK default endpoints / SIP proxy / STUN / TURN with the customer's own hosts. Each field is **optional** — omit any field to keep the SDK default. Persisted natively across app relaunches.
+
+**There is no JavaScript API for this feature.** Config must be set in `AppDelegate` (iOS) / `MainApplication` (Android), BEFORE React Native bootstraps. Setting from JS would race the SDK's first HTTP / SIP call (FCM token, push registration, VoIP push handler) and those requests would hit the default cloud endpoints. The native API persists the config so subsequent app launches are race-free.
+
+#### iOS — `AppDelegate.m`
+
+Add the call at the top of `didFinishLaunchingWithOptions:`, BEFORE the existing RN bootstrap and BEFORE any other Omi call:
+
+```objc
+#import <OmiKit/OmiKit.h>
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+  [OmiClient setOnPremiseInfoWithMobileSdkHost:@"omisdk.your-domain.com"
+                                callEventHost:@"call-event.your-domain.com"
+                                publicApiHost:@"public.your-domain.com"
+                                 pushInfoHost:@"push-info.your-domain.com"
+                                  app2AppHost:@"app-2-app.your-domain.com"
+                                logUploadHost:@"log-upload.your-domain.com"
+                                     sipProxy:@"sig.your-domain.com:5222"
+                                   stunServer:@"stun.your-domain.com:3478"
+                                   turnServer:@"turn.your-domain.com:2222"
+                                 turnUsername:@"your-turn-user"
+                                 turnPassword:@"your-turn-pass"];
+
+  // ... existing RN bootstrap (RCTAppDelegate / RCTReactNativeFactory)
+}
+```
+
+To revert: `[OmiClient clearOnPremiseInfo];`
+
+#### Android — `MainApplication.kt`
+
+Add the call at the top of `onCreate()`, BEFORE `SoLoader.init` and RN init:
+
+```kotlin
+import vn.vihat.omicall.omisdk.OmiClient
+
+class MainApplication : Application(), ReactApplication {
+  override fun onCreate() {
+    super.onCreate()
+
+    OmiClient.setOnPremiseInfo(
+      this,
+      mobileSdkHost = "omisdk.your-domain.com",
+      callEventHost = "call-event.your-domain.com",
+      publicApiHost = "public.your-domain.com",
+      pushInfoHost  = "push-info.your-domain.com",
+      app2AppHost   = "app-2-app.your-domain.com",
+      logUploadHost = "log-upload.your-domain.com",
+      sipProxy      = "sig.your-domain.com:5222",
+      stunServer    = "stun.your-domain.com:3478",
+      turnServer    = "turn.your-domain.com:2222",
+      turnUsername  = "your-turn-user",
+      turnPassword  = "your-turn-pass",
+    )
+
+    SoLoader.init(this, false)
+    // ... existing RN bootstrap
+  }
+}
+```
+
+To revert: `OmiClient.clearOnPremiseInfo(this)`.
+
+#### Field Reference
+
+**HTTP host groups** (SDK replaces scheme + host only; path + query preserved 100%):
+
+| Field | Replaces |
+|-------|----------|
+| `mobileSdkHost` | `omisdk-v1*.omicrm.com` — devices, extensions, network info, ICE provider, rtp log |
+| `callEventHost` | `call-event-v2*.omicrm.com` — call-action APIs |
+| `publicApiHost` | `public-v1*.omicrm.com` — init call API |
+| `pushInfoHost` | `push-info-v2*.omicrm.com` — has-answered |
+| `app2AppHost` | `app-2-app*.omicrm.com` — agent/customer login |
+| `logUploadHost` | `elastic-v2*.omicrm.com` — log upload |
+
+**SIP / Media** (`"host:port"` format):
+
+| Field | SDK default |
+|-------|------------|
+| `sipProxy` | `171.244.138.14:5222` |
+| `stunServer` | `stun.omicrm.com:3478` |
+| `turnServer` | `turn.omicrm.com:2222` |
+| `turnUsername` | embedded credentials |
+| `turnPassword` | embedded credentials |
+
+#### Behavior Notes
+
+- Config is **persisted** natively (iOS `NSUserDefaults` key `omicall/onpremise_config_v1`, Android `SharedPreferences` `omicall_onpremise`/`config_v1`) — no need to set on every app launch after the first.
+- Priority: **HTTP** → on-premise > SDK default. **SIP / Media** → on-premise > dynamic API provider > SDK default.
+- **Android DNS**: when on-premise is active, the SDK bypasses custom public DNS (`8.8.8.8` / `1.1.1.1`) and uses **system DNS** so internal hostnames resolve over the customer's private network / VPN. Applies to both OkHttp HTTP layer and PJSIP native.
+- Empty strings, null, and missing fields are treated identically as "keep SDK default" for that field.
+- Requires native SDK: iOS `OmiKit ≥ 1.11.23`, Android `OMICore ≥ 2.7.0`.
+- Backward compatible: clients that do not call `setOnPremiseInfo` see byte-for-byte identical behavior to earlier versions.
 
 ### Backend Device Registration Check (v4.1.7+)
 

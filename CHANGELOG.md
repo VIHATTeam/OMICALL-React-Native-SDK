@@ -2,6 +2,103 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.1.8 [08/06/2026]
+
+### Feature — On-Premise Endpoint Configuration (iOS 1.11.23 / Android 2.7.0)
+
+Enterprise customers can now route SDK traffic to their own on-premise infrastructure (HTTP backends, SIP proxy, STUN, TURN) without forking the SDK.
+
+**This is a native-only API.** The plugin does NOT wrap this in a JavaScript bridge method, because the JS bridge cannot run before the SDK's first HTTP / SIP call. Calling from JS would race the SDK's internal init (FCM token registration, SIP register, push setup) and ANY native call that fires before JS bundle is ready would hit the default OMI cloud endpoints. The config must be set in `AppDelegate` (iOS) / `MainApplication` (Android) so it persists in native storage before any SDK code runs.
+
+### Where to call
+
+**iOS — `AppDelegate.m`** (BEFORE `[super application:didFinishLaunchingWithOptions:]` and before any RN setup):
+
+```objc
+#import <OmiKit/OmiKit.h>
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+  [OmiClient setOnPremiseInfoWithMobileSdkHost:@"omisdk.your-domain.com"
+                                callEventHost:@"call-event.your-domain.com"
+                                publicApiHost:@"public.your-domain.com"
+                                 pushInfoHost:@"push-info.your-domain.com"
+                                  app2AppHost:@"app-2-app.your-domain.com"
+                                logUploadHost:@"log-upload.your-domain.com"
+                                     sipProxy:@"sig.your-domain.com:5222"
+                                   stunServer:@"stun.your-domain.com:3478"
+                                   turnServer:@"turn.your-domain.com:2222"
+                                 turnUsername:@"your-turn-user"
+                                 turnPassword:@"your-turn-pass"];
+
+  // ... existing RN bootstrap
+}
+```
+
+**Android — `MainApplication.kt`** (in `onCreate`, BEFORE `SoLoader.init` / RN init):
+
+```kotlin
+import vn.vihat.omicall.omisdk.OmiClient
+
+class MainApplication : Application(), ReactApplication {
+  override fun onCreate() {
+    super.onCreate()
+
+    OmiClient.setOnPremiseInfo(
+      this,
+      mobileSdkHost = "omisdk.your-domain.com",
+      callEventHost = "call-event.your-domain.com",
+      publicApiHost = "public.your-domain.com",
+      pushInfoHost  = "push-info.your-domain.com",
+      app2AppHost   = "app-2-app.your-domain.com",
+      logUploadHost = "log-upload.your-domain.com",
+      sipProxy      = "sig.your-domain.com:5222",
+      stunServer    = "stun.your-domain.com:3478",
+      turnServer    = "turn.your-domain.com:2222",
+      turnUsername  = "your-turn-user",
+      turnPassword  = "your-turn-pass",
+    )
+
+    SoLoader.init(this, false)
+    // ... existing RN bootstrap
+  }
+}
+```
+
+To revert: `[OmiClient clearOnPremiseInfo]` (iOS) / `OmiClient.clearOnPremiseInfo(this)` (Android).
+
+### Behavior
+
+- **Persistence**: Config saved natively (iOS `NSUserDefaults` key `omicall/onpremise_config_v1`, Android `SharedPreferences` `omicall_onpremise`/`config_v1`) so it survives app relaunch. After first install, subsequent launches read the saved config directly — no race.
+- **HTTP**: replaces scheme + host only; path + query preserved 100%.
+- **Priority**:
+  - HTTP: **on-premise > SDK hardcoded default**
+  - SIP / Media: **on-premise > dynamic API provider > SDK hardcoded default**
+- **DNS (Android)**: When on-premise active, the SDK bypasses custom public DNS (`8.8.8.8` / `1.1.1.1`) and uses **system DNS** so internal hostnames resolve over the customer's private network / VPN. Applies to BOTH OkHttp HTTP layer and PJSIP native.
+- **Empty / null fields**: treated as "keep SDK default" — set only the fields the customer overrides.
+
+### Why no JS API
+
+A `setOnPremiseInfo()` JavaScript wrapper was considered and rejected for these reasons:
+
+1. **First-launch race**: JS bundle load takes hundreds of ms. The native SDK can fire HTTP requests (FCM registration, push setup) before JS evaluates → those requests would hit the default cloud endpoints.
+2. **VoIP push entry**: On iOS, VoIP push arrives at `PKPushRegistry` → native SDK code path, which never touches JS. Config must be in native storage by then.
+3. **Re-init churn**: Setting config from JS every app launch is wasteful (write to NSUserDefaults / SharedPreferences each cold start) and visually confusing — the native API is `set once on first install, persists forever` semantics.
+
+If client apps need to switch tenants at runtime, they should call the native API + restart the SDK process (`logoutAndWait` → `startServices`) — but this is rarely needed in practice.
+
+### Backward compatibility
+
+100% backward compatible. Apps that do NOT call `setOnPremiseInfo` see byte-for-byte identical behavior to previous versions — same default cloud endpoints, same SIP proxy, same STUN / TURN.
+
+### Dependencies
+
+- Upgrade OmiKit iOS SDK: `1.11.19` → `1.11.23` (also includes 1.11.20–1.11.22: CallKit display name override, Unicode handle fix, dual-UUID display name mirror, on-premise endpoint config)
+- Upgrade OMICore Android SDK: `2.6.21` → `2.7.0` (also includes 2.6.22–2.6.27: incoming call full-screen, lazy native lib loading, ZCC display name update, duplicate CallSessionActivity dedup, RTP-dead watchdog, NetworkCallback leak fix, double-free / UAF guards, audio volume boost, ring popup auto-cancel, FCM `Infinity` crash guard)
+
+---
+
 ## 4.1.7 [19/05/2026]
 
 ### Feature — Backend device registration check APIs (iOS 1.11.19 / Android 2.6.22)
