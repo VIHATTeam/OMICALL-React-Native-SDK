@@ -26,14 +26,16 @@ Pod::Spec.new do |s|
   s.module_name = "OmikitPlugin"
   s.requires_arc = true
 
-  # OmiKit binary dependency — arm64 simulator excluded due to binary compatibility
-  s.dependency "OmiKit", "1.11.19"
+  # OmiKit binary dependency. Since 1.11.23 the xcframework ships an
+  # ios-arm64-simulator slice, so arm64 simulator builds link natively on
+  # Apple Silicon — no need to exclude arm64 for the simulator anymore.
+  # (Excluding it forced x86_64/Rosetta and dropped our Swift .o files from the
+  #  simulator binary, which broke the Expo lifecycle subscriber's +load.)
+  s.dependency "OmiKit", "1.11.25"
 
   # Base xcconfig applied regardless of architecture
   base_xcconfig = {
-    "DEFINES_MODULE" => "YES",
-    # Note: arm64 simulator excluded due to OmiKit binary compatibility
-    "EXCLUDED_ARCHS[sdk=iphonesimulator*]" => "arm64"
+    "DEFINES_MODULE" => "YES"
   }
 
   # Use install_modules_dependencies (RN 0.71+) for proper New Architecture support.
@@ -42,7 +44,7 @@ Pod::Spec.new do |s|
     install_modules_dependencies(s)
     # install_modules_dependencies sets pod_target_xcconfig internally.
     # Re-assign with base_xcconfig merged — pod_target_xcconfig= accumulates,
-    # so calling it again appends our EXCLUDED_ARCHS without losing New Arch settings.
+    # so calling it again applies DEFINES_MODULE without losing New Arch settings.
     s.pod_target_xcconfig = base_xcconfig
   else
     # Fallback: manual New Architecture / Old Architecture setup for RN < 0.71

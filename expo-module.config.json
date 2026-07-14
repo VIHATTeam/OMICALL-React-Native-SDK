@@ -1,0 +1,7 @@
+{
+  "platforms": ["ios", "android"],
+  "android": {
+    "modules": [],
+    "packages": ["com.omikitplugin.expo.OmikitExpoPackage"]
+  }
+}

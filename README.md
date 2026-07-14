@@ -10,7 +10,7 @@ npm install omikit-plugin
 
 The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SIP calling via the OMICALL platform with support for both Old and **New Architecture** (TurboModules + Fabric).
 
-> **⚠️ Expo is not supported.** This SDK requires native modules (SIP/VoIP, CallKit, PushKit) that are not compatible with Expo managed workflow. Please use React Native CLI.
+> **✅ Expo is supported (v4.2.0+)** via a config plugin — works with `expo prebuild` / dev-client / EAS Build (not Expo Go, since the SDK ships native code). Verified end-to-end (outbound + inbound calls) on real iOS and Android devices. See [Expo Setup](#expo-setup). React Native CLI is also fully supported (manual native setup below).
 
 ---
 
@@ -18,6 +18,7 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 - [Compatibility](#compatibility)
 - [Installation](#installation)
+- [Expo Setup](#expo-setup)
 - [Android Setup](#android-setup)
 - [iOS Setup](#ios-setup)
 - [Architecture Overview](#architecture-overview)
@@ -54,8 +55,8 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | Platform | SDK | Version |
 |----------|-----|---------|
-| Android | OMICore | 2.6.21 |
-| iOS | OmiKit | 1.11.19 |
+| Android | OMICore | 2.7.4 |
+| iOS | OmiKit | 1.11.25 |
 
 ### Platform Requirements
 
@@ -108,7 +109,143 @@ No extra steps — permissions are declared in the module's `AndroidManifest.xml
 
 ---
 
+## Expo Setup
+
+> For **Expo** projects using prebuild / dev-client / EAS Build. Requires a custom dev client (not Expo Go) because the SDK ships native code — this is normal for any native library. If you use **React Native CLI** (bare workflow), skip this section and follow [Android Setup](#android-setup) / [iOS Setup](#ios-setup) instead.
+
+### 1. Install
+
+```bash
+npx expo install omikit-plugin
+```
+
+### 2. Add the config plugin to `app.json`
+
+The plugin automates **all** native setup (permissions, background modes, Push capability, incoming-call intent-filter, MainActivity attributes, maven repos, and OmiKit runtime init) — you do **not** edit AppDelegate, MainActivity, Info.plist, or AndroidManifest by hand.
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "omikit-plugin",
+        {
+          "environment": "production",
+          "enableVideo": false,
+          "callKitImage": "call_image",
+          "maxCall": 1,
+          "microphonePermission": "This app needs microphone access for voice calls.",
+          "cameraPermission": "This app needs camera access for video calls."
+        }
+      ]
+    ]
+  }
+}
+```
+
+### 3. Android — Maven credentials & Kotlin version
+
+The Android SDK (`io.omicrm.vihat:omi-sdk`) is served from **GitHub Packages (private)**, so Gradle needs credentials. The config plugin adds the repo with a credentials block that reads `OMI_USER` / `OMI_TOKEN` from the environment (or a gradle property) — set them before building:
+
+```bash
+export OMI_USER=omicall
+export OMI_TOKEN=<omi_github_packages_token>
+```
+
+> Contact the OMICall development team to get `OMI_USER` / `OMI_TOKEN`. On EAS Build, add them as secrets. You can also put them in `android/gradle.properties` (keep it gitignored — never commit the token).
+
+Match your Kotlin version to your React Native version (RN 0.76 → `1.9.24`) via `expo-build-properties` to avoid a Compose-compiler mismatch:
+
+```json
+[
+  "expo-build-properties",
+  { "android": { "kotlinVersion": "1.9.24" } }
+]
+```
+
+### 4. Prebuild & run
+
+```bash
+npx expo prebuild --clean
+npx expo run:ios                 # iOS — use a physical device to test VoIP push
+OMI_USER=omicall OMI_TOKEN=… npx expo run:android   # Android needs the token
+```
+
+On EAS Build, no extra steps besides the secrets above — the plugin runs during the prebuild phase.
+
+### Plugin options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `environment` | `'sandbox' \| 'production'` | `'production'` | OmiKit environment |
+| `enableVideo` | `boolean` | `false` | Enables camera permission, `NSCameraUsageDescription`, and video-view interop. Leave `false` for audio-only apps |
+| `userNameKey` | `string` | `'full_name'` | OmiKit userNameKey |
+| `maxCall` | `number` | `1` | Max concurrent calls |
+| `callKitImage` | `string` | `'call_image'` | iOS CallKit image asset name |
+| `typePushVoip` | `'default' \| 'callkit'` | `'default'` | VoIP push type |
+| `microphonePermission` | `string` | (generic) | iOS `NSMicrophoneUsageDescription` message |
+| `cameraPermission` | `string` | (generic) | iOS `NSCameraUsageDescription` message (video only) |
+| `apsEnvironment` | `'development' \| 'production'` | `'development'` | iOS `aps-environment` entitlement |
+| `onPremise` | `object` | — | On-premise endpoint overrides (see below) |
+
+### On-premise (self-hosted) config
+
+For customers routing traffic to their own infrastructure, pass an `onPremise` object. Every field is optional — omit a field to keep the SDK default (OMI cloud). The SDK applies these **before** its first request at launch.
+
+```json
+[
+  "omikit-plugin",
+  {
+    "environment": "production",
+    "onPremise": {
+      "mobileSdkHost": "omisdk.your-domain.com",
+      "publicApiHost": "public.your-domain.com",
+      "pushInfoHost": "push-info.your-domain.com",
+      "logUploadHost": "log.your-domain.com",
+      "sipProxy": "sip.your-domain.com",
+      "stunServer": "stun.your-domain.com",
+      "turnServer": "turn.your-domain.com",
+      "turnUsername": "your-turn-user",
+      "turnPassword": "your-turn-pass"
+    }
+  }
+]
+```
+
+> **⚠️ Secrets:** `app.json` is committed to git. Do **not** put a real `turnPassword` there for production — inject it via an env-driven prebuild config (e.g. `app.config.js` reading `process.env`) or EAS secrets.
+
+### Firebase / FCM
+
+**Android inbound calls require FCM** (iOS uses PushKit, handled natively by the bridge — no Firebase needed). Add Firebase yourself:
+
+1. Install: `npx expo install @react-native-firebase/app @react-native-firebase/messaging`
+2. Put your `google-services.json` in the project root and declare it in `app.json`:
+   ```json
+   "android": { "googleServicesFile": "./google-services.json" },
+   "plugins": ["@react-native-firebase/app", /* … */]
+   ```
+3. Fetch the FCM token via `messaging().getToken()` and pass it to the SDK at login.
+
+See `expo-example/` for a complete, working setup (its `google-services.json` is gitignored — supply your own).
+
+### Video calls on New Architecture
+
+Video views (`OmiLocalCameraView` / `OmiRemoteCameraView`) are legacy ViewManagers and require **bridge mode**. If you enable `enableVideo` on New Architecture, do **not** enable React Native bridgeless mode, or video won't render.
+
+### How it works (no AppDelegate/MainActivity edits)
+
+OmiKit's runtime init runs via native lifecycle hooks shipped in the SDK, so there is nothing to inject into your `AppDelegate` / `MainActivity` and nothing breaks across RN/Expo upgrades:
+
+- **iOS** — `OmikitExpoAppDelegateBridge` (an Objective-C class in the pod) registers itself as an Expo AppDelegate subscriber at load time (`+load`) and runs the OmiKit init (CallKit provider, PushKit registry, `setEnviroment`, on-premise, notification-center delegate), reading its config from the Info.plist keys the config plugin writes. On a bare React Native app (no ExpoModulesCore) it detects Expo is absent and no-ops, so your existing AppDelegate integration is untouched.
+- **Android** — Expo autolinking discovers the plugin via `expo-module.config.json` and registers `OmikitReactActivityLifecycleListener`, which forwards `onResume` / `onNewIntent` to the SDK.
+
+Verified end-to-end on real iOS and Android devices — `expo prebuild` + build + launch shows the SDK initialising automatically (`[OMI NATIVE] +load … → didFinishLaunching — init OmiKit`), and both outbound and inbound calls work.
+
+---
+
 ## Android Setup
+
+> **Note:** This section is for **React Native CLI** (bare) projects. Expo projects should use [Expo Setup](#expo-setup) instead — the config plugin does all of this automatically.
 
 ### 1. Permissions
 
@@ -194,7 +331,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
-        maven { url = uri("https://repo.omicall.com/maven") }
         maven {
             url = uri("https://maven.pkg.github.com/omicall/OMICall-SDK")
             credentials {
@@ -218,7 +354,6 @@ allprojects {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        maven { url 'https://repo.omicall.com/maven' }
         maven {
             url "https://maven.pkg.github.com/omicall/OMICall-SDK"
             credentials {
@@ -1141,6 +1276,106 @@ await initCallWithUserPassword({
 | `getFcmToken()` | `Promise<string\|null>` | FCM push token |
 | `getSipInfo()` | `Promise<string\|null>` | SIP info (`user@realm`) |
 | `getVoipToken()` | `Promise<string\|null>` | VoIP token (iOS only) |
+
+### On-Premise Endpoint Configuration (v4.1.8+) — Native Only
+
+> For enterprise customers self-hosting OMI infrastructure. Override SDK default endpoints / SIP proxy / STUN / TURN with the customer's own hosts. Each field is **optional** — omit any field to keep the SDK default. Persisted natively across app relaunches.
+
+**There is no JavaScript API for this feature.** Config must be set in `AppDelegate` (iOS) / `MainApplication` (Android), BEFORE React Native bootstraps. Setting from JS would race the SDK's first HTTP / SIP call (FCM token, push registration, VoIP push handler) and those requests would hit the default cloud endpoints. The native API persists the config so subsequent app launches are race-free.
+
+#### iOS — `AppDelegate.m`
+
+Add the call at the top of `didFinishLaunchingWithOptions:`, BEFORE the existing RN bootstrap and BEFORE any other Omi call:
+
+```objc
+#import <OmiKit/OmiKit.h>
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+  [OmiClient setOnPremiseInfoWithMobileSdkHost:@"omisdk.your-domain.com"
+                                callEventHost:@"call-event.your-domain.com"
+                                publicApiHost:@"public.your-domain.com"
+                                 pushInfoHost:@"push-info.your-domain.com"
+                                  app2AppHost:@"app-2-app.your-domain.com"
+                                logUploadHost:@"log-upload.your-domain.com"
+                                     sipProxy:@"sig.your-domain.com:5222"
+                                   stunServer:@"stun.your-domain.com:3478"
+                                   turnServer:@"turn.your-domain.com:2222"
+                                 turnUsername:@"your-turn-user"
+                                 turnPassword:@"your-turn-pass"];
+
+  // ... existing RN bootstrap (RCTAppDelegate / RCTReactNativeFactory)
+}
+```
+
+To revert: `[OmiClient clearOnPremiseInfo];`
+
+#### Android — `MainApplication.kt`
+
+Add the call at the top of `onCreate()`, BEFORE `SoLoader.init` and RN init:
+
+```kotlin
+import vn.vihat.omicall.omisdk.OmiClient
+
+class MainApplication : Application(), ReactApplication {
+  override fun onCreate() {
+    super.onCreate()
+
+    OmiClient.setOnPremiseInfo(
+      this,
+      mobileSdkHost = "omisdk.your-domain.com",
+      callEventHost = "call-event.your-domain.com",
+      publicApiHost = "public.your-domain.com",
+      pushInfoHost  = "push-info.your-domain.com",
+      app2AppHost   = "app-2-app.your-domain.com",
+      logUploadHost = "log-upload.your-domain.com",
+      sipProxy      = "sig.your-domain.com:5222",
+      stunServer    = "stun.your-domain.com:3478",
+      turnServer    = "turn.your-domain.com:2222",
+      turnUsername  = "your-turn-user",
+      turnPassword  = "your-turn-pass",
+    )
+
+    SoLoader.init(this, false)
+    // ... existing RN bootstrap
+  }
+}
+```
+
+To revert: `OmiClient.clearOnPremiseInfo(this)`.
+
+#### Field Reference
+
+**HTTP host groups** (SDK replaces scheme + host only; path + query preserved 100%):
+
+| Field | Replaces |
+|-------|----------|
+| `mobileSdkHost` | `omisdk-v1*.omicrm.com` — devices, extensions, network info, ICE provider, rtp log |
+| `callEventHost` | `call-event-v2*.omicrm.com` — call-action APIs |
+| `publicApiHost` | `public-v1*.omicrm.com` — init call API |
+| `pushInfoHost` | `push-info-v2*.omicrm.com` — has-answered |
+| `app2AppHost` | `app-2-app*.omicrm.com` — agent/customer login |
+| `logUploadHost` | `elastic-v2*.omicrm.com` — log upload |
+
+**SIP / Media** (`"host:port"` format):
+
+| Field | SDK default |
+|-------|------------|
+| `sipProxy` | `171.244.138.14:5222` |
+| `stunServer` | `stun.omicrm.com:3478` |
+| `turnServer` | `turn.omicrm.com:2222` |
+| `turnUsername` | embedded credentials |
+| `turnPassword` | embedded credentials |
+
+#### Behavior Notes
+
+- Config is **persisted** natively (iOS `NSUserDefaults` key `omicall/onpremise_config_v1`, Android `SharedPreferences` `omicall_onpremise`/`config_v1`) — no need to set on every app launch after the first.
+- Priority: **HTTP** → on-premise > SDK default. **SIP / Media** → on-premise > dynamic API provider > SDK default.
+- **Android DNS**: when on-premise is active, the SDK bypasses custom public DNS (`8.8.8.8` / `1.1.1.1`) and uses **system DNS** so internal hostnames resolve over the customer's private network / VPN. Applies to both OkHttp HTTP layer and PJSIP native.
+- Empty strings, null, and missing fields are treated identically as "keep SDK default" for that field.
+- Requires native SDK: iOS `OmiKit ≥ 1.11.25`, Android `OMICore ≥ 2.7.4`.
+- Backward compatible: clients that do not call `setOnPremiseInfo` see byte-for-byte identical behavior to earlier versions.
 
 ### Backend Device Registration Check (v4.1.7+)
 

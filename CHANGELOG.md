@@ -2,6 +2,147 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.2.0 [14/07/2026]
+
+### Feature — Expo support (config plugin + native lifecycle hooks)
+
+**Files:** `app.plugin.js`, `plugin/**`, `expo-module.config.json`, `ios/OmikitExpoAppDelegateBridge.m`, `android/src/expo/**`, `android/build.gradle`, `omikit-plugin.podspec`, `package.json`, `README.md`, `expo-example/**`
+
+`omikit-plugin` now integrates on **Expo** (prebuild / dev-client / EAS Build) with **zero manual native edits** — just install the package and add the plugin to `app.json` `plugins`. React Native CLI (bare) keeps working exactly as before, unchanged. **Verified end-to-end (outbound + inbound calls) on real iOS (iPhone) and Android devices.**
+
+- **[UPGRADE] Native SDK**: iOS `OmiKit 1.11.23 → 1.11.25`, Android `omi-sdk 2.7.0 → 2.7.4`.
+
+- **[FEATURE] Expo config plugin** — automates all native setup during prebuild:
+  - **iOS** (`withInfoPlist`): `NSMicrophoneUsageDescription`, `NSCameraUsageDescription` (only when `enableVideo`), `UIBackgroundModes` (`voip`, `remote-notification`, `fetch`), and config keys for the bridge to read. (`withEntitlementsPlist`): `aps-environment` (Push Notifications capability).
+  - **Android** (`withAndroidManifest`): permissions (INTERNET, RECORD_AUDIO, POST_NOTIFICATIONS, FOREGROUND_SERVICE(+PHONE_CALL/MICROPHONE), SYSTEM_ALERT_WINDOW, USE_FULL_SCREEN_INTENT, CAMERA for video), removes FOREGROUND_SERVICE_CAMERA when audio-only, MainActivity attrs (`showWhenLocked`/`turnScreenOn`/`launchMode=singleTask`), incoming-call intent-filter, config meta-data. (`withProjectBuildGradle`): adds maven `jitpack.io` + **GitHub Packages** `maven.pkg.github.com/omicall/OMICall-SDK` with credentials read from `OMI_USER`/`OMI_TOKEN` (env var or gradle property — the token is never hardcoded).
+
+- **[FEATURE] Plugin props** (`app.json`): `environment`, `enableVideo`, `userNameKey`, `maxCall`, `callKitImage`, `typePushVoip`, `microphonePermission`, `cameraPermission`, `apsEnvironment`, and `onPremise` (11 optional host/SIP/TURN fields). Defaults match the existing RN CLI setup.
+
+- **[FEATURE] Native lifecycle hooks** — OmiKit runtime init runs automatically instead of injecting code into AppDelegate/MainActivity:
+  - **iOS** `OmikitExpoAppDelegateBridge.m` (pure Objective-C, inside the pod): registers itself as an Expo AppDelegate subscriber at `+load` (via `EXExpoAppDelegate registerSubscriber:`, called entirely through the ObjC runtime `NSClassFromString`/`performSelector` so it needs no ExpoModulesCore header). Runs `setOnPremiseInfo` → `setEnviroment` → CallKit/PushKit setup, forwards `didRegisterForRemoteNotifications` (→ `setUserPushNotificationToken`), `didReceiveNotificationResponse` (→ `OmikitNotification.didRecieve`), `applicationWillTerminate` (→ `OMICloseCall`). Reads its config from Info.plist keys.
+    - **Written in ObjC (not Swift)** so `+load` is reliably force-loaded from the static lib via the `-ObjC` linker flag — a Swift `@objc` class with only a `+load` gets dead-stripped from the binary. Guarded by `#if __has_include(<OmiKit/OmiKit.h>)`; on bare RN CLI (no Expo) `+load` finds `EXExpoAppDelegate` absent and no-ops.
+  - **Android** `OmikitReactActivityLifecycleListener` + `OmikitExpoPackage` (source set `android/src/expo`, compiled only when `expo-modules-core` is present, `compileOnly`): wires `onResume`, `onNewIntent` → `handlePickupIntentEarly` + `onGetIntentFromNotification`. Expo autolinking discovers it via `expo-module.config.json` and registers it automatically (no runtime hack needed as on iOS).
+
+- **[FIX] Removed podspec `EXCLUDED_ARCHS[simulator]=arm64`** — OmiKit ≥ 1.11.23 ships an `ios-arm64-simulator` slice. The exclusion previously forced x86_64/Rosetta builds on Apple Silicon and dropped `.o` files (including the bridge's `+load`) from the simulator binary. Also benefits RN CLI (native arm64 simulator builds, faster).
+
+### Backward compatibility (RN CLI is NOT affected)
+
+- 100% additive. The config plugin only runs when `app.json` lists `omikit-plugin` under `plugins` (Expo). Bare RN CLI never invokes it.
+- The iOS bridge is guarded by `#if __has_include(<OmiKit/OmiKit.h>)` and its `+load` no-ops when Expo is absent. The Android source set is conditional (`compileOnly expo-modules-core`). Non-Expo builds compile normally.
+- No changes to `src/`, the core podspec (only OmiKit version bump + EXCLUDED_ARCHS removal), or the `react-native (>=0.74.0)` peer dependency. `expo` is an optional peer dependency; `dependencies` is empty and `@expo/config-plugins` lives in devDependencies, so RN CLI consumers pull no extra deps.
+
+### Notes
+
+- **Android FCM**: required to receive inbound calls. Add `@react-native-firebase/app` + `/messaging` and declare `android.googleServicesFile` in `app.json` (see `expo-example`). iOS uses PushKit (handled by the bridge — no Firebase needed).
+- **Android omi-sdk** is on GitHub Packages (private) — needs `OMI_TOKEN`. Set `OMI_USER`/`OMI_TOKEN` in the environment when building, or in `android/gradle.properties` (gitignored).
+- **Kotlin version**: set `kotlinVersion` via `expo-build-properties` to match your React Native version (RN 0.76 → `1.9.24`) to avoid a Compose-compiler mismatch.
+- On-premise `turnPassword` passed through `app.json` props is committed to git — prefer env / `app.config.js` or EAS secrets for production.
+- Video on New Architecture requires bridge mode (not bridgeless).
+
+### Dev tooling
+
+- `plugin/` builds separately via `tsc` (not bob); `prepack` = `bob build && tsc --build plugin`.
+- Snapshot tests: `yarn test:plugin` (20 tests — iOS Info.plist/entitlements, Android manifest/gradle, integration).
+- `build.sh` verifies both the RN CLI and Expo example builds before tagging + publishing.
+- `build.sh` hỗ trợ build cả RN CLI example và Expo example.
+
+## 4.1.8 [08/06/2026]
+
+### Feature — On-Premise Endpoint Configuration (iOS 1.11.23 / Android 2.7.0)
+
+Enterprise customers can now route SDK traffic to their own on-premise infrastructure (HTTP backends, SIP proxy, STUN, TURN) without forking the SDK.
+
+**This is a native-only API.** The plugin does NOT wrap this in a JavaScript bridge method, because the JS bridge cannot run before the SDK's first HTTP / SIP call. Calling from JS would race the SDK's internal init (FCM token registration, SIP register, push setup) and ANY native call that fires before JS bundle is ready would hit the default OMI cloud endpoints. The config must be set in `AppDelegate` (iOS) / `MainApplication` (Android) so it persists in native storage before any SDK code runs.
+
+### Where to call
+
+**iOS — `AppDelegate.m`** (BEFORE `[super application:didFinishLaunchingWithOptions:]` and before any RN setup):
+
+```objc
+#import <OmiKit/OmiKit.h>
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+  [OmiClient setOnPremiseInfoWithMobileSdkHost:@"omisdk.your-domain.com"
+                                callEventHost:@"call-event.your-domain.com"
+                                publicApiHost:@"public.your-domain.com"
+                                 pushInfoHost:@"push-info.your-domain.com"
+                                  app2AppHost:@"app-2-app.your-domain.com"
+                                logUploadHost:@"log-upload.your-domain.com"
+                                     sipProxy:@"sig.your-domain.com:5222"
+                                   stunServer:@"stun.your-domain.com:3478"
+                                   turnServer:@"turn.your-domain.com:2222"
+                                 turnUsername:@"your-turn-user"
+                                 turnPassword:@"your-turn-pass"];
+
+  // ... existing RN bootstrap
+}
+```
+
+**Android — `MainApplication.kt`** (in `onCreate`, BEFORE `SoLoader.init` / RN init):
+
+```kotlin
+import vn.vihat.omicall.omisdk.OmiClient
+
+class MainApplication : Application(), ReactApplication {
+  override fun onCreate() {
+    super.onCreate()
+
+    OmiClient.setOnPremiseInfo(
+      this,
+      mobileSdkHost = "omisdk.your-domain.com",
+      callEventHost = "call-event.your-domain.com",
+      publicApiHost = "public.your-domain.com",
+      pushInfoHost  = "push-info.your-domain.com",
+      app2AppHost   = "app-2-app.your-domain.com",
+      logUploadHost = "log-upload.your-domain.com",
+      sipProxy      = "sig.your-domain.com:5222",
+      stunServer    = "stun.your-domain.com:3478",
+      turnServer    = "turn.your-domain.com:2222",
+      turnUsername  = "your-turn-user",
+      turnPassword  = "your-turn-pass",
+    )
+
+    SoLoader.init(this, false)
+    // ... existing RN bootstrap
+  }
+}
+```
+
+To revert: `[OmiClient clearOnPremiseInfo]` (iOS) / `OmiClient.clearOnPremiseInfo(this)` (Android).
+
+### Behavior
+
+- **Persistence**: Config saved natively (iOS `NSUserDefaults` key `omicall/onpremise_config_v1`, Android `SharedPreferences` `omicall_onpremise`/`config_v1`) so it survives app relaunch. After first install, subsequent launches read the saved config directly — no race.
+- **HTTP**: replaces scheme + host only; path + query preserved 100%.
+- **Priority**:
+  - HTTP: **on-premise > SDK hardcoded default**
+  - SIP / Media: **on-premise > dynamic API provider > SDK hardcoded default**
+- **DNS (Android)**: When on-premise active, the SDK bypasses custom public DNS (`8.8.8.8` / `1.1.1.1`) and uses **system DNS** so internal hostnames resolve over the customer's private network / VPN. Applies to BOTH OkHttp HTTP layer and PJSIP native.
+- **Empty / null fields**: treated as "keep SDK default" — set only the fields the customer overrides.
+
+### Why no JS API
+
+A `setOnPremiseInfo()` JavaScript wrapper was considered and rejected for these reasons:
+
+1. **First-launch race**: JS bundle load takes hundreds of ms. The native SDK can fire HTTP requests (FCM registration, push setup) before JS evaluates → those requests would hit the default cloud endpoints.
+2. **VoIP push entry**: On iOS, VoIP push arrives at `PKPushRegistry` → native SDK code path, which never touches JS. Config must be in native storage by then.
+3. **Re-init churn**: Setting config from JS every app launch is wasteful (write to NSUserDefaults / SharedPreferences each cold start) and visually confusing — the native API is `set once on first install, persists forever` semantics.
+
+If client apps need to switch tenants at runtime, they should call the native API + restart the SDK process (`logoutAndWait` → `startServices`) — but this is rarely needed in practice.
+
+### Backward compatibility
+
+100% backward compatible. Apps that do NOT call `setOnPremiseInfo` see byte-for-byte identical behavior to previous versions — same default cloud endpoints, same SIP proxy, same STUN / TURN.
+
+### Dependencies
+
+- Upgrade OmiKit iOS SDK: `1.11.19` → `1.11.23` (also includes 1.11.20–1.11.22: CallKit display name override, Unicode handle fix, dual-UUID display name mirror, on-premise endpoint config)
+- Upgrade OMICore Android SDK: `2.6.21` → `2.7.0` (also includes 2.6.22–2.6.27: incoming call full-screen, lazy native lib loading, ZCC display name update, duplicate CallSessionActivity dedup, RTP-dead watchdog, NetworkCallback leak fix, double-free / UAF guards, audio volume boost, ring popup auto-cancel, FCM `Infinity` crash guard)
+
+---
+
 ## 4.1.7 [19/05/2026]
 
 ### Feature — Backend device registration check APIs (iOS 1.11.19 / Android 2.6.22)

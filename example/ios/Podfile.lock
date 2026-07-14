@@ -125,15 +125,29 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - OmiKit (1.11.4)
-  - omikit-plugin (4.1.0):
-    - OmiKit (= 1.11.4)
-    - RCT-Folly
+  - OmiKit (1.11.23)
+  - omikit-plugin (4.1.8):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - OmiKit (= 1.11.23)
+    - RCT-Folly (= 2024.01.01.00)
     - RCTRequired
     - RCTTypeSafety
-    - React-Codegen
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
+    - Yoga
   - PromisesObjC (2.4.0)
   - RCT-Folly (2024.01.01.00):
     - boost
@@ -171,7 +185,6 @@ PODS:
     - React-RCTText (= 0.76.2)
     - React-RCTVibration (= 0.76.2)
   - React-callinvoker (0.76.2)
-  - React-Codegen (0.1.0)
   - React-Core (0.76.2):
     - glog
     - hermes-engine
@@ -1836,7 +1849,6 @@ DEPENDENCIES:
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - GoogleUtilities
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
-  - OmiKit (from `/Users/hsolutions/Documents/CODING/VIHAT/SDK/BUILD-IOS-SDK`)
   - omikit-plugin (from `../../`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
@@ -1919,8 +1931,8 @@ SPEC REPOS:
     - GoogleDataTransport
     - GoogleUtilities
     - nanopb
+    - OmiKit
     - PromisesObjC
-    - React-Codegen
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -1937,8 +1949,6 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2024-11-12-RNv0.76.2-5b4aa20c719830dcf5684832b89a6edb95ac3d64
-  OmiKit:
-    :path: "/Users/hsolutions/Documents/CODING/VIHAT/SDK/BUILD-IOS-SDK"
   omikit-plugin:
     :path: "../../"
   RCT-Folly:
@@ -2090,8 +2100,8 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   hermes-engine: 3852e37f6158a2fcfad23e31215ed495da3a6a40
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  OmiKit: b2c99c00fd818f5a511a85f33b1388a24ca6d3cc
-  omikit-plugin: 4e0a3ebe344e0053f47fde93d189a1799dcd0b76
+  OmiKit: 78339f6befe03b7bc012b692f363d3f1ae425fa0
+  omikit-plugin: 0c200dcd5e2da547a54132309941c4131278b318
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCT-Folly: 84578c8756030547307e4572ab1947de1685c599
   RCTDeprecation: d575d28132f93e5deef4849d5afffb4ac4e63226
@@ -2099,7 +2109,6 @@ SPEC CHECKSUMS:
   RCTTypeSafety: 30e36ceafa26979860e13fb3f234fb61692924c2
   React: 10ad41b51f981992714011b6a4e081234c28dc2e
   React-callinvoker: 58b51494f8b2cca07a27fc6f69273239c30a1e70
-  React-Codegen: 4b8b4817cea7a54b83851d4c1f91f79aa73de30a
   React-Core: 7a5e9897daf0189c0233b25243d6704e5b9025d8
   React-CoreModules: 09d4f4ddd85ce9301c4b06dfe68750a82ee4b4f5
   React-cxxreact: 29bfe097a993c73a314f569998fe863eb6fb8a18
@@ -2161,6 +2170,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: c5b0e913b5b3b4cde588227c1402e747797061f3
 
-PODFILE CHECKSUM: 0d28706ee33649a841bc639d9344fb193305969f
+PODFILE CHECKSUM: bc97cdb38ba9400df5d31455b7cc36718aae9f55
 
 COCOAPODS: 1.16.2

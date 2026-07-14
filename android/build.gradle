@@ -2,6 +2,15 @@ def isNewArchitectureEnabled() {
   return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
 }
 
+// Expo apps autolink an :expo-modules-core gradle project. When present, we
+// compile the extra Expo lifecycle-listener source set (android/src/expo) so
+// OmiKit init works on Expo with zero MainActivity edits. Bare RN apps have no
+// such project, so the Expo source set is skipped and nothing changes.
+def isExpoAvailable = {
+  return rootProject.subprojects.any { it.name == "expo-modules-core" } ||
+      rootProject.findProject(":expo-modules-core") != null
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
@@ -51,6 +60,15 @@ android {
   kotlinOptions {
     jvmTarget = "17"
   }
+
+  // Only compile the Expo lifecycle-listener source set when Expo is present.
+  if (isExpoAvailable()) {
+    sourceSets {
+      main {
+        java.srcDirs += "src/expo/java"
+      }
+    }
+  }
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
@@ -65,10 +83,16 @@ dependencies {
   // OMISDK
   implementation("androidx.work:work-runtime:2.8.1")
   implementation "androidx.security:security-crypto:1.1.0-alpha06"
-  api "io.omicrm.vihat:omi-sdk:2.6.22"
+  api "io.omicrm.vihat:omi-sdk:2.7.4"
 
   // React Native — resolved from consumer's node_modules
   implementation "com.facebook.react:react-native:+"
+
+  // Expo lifecycle listeners (compiled only for Expo apps; see src/expo).
+  // compileOnly so bare RN builds never require expo-modules-core.
+  if (isExpoAvailable()) {
+    compileOnly project(":expo-modules-core")
+  }
 
   // Kotlin
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

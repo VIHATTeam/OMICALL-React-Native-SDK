@@ -1,0 +1,16 @@
+export const UIImages = {
+  hangup: require('./hangup.png'),
+  micOff: require('./mic-off.png'),
+  micOn: require('./mic-on.png'),
+  audioOn: require('./audio-on.png'),
+  audioOff: require('./audio-off.png'),
+  comment: require('./comment.png'),
+  close: require('./close.png'),
+  joinCall: require('./join_call.png'),
+  callingFace: require('./calling_face.png'),
+  icBack: require('./ic_back.png'),
+  icAirPod: require('./ic_airpod.png'),
+  icIphone: require('./ic_iphone.png'),
+  icSpeaker: require('./ic_speaker.png'),
+  icChange: require('./ic_change.png'),
+};
