@@ -12,6 +12,12 @@
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Remove camera foreground service if NOT using video call -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"
+        tools:node="remove" />
+    <!-- Remove if you do NOT want calls saved to device call history -->
+    <uses-permission android:name="android.permission.WRITE_CALL_LOG"
+        tools:node="remove" />
 
   <application
     android:name=".MainApplication"
@@ -44,7 +50,9 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
 
+      <!-- Incoming call intent: custom action per app (Android 9-14 lock screen fix) -->
       <intent-filter>
+        <action android:name="${applicationId}.ACTION_INCOMING_CALL" />
         <action android:name="android.intent.action.CALL" />
         <category android:name="android.intent.category.DEFAULT" />
         <data

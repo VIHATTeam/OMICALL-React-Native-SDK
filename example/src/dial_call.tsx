@@ -22,9 +22,9 @@ import {
   getCurrentUser,
   getGuestUser,
   getInitialCall,
-  omiEmitter,
   OmiCallEvent,
   OmiCallState,
+  toggleMute,
 } from 'omikit-plugin';
 
 import {
@@ -226,7 +226,7 @@ export const DialCallScreen = ({ route }: { route: { params: RouteParams } }) =>
 
   // Toggle hold
   const handleToggleHold = useCallback(() => {
-    toggleHold();
+    toggleMute();
   }, []);
 
   // Transfer call
@@ -253,16 +253,17 @@ export const DialCallScreen = ({ route }: { route: { params: RouteParams } }) =>
     await joinCall();
   }, []);
 
-  // Register event listeners
+  // Register event listeners on the global DeviceEventEmitter — the JS
+  // counterpart of native RCTDeviceEventEmitter that the SDK emits on.
   useEffect(() => {
     const listeners = [
-      omiEmitter.addListener(OmiCallEvent.onCallStateChanged, handleCallStateChanged),
-      omiEmitter.addListener(OmiCallEvent.onMuted, handleMuteChanged),
-      omiEmitter.addListener(OmiCallEvent.onHold, handleHoldChanged),
-      omiEmitter.addListener(OmiCallEvent.onCallQuality, handleCallQuality),
-      omiEmitter.addListener(OmiCallEvent.onAudioChange, handleAudioChanged),
-      omiEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, handleSwitchboardAnswer),
-      omiEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, handlePermissionRequest),
+      DeviceEventEmitter.addListener(OmiCallEvent.onCallStateChanged, handleCallStateChanged),
+      DeviceEventEmitter.addListener(OmiCallEvent.onMuted, handleMuteChanged),
+      DeviceEventEmitter.addListener(OmiCallEvent.onHold, handleHoldChanged),
+      DeviceEventEmitter.addListener(OmiCallEvent.onCallQuality, handleCallQuality),
+      DeviceEventEmitter.addListener(OmiCallEvent.onAudioChange, handleAudioChanged),
+      DeviceEventEmitter.addListener(OmiCallEvent.onSwitchboardAnswer, handleSwitchboardAnswer),
+      DeviceEventEmitter.addListener(OmiCallEvent.onRequestPermissionAndroid, handlePermissionRequest),
     ];
 
     LiveData.isOpenedCall = true;

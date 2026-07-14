@@ -42,7 +42,7 @@ target 'OmikitPluginExample' do
 
   pod 'omikit-plugin', :path => '../../'
   # Override OmiKit with local build for testing (comment out for production)
-  pod 'OmiKit', :path => '/Users/hsolutions/Documents/CODING/VIHAT/SDK/BUILD-IOS-SDK'
+  # pod 'OmiKit', :path => '/Users/hsolutions/Documents/CODING/VIHAT/SDK/BUILD-IOS-SDK'
 
   use_react_native!(
     :path => config[:reactNativePath],

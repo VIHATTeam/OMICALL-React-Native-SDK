@@ -347,7 +347,10 @@ export const VideoCallScreen = ({ route }: { route: { params: RouteParams } }) =
         {Platform.OS === 'android' && isCallActive && (
           <>
             <OmiRemoteCameraView style={styles.remoteCamera} />
-            <OmiLocalCameraView style={styles.localCamera} />
+            {/* <OmiLocalCameraView style={styles.localCamera} /> */}
+              <View style={styles.localCamera}>
+                <OmiLocalCameraView style={{ width: 100, height: 160 }} />
+              </View>
           </>
         )}
 
@@ -447,9 +450,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 56,
     right: 16,
-    width: 120,
+    width: 100,
     height: 160,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
     zIndex: 10,
   },

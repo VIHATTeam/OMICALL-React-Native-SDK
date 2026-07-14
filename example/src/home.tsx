@@ -15,7 +15,6 @@ import {
   OmiCallEvent,
   OmiCallState,
   OmiStartCallStatus,
-  omiEmitter,
   startCall,
   getProjectId,
   getAppId,
@@ -24,6 +23,9 @@ import {
   getSipInfo,
   getVoipToken,
   getUserInfo,
+  getOmiDevices,
+  isCurrentDeviceRegistered,
+  needsReLogin,
 } from 'omikit-plugin';
 
 import { LiveData } from './livedata';
@@ -45,9 +47,16 @@ const MICROPHONE_PERMISSION: Permission = Platform.select({
 export const HomeScreen = () => {
   const navigation: any = useNavigation();
 
-  const [phone, setPhone] = useState('101');
+  const [phone, setPhone] = useState('100');
   const [isVideoCall, setIsVideoCall] = useState(false);
   const [sdkInfo, setSdkInfo] = useState<Record<string, string | null>>({});
+  const [deviceCheckInfo, setDeviceCheckInfo] = useState<{
+    devices: any[];
+    registered: boolean | null;
+    needsRelogin: boolean | null;
+    localDeviceId: string | null;
+    localAppId: string | null;
+  } | null>(null);
 
   // Fetch all getter function results
   const fetchSdkInfo = async () => {
@@ -68,6 +77,85 @@ export const HomeScreen = () => {
       Alert.alert('Error', String(error));
     }
   };
+
+  // Force logout — used when device registration is stale (needsReLogin === true).
+  // Local SIP user exists but backend has no matching device entry, so PBX will
+  // never push incoming calls to this device. Only safe recovery is re-login.
+  const forceLogoutForRelogin = useCallback(async () => {
+    try {
+      console.log('[DEVICE_CHECK] Forcing logout for re-login...');
+      await logout();
+      LocalStorage.clearAll();
+    } catch (e) {
+      console.log('[DEVICE_CHECK] forceLogout error:', e);
+    } finally {
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    }
+  }, [navigation]);
+
+  // Verify the local SIP session is still registered on the OMI backend.
+  // Call after every login and on app foreground — if the user reinstalled the
+  // app or the backend cleaned up the device record, the local session is stale
+  // and the PBX will never route incoming calls here.
+  const runDeviceCheck = useCallback(
+    async (opts: { showAlertOnPass?: boolean } = {}) => {
+      try {
+        console.log('[DEVICE_CHECK] === AFTER LOGIN (Home screen) ===');
+        const localDeviceId = await getDeviceId();
+        const localAppId = await getAppId();
+        console.log('[DEVICE_CHECK] localDeviceId:', localDeviceId);
+        console.log('[DEVICE_CHECK] localAppId:', localAppId);
+
+        const devices = await getOmiDevices();
+        console.log('[DEVICE_CHECK] getOmiDevices() count:', devices.length);
+        console.log('[DEVICE_CHECK] getOmiDevices() payload:', JSON.stringify(devices, null, 2));
+
+        const registered = await isCurrentDeviceRegistered();
+        console.log('[DEVICE_CHECK] isCurrentDeviceRegistered:', registered);
+
+        const needsRelogin = await needsReLogin();
+        console.log('[DEVICE_CHECK] needsReLogin:', needsRelogin);
+
+        setDeviceCheckInfo({
+          devices,
+          registered,
+          needsRelogin,
+          localDeviceId,
+          localAppId,
+        });
+
+        if (needsRelogin) {
+          // SIP user is set locally but backend has no matching device entry.
+          // Show alert and force re-login — there is no other recovery path.
+          Alert.alert(
+            'Session stale — please log in again',
+            `Local device (${localDeviceId ?? 'unknown'} / ${localAppId ?? 'unknown'}) ` +
+              `was not found on the backend for the current SIP user.\n\n` +
+              `You will be logged out so you can sign in again.`,
+            [
+              { text: 'Log out & re-login', onPress: forceLogoutForRelogin },
+            ],
+            { cancelable: false }
+          );
+        } else if (opts.showAlertOnPass) {
+          Alert.alert(
+            'Device Check OK',
+            `localDeviceId: ${localDeviceId ?? 'null'}\n` +
+              `localAppId: ${localAppId ?? 'null'}\n` +
+              `devices on backend: ${devices.length}\n` +
+              `isCurrentDeviceRegistered: ${registered}\n` +
+              `needsReLogin: ${needsRelogin}`
+          );
+        }
+      } catch (error) {
+        console.log('[DEVICE_CHECK] Error:', error);
+        if (opts.showAlertOnPass) {
+          Alert.alert('Device Check Error', String(error));
+        }
+      }
+    },
+    [forceLogoutForRelogin]
+  );
 
   // Fetch user info by phone number
   const fetchUserInfo = async () => {
@@ -189,14 +277,22 @@ export const HomeScreen = () => {
   useEffect(() => {
     checkInitCall();
     checkPermission();
-  }, [checkInitCall, checkPermission]);
+    // Verify backend device registration once after login lands on Home.
+    // If needsReLogin === true, user will be alerted and forced back to Login.
+    runDeviceCheck();
+  }, [checkInitCall, checkPermission, runDeviceCheck]);
 
-  // Register event listeners
+  // Register event listeners on the global DeviceEventEmitter — the JS
+  // counterpart of native RCTDeviceEventEmitter that the SDK emits on.
   useEffect(() => {
-    console.log('Registering call event listeners');
-
-    const callStateSub = omiEmitter.addListener(OmiCallEvent.onCallStateChanged, onCallStateChanged);
-    const missedCallSub = omiEmitter.addListener(OmiCallEvent.onClickMissedCall, onClickMissedCall);
+    const callStateSub = DeviceEventEmitter.addListener(
+      OmiCallEvent.onCallStateChanged,
+      onCallStateChanged
+    );
+    const missedCallSub = DeviceEventEmitter.addListener(
+      OmiCallEvent.onClickMissedCall,
+      onClickMissedCall
+    );
 
     return () => {
       callStateSub.remove();
@@ -292,6 +388,68 @@ export const HomeScreen = () => {
           )}
         </View>
 
+        {/* Device Registration Check Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Device Registration Check</Text>
+          <Text style={styles.sectionHint}>
+            Auto-checked on mount. Verifies this device is still registered on
+            the OMI backend for the current SIP user. If not, you will be
+            forced to log out and log in again.
+          </Text>
+          <CustomButton
+            title="RE-CHECK DEVICE REGISTRATION"
+            callback={() => runDeviceCheck({ showAlertOnPass: true })}
+            style={styles.button}
+          />
+
+          {deviceCheckInfo && (
+            <View style={styles.infoBox}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>localDeviceId:</Text>
+                <Text style={styles.infoValue} selectable>
+                  {deviceCheckInfo.localDeviceId ?? 'null'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>localAppId:</Text>
+                <Text style={styles.infoValue} selectable>
+                  {deviceCheckInfo.localAppId ?? 'null'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>devices:</Text>
+                <Text style={styles.infoValue} selectable>
+                  {deviceCheckInfo.devices.length}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>registered:</Text>
+                <Text
+                  style={[
+                    styles.infoValue,
+                    { color: deviceCheckInfo.registered ? '#28a745' : '#dc3545' },
+                  ]}
+                  selectable
+                >
+                  {String(deviceCheckInfo.registered)}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>needsReLogin:</Text>
+                <Text
+                  style={[
+                    styles.infoValue,
+                    { color: deviceCheckInfo.needsRelogin ? '#dc3545' : '#28a745' },
+                  ]}
+                  selectable
+                >
+                  {String(deviceCheckInfo.needsRelogin)}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
         <CustomButton
           title="LOG OUT"
           callback={handleLogout}
@@ -326,6 +484,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+  },
+  sectionHint: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#666',
+    lineHeight: 16,
   },
   infoBox: {
     marginTop: 16,
