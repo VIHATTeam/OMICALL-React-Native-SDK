@@ -5,6 +5,21 @@
 # XDE
 .expo/
 
+# Expo config plugin build output (shipped in npm tarball, not committed)
+plugin/build/
+plugin/tsconfig.tsbuildinfo
+
+# Expo example generated native projects + deps (regenerated via prebuild)
+expo-example/ios/
+expo-example/android/
+expo-example/node_modules/
+expo-example/.expo/
+
+# Firebase config for the Expo example — developers supply their own
+# (contains an API key; see README "Expo Setup · Firebase")
+expo-example/google-services.json
+expo-example/GoogleService-Info.plist
+
 # VSCode
 .vscode/
 jsconfig.json

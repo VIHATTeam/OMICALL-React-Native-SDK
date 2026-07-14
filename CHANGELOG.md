@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.2.0 [14/07/2026]
+
+### Feature — Expo support (config plugin + native lifecycle hooks)
+
+**Files:** `app.plugin.js`, `plugin/**`, `expo-module.config.json`, `ios/OmikitExpoAppDelegateBridge.m`, `android/src/expo/**`, `android/build.gradle`, `omikit-plugin.podspec`, `package.json`, `README.md`, `expo-example/**`
+
+`omikit-plugin` now integrates on **Expo** (prebuild / dev-client / EAS Build) with **zero manual native edits** — just install the package and add the plugin to `app.json` `plugins`. React Native CLI (bare) keeps working exactly as before, unchanged. **Verified end-to-end (outbound + inbound calls) on real iOS (iPhone) and Android devices.**
+
+- **[UPGRADE] Native SDK**: iOS `OmiKit 1.11.23 → 1.11.25`, Android `omi-sdk 2.7.0 → 2.7.4`.
+
+- **[FEATURE] Expo config plugin** — automates all native setup during prebuild:
+  - **iOS** (`withInfoPlist`): `NSMicrophoneUsageDescription`, `NSCameraUsageDescription` (only when `enableVideo`), `UIBackgroundModes` (`voip`, `remote-notification`, `fetch`), and config keys for the bridge to read. (`withEntitlementsPlist`): `aps-environment` (Push Notifications capability).
+  - **Android** (`withAndroidManifest`): permissions (INTERNET, RECORD_AUDIO, POST_NOTIFICATIONS, FOREGROUND_SERVICE(+PHONE_CALL/MICROPHONE), SYSTEM_ALERT_WINDOW, USE_FULL_SCREEN_INTENT, CAMERA for video), removes FOREGROUND_SERVICE_CAMERA when audio-only, MainActivity attrs (`showWhenLocked`/`turnScreenOn`/`launchMode=singleTask`), incoming-call intent-filter, config meta-data. (`withProjectBuildGradle`): adds maven `jitpack.io` + **GitHub Packages** `maven.pkg.github.com/omicall/OMICall-SDK` with credentials read from `OMI_USER`/`OMI_TOKEN` (env var or gradle property — the token is never hardcoded).
+
+- **[FEATURE] Plugin props** (`app.json`): `environment`, `enableVideo`, `userNameKey`, `maxCall`, `callKitImage`, `typePushVoip`, `microphonePermission`, `cameraPermission`, `apsEnvironment`, and `onPremise` (11 optional host/SIP/TURN fields). Defaults match the existing RN CLI setup.
+
+- **[FEATURE] Native lifecycle hooks** — OmiKit runtime init runs automatically instead of injecting code into AppDelegate/MainActivity:
+  - **iOS** `OmikitExpoAppDelegateBridge.m` (pure Objective-C, inside the pod): registers itself as an Expo AppDelegate subscriber at `+load` (via `EXExpoAppDelegate registerSubscriber:`, called entirely through the ObjC runtime `NSClassFromString`/`performSelector` so it needs no ExpoModulesCore header). Runs `setOnPremiseInfo` → `setEnviroment` → CallKit/PushKit setup, forwards `didRegisterForRemoteNotifications` (→ `setUserPushNotificationToken`), `didReceiveNotificationResponse` (→ `OmikitNotification.didRecieve`), `applicationWillTerminate` (→ `OMICloseCall`). Reads its config from Info.plist keys.
+    - **Written in ObjC (not Swift)** so `+load` is reliably force-loaded from the static lib via the `-ObjC` linker flag — a Swift `@objc` class with only a `+load` gets dead-stripped from the binary. Guarded by `#if __has_include(<OmiKit/OmiKit.h>)`; on bare RN CLI (no Expo) `+load` finds `EXExpoAppDelegate` absent and no-ops.
+  - **Android** `OmikitReactActivityLifecycleListener` + `OmikitExpoPackage` (source set `android/src/expo`, compiled only when `expo-modules-core` is present, `compileOnly`): wires `onResume`, `onNewIntent` → `handlePickupIntentEarly` + `onGetIntentFromNotification`. Expo autolinking discovers it via `expo-module.config.json` and registers it automatically (no runtime hack needed as on iOS).
+
+- **[FIX] Removed podspec `EXCLUDED_ARCHS[simulator]=arm64`** — OmiKit ≥ 1.11.23 ships an `ios-arm64-simulator` slice. The exclusion previously forced x86_64/Rosetta builds on Apple Silicon and dropped `.o` files (including the bridge's `+load`) from the simulator binary. Also benefits RN CLI (native arm64 simulator builds, faster).
+
+### Backward compatibility (RN CLI is NOT affected)
+
+- 100% additive. The config plugin only runs when `app.json` lists `omikit-plugin` under `plugins` (Expo). Bare RN CLI never invokes it.
+- The iOS bridge is guarded by `#if __has_include(<OmiKit/OmiKit.h>)` and its `+load` no-ops when Expo is absent. The Android source set is conditional (`compileOnly expo-modules-core`). Non-Expo builds compile normally.
+- No changes to `src/`, the core podspec (only OmiKit version bump + EXCLUDED_ARCHS removal), or the `react-native (>=0.74.0)` peer dependency. `expo` is an optional peer dependency; `dependencies` is empty and `@expo/config-plugins` lives in devDependencies, so RN CLI consumers pull no extra deps.
+
+### Notes
+
+- **Android FCM**: required to receive inbound calls. Add `@react-native-firebase/app` + `/messaging` and declare `android.googleServicesFile` in `app.json` (see `expo-example`). iOS uses PushKit (handled by the bridge — no Firebase needed).
+- **Android omi-sdk** is on GitHub Packages (private) — needs `OMI_TOKEN`. Set `OMI_USER`/`OMI_TOKEN` in the environment when building, or in `android/gradle.properties` (gitignored).
+- **Kotlin version**: set `kotlinVersion` via `expo-build-properties` to match your React Native version (RN 0.76 → `1.9.24`) to avoid a Compose-compiler mismatch.
+- On-premise `turnPassword` passed through `app.json` props is committed to git — prefer env / `app.config.js` or EAS secrets for production.
+- Video on New Architecture requires bridge mode (not bridgeless).
+
+### Dev tooling
+
+- `plugin/` builds separately via `tsc` (not bob); `prepack` = `bob build && tsc --build plugin`.
+- Snapshot tests: `yarn test:plugin` (20 tests — iOS Info.plist/entitlements, Android manifest/gradle, integration).
+- `build.sh` verifies both the RN CLI and Expo example builds before tagging + publishing.
+- `build.sh` hỗ trợ build cả RN CLI example và Expo example.
+
 ## 4.1.8 [08/06/2026]
 
 ### Feature — On-Premise Endpoint Configuration (iOS 1.11.23 / Android 2.7.0)

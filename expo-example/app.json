@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "OmiKit Expo Example",
+    "slug": "omikit-expo-example",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "vn.vihat.omicall",
+      "supportsTablet": true,
+      "appleTeamId": "ZD8A96Y6GA"
+    },
+    "android": {
+      "package": "com.omikitpluginexample",
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.24"
+          }
+        }
+      ],
+      [
+        "react-native-permissions",
+        {
+          "iosPermissions": [
+            "Microphone"
+          ]
+        }
+      ],
+      [
+        "omikit-plugin",
+        {
+          "environment": "sandbox",
+          "enableVideo": true,
+          "callKitImage": "call_image",
+          "maxCall": 1,
+          "microphonePermission": "OmiKit Example needs microphone access for calls.",
+          "cameraPermission": "OmiKit Example needs camera access for video calls."
+        }
+      ]
+    ]
+  }
+}

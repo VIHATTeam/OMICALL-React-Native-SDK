@@ -1,6 +1,6 @@
 {
   "name": "omikit-plugin",
-  "version": "4.1.8",
+  "version": "4.2.0",
   "description": "Omikit Plugin by ViHAT",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -15,6 +15,9 @@
     "cpp",
     "*.podspec",
     "react-native.config.js",
+    "app.plugin.js",
+    "plugin/build",
+    "expo-module.config.json",
     "!lib/typescript/example",
     "!ios/build",
     "!android/build",
@@ -30,7 +33,9 @@
   "scripts": {
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "prepack": "bob build",
+    "build:plugin": "tsc --build plugin",
+    "test:plugin": "jest --config plugin/jest.config.js",
+    "prepack": "bob build && tsc --build plugin",
     "release": "release-it",
     "example": "yarn --cwd example",
     "bootstrap": "yarn example && yarn install && yarn example pods",
@@ -59,15 +64,18 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@expo/config-plugins": "^9.0.0",
+    "@expo/config-types": "^52.0.0",
     "@release-it/conventional-changelog": "^5.0.0",
     "@types/jest": "^28.1.2",
+    "@types/node": "^20.0.0",
     "@types/react": "18.3.1",
-    "react": "18.3.1",
-    "react-native": "0.76.2",
     "del-cli": "^5.0.0",
     "jest": "^28.1.1",
     "pod-install": "^0.1.0",
     "prettier": "^2.8.4",
+    "react": "18.3.1",
+    "react-native": "0.76.2",
     "react-native-builder-bob": "0.20.0",
     "release-it": "^15.0.0",
     "typescript": "^4.5.2"
@@ -76,8 +84,14 @@
     "@types/react": "17.0.21"
   },
   "peerDependencies": {
+    "expo": ">=51.0.0",
     "react": "*",
     "react-native": ">=0.74.0"
+  },
+  "peerDependenciesMeta": {
+    "expo": {
+      "optional": true
+    }
   },
   "codegenConfig": {
     "name": "RNOmikitPluginSpec",
