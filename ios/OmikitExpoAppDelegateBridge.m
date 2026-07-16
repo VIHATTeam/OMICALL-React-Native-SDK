@@ -47,9 +47,6 @@
 // conform to the ObjC subscriber protocol (UIApplicationDelegate) and register
 // via the ObjC runtime so we don't need ExpoModulesCore headers at compile time.
 @interface OmikitExpoAppDelegateBridge : NSObject <UIApplicationDelegate, UNUserNotificationCenterDelegate>
-@property (nonatomic, strong) CallKitProviderDelegate *provider;
-@property (nonatomic, strong) PushKitManager *pushkitManager;
-@property (nonatomic, strong) PKPushRegistry *voipRegistry;
 @end
 
 @implementation OmikitExpoAppDelegateBridge
@@ -65,47 +62,46 @@
     return;
   }
   NSLog(@"[OMI NATIVE] +load: registering OmiKit Expo subscriber");
+  // Keep a strong reference so the subscriber (and the notification-center
+  // delegate it becomes) stays alive regardless of whether Expo retains it.
+  static OmikitExpoAppDelegateBridge *sharedSubscriber = nil;
+  sharedSubscriber = [[OmikitExpoAppDelegateBridge alloc] init];
+
+  // Own the missed-call-tap delegate here, deterministically — it does NOT
+  // depend on didFinishLaunching being forwarded to us.
+  [UNUserNotificationCenter currentNotificationCenter].delegate = sharedSubscriber;
+
   SEL registerSel = NSSelectorFromString(@"registerSubscriber:");
   if ([expoAppDelegate respondsToSelector:registerSel]) {
-    id subscriber = [[OmikitExpoAppDelegateBridge alloc] init];
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    [expoAppDelegate performSelector:registerSel withObject:subscriber];
+    [expoAppDelegate performSelector:registerSel withObject:sharedSubscriber];
 #pragma clang diagnostic pop
   }
 }
 
+// NOTE: OmiKit init (setEnviroment / on-premise / CallKit / PushKit) was moved
+// to OmikitPlugin.init() (Swift). Registering this subscriber via +load races
+// with Expo's didFinishLaunching dispatch — on apps with many pods the subscriber
+// can be registered too late, so this callback never fires and OmiKit falls back
+// to its default (staging) environment. OmikitPlugin.init() runs deterministically
+// when the RN bridge sets up (after launch), so init lives there now.
+//
+// This subscriber is kept only to forward the remote-notification / missed-call
+// callbacks below, which need the UIApplicationDelegate. When didFinishLaunching
+// DOES reach us (the lucky ordering), we still trigger the idempotent bootstrap
+// so nothing is missed; OmikitPlugin's own guard prevents a double init.
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-  NSDictionary *info = [[NSBundle mainBundle] infoDictionary];
-  NSString *envKey = info[@"OMIKitEnvironment"];
-  NSString *environment = [envKey isEqualToString:@"sandbox"]
-      ? KEY_OMI_APP_ENVIROMENT_SANDBOX
-      : KEY_OMI_APP_ENVIROMENT_PRODUCTION;
-  NSString *userNameKey = info[@"OMIKitUserNameKey"] ?: @"full_name";
-  int maxCall = info[@"OMIKitMaxCall"] ? [info[@"OMIKitMaxCall"] intValue] : 1;
-  NSString *callKitImage = info[@"OMIKitCallKitImage"] ?: @"call_image";
-
-  NSLog(@"[OMI NATIVE] didFinishLaunching — init OmiKit (env=%@)", envKey ?: @"production");
-
-  // On-premise endpoints (if configured by the config plugin) — only rewrites
-  // URLs, no network call. Applied before setEnviroment.
-  [self applyOnPremiseFromInfo:info];
-
-  [OmiClient setEnviroment:environment
-              userNameKey:userNameKey
-                  maxCall:maxCall
-             callKitImage:callKitImage
-             typePushVoip:TYPE_PUSH_CALLKIT_DEFAULT];
-
-  // CallKit + PushKit. PushKitManager owns the registry delegate and reports
-  // incoming VoIP push to CallKit (mandatory on iOS 13+).
-  self.provider = [[CallKitProviderDelegate alloc]
-      initWithCallManager:[OMISIPLib sharedInstance].callManager];
-  self.voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
-  self.pushkitManager = [[PushKitManager alloc] initWithVoipRegistry:self.voipRegistry];
-
-  [UNUserNotificationCenter currentNotificationCenter].delegate = self;
+  NSLog(@"[OMI NATIVE] didFinishLaunching — ensuring OmiKit bootstrap");
+  Class plugin = NSClassFromString(@"OmikitPlugin");
+  SEL bootstrapSel = NSSelectorFromString(@"bootstrapOmiKitFromBridge");
+  if ([plugin respondsToSelector:bootstrapSel]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    [plugin performSelector:bootstrapSel];
+#pragma clang diagnostic pop
+  }
   return YES;
 }
 
@@ -121,34 +117,6 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application {
   [OmiClient OMICloseCall];
-}
-
-// MARK: - On-premise
-
-- (void)applyOnPremiseFromInfo:(NSDictionary *)info {
-  NSDictionary *onPremise = info[@"OMIKitOnPremise"];
-  if (![onPremise isKindOfClass:[NSDictionary class]] || onPremise.count == 0) {
-    return;
-  }
-  NSString *mobileSdkHost = onPremise[@"mobileSdkHost"];
-  if (mobileSdkHost.length == 0) {
-    return;
-  }
-  // +setOnPremiseInfoWithMobileSdkHost:...: takes many named params, so it's
-  // called directly (not via a single-arg performSelector). The remaining hosts
-  // fall back to the mobile SDK host when omitted.
-  [OmiClient setOnPremiseInfoWithMobileSdkHost:mobileSdkHost
-                                  callEventHost:onPremise[@"callEventHost"]
-                                  publicApiHost:onPremise[@"publicApiHost"]
-                                   pushInfoHost:onPremise[@"pushInfoHost"]
-                                    app2AppHost:onPremise[@"app2AppHost"]
-                                  logUploadHost:onPremise[@"logUploadHost"]
-                                       sipProxy:onPremise[@"sipProxy"]
-                                     stunServer:onPremise[@"stunServer"]
-                                     turnServer:onPremise[@"turnServer"]
-                                   turnUsername:onPremise[@"turnUsername"]
-                                   turnPassword:onPremise[@"turnPassword"]];
-  NSLog(@"[OMI NATIVE] applied on-premise host: %@", mobileSdkHost);
 }
 
 // MARK: - UNUserNotificationCenterDelegate (missed-call tap + foreground)

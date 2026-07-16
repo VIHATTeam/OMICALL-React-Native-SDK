@@ -216,17 +216,45 @@ For customers routing traffic to their own infrastructure, pass an `onPremise` o
 
 ### Firebase / FCM
 
-**Android inbound calls require FCM** (iOS uses PushKit, handled natively by the bridge — no Firebase needed). Add Firebase yourself:
+**Android inbound calls require FCM** (iOS uses PushKit, handled natively — no Firebase needed for iOS calls). Firebase is *your* dependency — omikit-plugin does not bundle it. Install it and let its own config plugin wire the native side:
 
 1. Install: `npx expo install @react-native-firebase/app @react-native-firebase/messaging`
-2. Put your `google-services.json` in the project root and declare it in `app.json`:
-   ```json
-   "android": { "googleServicesFile": "./google-services.json" },
-   "plugins": ["@react-native-firebase/app", /* … */]
-   ```
+2. Supply your Google services files: `google-services.json` (Android) and `GoogleService-Info.plist` (iOS).
 3. Fetch the FCM token via `messaging().getToken()` and pass it to the SDK at login.
 
-See `expo-example/` for a complete, working setup (its `google-services.json` is gitignored — supply your own).
+Declare everything in `app.json` (see the combined block below).
+
+> **Use `useFrameworks: "dynamic"` — not `"static"`.** `@react-native-firebase` on iOS needs `use_frameworks!`. Choose **dynamic**: Firebase v21 supports it and OmiKit ships as a dynamic xcframework, so it builds out of the box. `"static"` triggers `GoogleUtilities does not define modules` and (on New Architecture) `Redefinition of module 'ReactCommon'` — do not use it.
+>
+> You do **not** need to create any custom config plugin (no `plugins/*.js` file). Every plugin below comes from npm and is referenced by name.
+
+### Full Expo `app.json` (copy-paste)
+
+```json
+{
+  "expo": {
+    "ios": {
+      "bundleIdentifier": "your.bundle.id",
+      "googleServicesFile": "./GoogleService-Info.plist"
+    },
+    "android": {
+      "package": "your.package.name",
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      ["expo-build-properties", { "ios": { "useFrameworks": "dynamic" } }],
+      ["react-native-permissions", { "iosPermissions": ["Microphone"] }],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      ["omikit-plugin", { "environment": "production" }]
+    ]
+  }
+}
+```
+
+Then `npx expo prebuild --clean && npx expo run:ios`. See `expo-example/` for a complete, working setup (its `google-services.json` / `GoogleService-Info.plist` are gitignored — supply your own).
+
+> **Microphone permission:** `react-native-permissions` with `iosPermissions: ["Microphone"]` is required — it generates `setup_permissions(['Microphone'])` in the Podfile so the SDK can request the mic. Without it, iOS reports the mic as `unavailable` and calls fail.
 
 ### Video calls on New Architecture
 
