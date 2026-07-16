@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.2.1 [16/07/2026]
+
+### Fix — Expo iOS: OmiKit env/CallKit/PushKit never initialized on apps with many pods (calls fail with staging host)
+
+**Files:** `ios/Library/OmikitPlugin.swift`, `ios/OmikitExpoAppDelegateBridge.m`
+
+- **[FIX] Outbound calls fail on Expo iOS** with `START_CALL_FAIL` because the SDK talked to the staging host (`call-event-v2-stg.omicrm.com`) and timed out. Root cause: the Expo AppDelegate bridge registered its subscriber in Objective-C `+load`, which **races** with Expo's `didFinishLaunching` subscriber dispatch. On apps with many pods the subscriber registered too late, so `didFinishLaunching` never fired, `OmiClient.setEnviroment` / on-premise / CallKit / PushKit were never run, and OmiKit fell back to its default (staging) environment. Our example app happened to win the race, so the bug only reproduced on customer apps.
+  - **Init moved to `OmikitPlugin.init()`** (the RN module), which runs deterministically when the RN bridge sets up — independent of dylib load order. It reads env / on-premise / callKitImage from Info.plist, calls `setOnPremiseInfo` → `setEnviroment`, and creates CallKit + PushKit. Idempotent (guarded) and Expo-only (`NSClassFromString("EXExpoAppDelegate")`), so bare RN CLI still inits in its own AppDelegate and is unaffected.
+  - The bridge is kept only to forward remote-notification / missed-call-tap callbacks; it also sets `UNUserNotificationCenter.delegate` in `+load` (deterministic) and, if `didFinishLaunching` does reach it, re-triggers the idempotent bootstrap.
+  - New log line `[OMI NATIVE] OmikitPlugin.init — bootstrap OmiKit (env=…)` confirms init ran (prints on every app, regardless of pod count).
+
+### Docs — iOS + @react-native-firebase: use dynamic frameworks
+
+**Files:** `README.md`
+
+- **[DOCS] Firebase on iOS** — documented that apps combining omikit-plugin with `@react-native-firebase` should set `["expo-build-properties", { "ios": { "useFrameworks": "dynamic" } }]` (not `"static"`). Firebase v21 works with dynamic frameworks and OmiKit ships as a dynamic xcframework, so `dynamic` avoids the `GoogleUtilities does not define modules` and `Redefinition of module 'ReactCommon'` build errors that `"static"` triggers on New Architecture. Also declare `ios.googleServicesFile`.
+
+### Backward compatibility
+
+- React Native CLI (bare) is **not affected**: the OmiKit init change is Expo-only (guarded by `NSClassFromString("EXExpoAppDelegate")`), so bare RN CLI still inits in its own AppDelegate exactly as before. Verified: bare `example/` builds and runs unchanged.
+
 ## 4.2.0 [14/07/2026]
 
 ### Feature — Expo support (config plugin + native lifecycle hooks)
@@ -44,7 +65,6 @@ All notable changes to this project will be documented in this file.
 - `plugin/` builds separately via `tsc` (not bob); `prepack` = `bob build && tsc --build plugin`.
 - Snapshot tests: `yarn test:plugin` (20 tests — iOS Info.plist/entitlements, Android manifest/gradle, integration).
 - `build.sh` verifies both the RN CLI and Expo example builds before tagging + publishing.
-- `build.sh` hỗ trợ build cả RN CLI example và Expo example.
 
 ## 4.1.8 [08/06/2026]
 

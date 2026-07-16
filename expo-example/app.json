@@ -9,7 +9,8 @@
     "ios": {
       "bundleIdentifier": "vn.vihat.omicall",
       "supportsTablet": true,
-      "appleTeamId": "ZD8A96Y6GA"
+      "appleTeamId": "ZD8A96Y6GA",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "package": "com.omikitpluginexample",
@@ -22,7 +23,8 @@
         {
           "android": {
             "kotlinVersion": "1.9.24"
-          }
+          },
+          "ios": { "useFrameworks": "dynamic" }
         }
       ],
       [

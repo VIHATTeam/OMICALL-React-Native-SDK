@@ -38,6 +38,48 @@ if [ "$PKG_VERSION" != "$VERSION" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 0b. Verify the native SDK versions this release declares actually exist on
+#     their repos — otherwise every consumer's pod install / gradle sync fails.
+# ---------------------------------------------------------------------------
+step "Verifying native SDK versions exist on their repos"
+
+# iOS: OmiKit "x.y.z" from the podspec → CocoaPods trunk (public CDN).
+OMIKIT_VERSION="$(grep -oE 's\.dependency "OmiKit", "[^"]+"' omikit-plugin.podspec | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)"
+if [ -n "$OMIKIT_VERSION" ]; then
+  H="$(printf '%s' OmiKit | md5)"   # CocoaPods shards specs by md5(name)[0..2]
+  OMIKIT_URL="https://cdn.cocoapods.org/Specs/${H:0:1}/${H:1:1}/${H:2:1}/OmiKit/${OMIKIT_VERSION}/OmiKit.podspec.json"
+  if curl -sfL -m 20 -o /dev/null "$OMIKIT_URL"; then
+    echo "  ✅ iOS  OmiKit $OMIKIT_VERSION on CocoaPods trunk"
+  else
+    echo "  ❌ iOS  OmiKit $OMIKIT_VERSION NOT found on CocoaPods trunk."
+    echo "     Publish OmiKit $OMIKIT_VERSION (pod trunk push) before releasing."
+    exit 1
+  fi
+else
+  echo "  ⚠ Could not read OmiKit version from podspec — skipping iOS check."
+fi
+
+# Android: io.omicrm.vihat:omi-sdk:x.y.z from build.gradle → GitHub Packages
+# (private — needs OMI_USER/OMI_TOKEN).
+OMISDK_VERSION="$(grep -oE 'io\.omicrm\.vihat:omi-sdk:[0-9]+\.[0-9]+\.[0-9]+' android/build.gradle | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
+if [ -n "$OMISDK_VERSION" ]; then
+  if [ -z "${OMI_TOKEN:-}" ]; then
+    echo "  ⚠ OMI_TOKEN not set — skipping Android omi-sdk $OMISDK_VERSION existence check."
+  else
+    OMISDK_URL="https://maven.pkg.github.com/omicall/OMICall-SDK/io/omicrm/vihat/omi-sdk/${OMISDK_VERSION}/omi-sdk-${OMISDK_VERSION}.pom"
+    if curl -sfL -m 20 -u "${OMI_USER:-omicall}:${OMI_TOKEN}" "$OMISDK_URL" | grep -q "<artifactId>omi-sdk"; then
+      echo "  ✅ Android omi-sdk $OMISDK_VERSION on GitHub Packages"
+    else
+      echo "  ❌ Android omi-sdk $OMISDK_VERSION NOT found on GitHub Packages."
+      echo "     Publish omi-sdk $OMISDK_VERSION before releasing."
+      exit 1
+    fi
+  fi
+else
+  echo "  ⚠ Could not read omi-sdk version from android/build.gradle — skipping."
+fi
+
+# ---------------------------------------------------------------------------
 # 1. Build library JS + config plugin, run tests.
 # ---------------------------------------------------------------------------
 step "Building library (bob) + config plugin (tsc)"

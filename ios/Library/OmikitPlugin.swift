@@ -1,6 +1,8 @@
 import Foundation
 import React
 import OmiKit
+import PushKit
+import UserNotifications
 
 #if RCT_NEW_ARCH_ENABLED
 import React_Codegen
@@ -11,9 +13,98 @@ public class OmikitPlugin: RCTEventEmitter {
 
   @objc public static var instance : OmikitPlugin!
 
+  // Strong refs so CallKit/PushKit objects survive after bootstrap (Expo only).
+  private static var provider: CallKitProviderDelegate?
+  private static var voipRegistry: PKPushRegistry?
+  private static var pushkitManager: PushKitManager?
+  private static var didBootstrapOmiKit = false
+
   public override init() {
     super.init()
     OmikitPlugin.instance = self
+    // On Expo, the +load AppDelegate subscriber (OmikitExpoAppDelegateBridge) can
+    // miss Expo's didFinishLaunching dispatch due to dylib load-order race, so
+    // setEnviroment / CallKit / PushKit never run and the SDK falls back to its
+    // default (staging) environment. This module's init() runs deterministically
+    // when the RN bridge sets up (after Expo's launch), so bootstrap OmiKit here.
+    OmikitPlugin.bootstrapOmiKitIfNeeded()
+  }
+
+  /// ObjC entry point for the Expo AppDelegate bridge's didFinishLaunching (when
+  /// it does fire) to trigger the same idempotent bootstrap. Guard prevents a
+  /// double init if init() already ran it.
+  @objc public static func bootstrapOmiKitFromBridge() {
+    bootstrapOmiKitIfNeeded()
+  }
+
+  /// Idempotent OmiKit init for Expo apps. No-op on bare RN CLI (which inits
+  /// OmiKit in its own AppDelegate) and after the first run.
+  private static func bootstrapOmiKitIfNeeded() {
+    // Expo-only: bare RN CLI has no EXExpoAppDelegate and inits in AppDelegate.
+    guard NSClassFromString("EXExpoAppDelegate") != nil else { return }
+    guard !didBootstrapOmiKit else { return }
+    didBootstrapOmiKit = true
+
+    // CallKit/PushKit setup must run on the main thread (RN may init the module
+    // off-main). The bare RN AppDelegate does this in didFinishLaunching (main).
+    if !Thread.isMainThread {
+      DispatchQueue.main.async { bootstrapOmiKitCore() }
+    } else {
+      bootstrapOmiKitCore()
+    }
+  }
+
+  private static func bootstrapOmiKitCore() {
+    let info = Bundle.main.infoDictionary ?? [:]
+    let envKey = info["OMIKitEnvironment"] as? String
+    let environment = envKey == "sandbox"
+      ? KEY_OMI_APP_ENVIROMENT_SANDBOX
+      : KEY_OMI_APP_ENVIROMENT_PRODUCTION
+    let userNameKey = (info["OMIKitUserNameKey"] as? String) ?? "full_name"
+    let maxCall = (info["OMIKitMaxCall"] as? Int) ?? 1
+    let callKitImage = (info["OMIKitCallKitImage"] as? String) ?? "call_image"
+
+    NSLog("[OMI NATIVE] OmikitPlugin.init — bootstrap OmiKit (env=\(envKey ?? "production"))")
+
+    // On-premise host overrides (config plugin writes these). Applied first.
+    applyOnPremise(info["OMIKitOnPremise"] as? [String: Any])
+
+    OmiClient.setEnviroment(
+      environment,
+      userNameKey: userNameKey,
+      maxCall: Int32(maxCall),
+      callKitImage: callKitImage,
+      typePushVoip: TYPE_PUSH_CALLKIT_DEFAULT
+    )
+
+    // CallKit + PushKit. Safe to create here (~RN bridge setup, shortly after
+    // launch): VoIP pushes are queued until the registry exists.
+    provider = CallKitProviderDelegate(callManager: OMISIPLib.sharedInstance().callManager)
+    let registry = PKPushRegistry(queue: .main)
+    voipRegistry = registry
+    pushkitManager = PushKitManager(voipRegistry: registry)
+    // NOTE: UNUserNotificationCenter.delegate is set by the Expo AppDelegate
+    // bridge (which implements the missed-call-tap delegate methods), not here.
+  }
+
+  private static func applyOnPremise(_ onPremise: [String: Any]?) {
+    guard let onPremise = onPremise, !onPremise.isEmpty,
+          let mobileSdkHost = onPremise["mobileSdkHost"] as? String,
+          !mobileSdkHost.isEmpty else { return }
+    OmiClient.setOnPremiseInfoWithMobileSdkHost(
+      mobileSdkHost,
+      callEventHost: onPremise["callEventHost"] as? String,
+      publicApiHost: onPremise["publicApiHost"] as? String,
+      pushInfoHost: onPremise["pushInfoHost"] as? String,
+      app2AppHost: onPremise["app2AppHost"] as? String,
+      logUploadHost: onPremise["logUploadHost"] as? String,
+      sipProxy: onPremise["sipProxy"] as? String,
+      stunServer: onPremise["stunServer"] as? String,
+      turnServer: onPremise["turnServer"] as? String,
+      turnUsername: onPremise["turnUsername"] as? String,
+      turnPassword: onPremise["turnPassword"] as? String
+    )
+    NSLog("[OMI NATIVE] applied on-premise host: \(mobileSdkHost)")
   }
 
   @objc public override static func moduleName() -> String! {
