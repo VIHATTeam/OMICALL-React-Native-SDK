@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
   # Apple Silicon — no need to exclude arm64 for the simulator anymore.
   # (Excluding it forced x86_64/Rosetta and dropped our Swift .o files from the
   #  simulator binary, which broke the Expo lifecycle subscriber's +load.)
-  s.dependency "OmiKit", "1.11.25"
+  s.dependency "OmiKit", "1.11.26"
 
   # Base xcconfig applied regardless of architecture
   base_xcconfig = {
