@@ -2,13 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## 4.2.3 [29/07/2026]
-
-### Upgrade — native SDK
-
-- **[UPGRADE] iOS `OmiKit 1.11.26 → 1.11.29`.**
-- **[UPGRADE] Android `omi-sdk 2.7.4 → 2.7.7`.**
-
 ## 4.2.2 [20/07/2026]
 
 ### Upgrade — native SDK
