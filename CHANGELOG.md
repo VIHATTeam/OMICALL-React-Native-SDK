@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## 4.2.1 [16/07/2026]
+## 4.2.3 [29/07/2026]
+
+### Upgrade — native SDK
+
+- **[UPGRADE] iOS `OmiKit 1.11.26 → 1.11.29`.**
+- **[UPGRADE] Android `omi-sdk 2.7.4 → 2.7.7`.**
+
+## 4.2.2 [20/07/2026]
+
+### Upgrade — native SDK
+
+- **[UPGRADE] iOS `OmiKit 1.11.25 → 1.11.26`.**
 
 ### Fix — Expo iOS: OmiKit env/CallKit/PushKit never initialized on apps with many pods (calls fail with staging host)
 
