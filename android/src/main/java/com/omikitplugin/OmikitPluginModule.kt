@@ -655,7 +655,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
                 val audioNotificationDescription = data.getString("audioNotificationDescription") ?: "Cuộc gọi audio"
                 val videoNotificationDescription = data.getString("videoNotificationDescription") ?: "Cuộc gọi video"
                 val representName = data.getString("representName") ?: ""
-                val isUserBusy = if (data.hasKey("isUserBusy")) data.getBoolean("isUserBusy") else false
+                // Default true (486 Busy Here) to match iOS (CallManager.swift: `isUserBusy ?? true`).
+                // Prior default `false` sent 603 Decline when the app omitted isUserBusy, which in a
+                // PBX hunt-group / call-criteria terminates the fork (does NOT advance to the next user).
+                val isUserBusy = if (data.hasKey("isUserBusy")) data.getBoolean("isUserBusy") else true
 
                 // Configure push notification with extracted parameters
                 OmiClient.getInstance(context).configPushNotification(

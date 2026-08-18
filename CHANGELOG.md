@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - **[UPGRADE] Android `omi-sdk 2.7.7 → 2.7.8`.**
 
+### Fix — Android
+
+- **[FIX] `isUserBusy` default `false → true`** (Android `configPushNotification`) to match iOS (`CallManager.swift: isUserBusy ?? true`). The prior `false` sent SIP `603 Decline` when the app omitted `isUserBusy`, which in a PBX hunt-group / call-criteria terminates the fork instead of advancing to the next user; `true` sends `486 Busy Here` so the call routes on.
+
 ## 4.2.3 [29/07/2026]
 
 ### Upgrade — native SDK
