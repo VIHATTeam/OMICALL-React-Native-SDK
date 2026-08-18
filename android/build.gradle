@@ -83,7 +83,7 @@ dependencies {
   // OMISDK
   implementation("androidx.work:work-runtime:2.8.1")
   implementation "androidx.security:security-crypto:1.1.0-alpha06"
-  api "io.omicrm.vihat:omi-sdk:2.7.7"
+  api "io.omicrm.vihat:omi-sdk:2.7.8"
 
   // React Native — resolved from consumer's node_modules
   implementation "com.facebook.react:react-native:+"

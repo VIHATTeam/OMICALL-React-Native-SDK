@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.2.4 [18/08/2026]
+
+### Upgrade — native SDK
+
+- **[UPGRADE] Android `omi-sdk 2.7.7 → 2.7.8`.**
+
 ## 4.2.3 [29/07/2026]
 
 ### Upgrade — native SDK
