@@ -607,8 +607,27 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
     omiLib.callManager.endAllCalls()
   }
   
+  /// The call that is currently ringing and waiting to be answered.
+  ///
+  /// `getAvailableCall()` prefers the *confirmed* (already-talking) call, which is
+  /// wrong for answering: with more than one concurrent call it would answer the
+  /// active call instead of the one that is ringing. For join/answer we must pick
+  /// the incoming leg. Scans all calls for an Incoming/Early one not yet answered;
+  /// falls back to getAvailableCall() when the list is unavailable (maxCall = 1
+  /// behaves exactly as before).
+  func getIncomingCall() -> OMICall? {
+    let allCalls = omiLib.callManager.getAllCalls() as? [OMICall] ?? []
+    // A ringing call is Incoming or Early and not yet Confirmed/Disconnected.
+    let ringing = allCalls.first { call in
+      call.isIncoming &&
+      (call.callState == .incoming || call.callState == .early ||
+       call.callState == .connecting)
+    }
+    return ringing ?? getAvailableCall()
+  }
+
   func joinCall() {
-    guard let call = getAvailableCall() else {
+    guard let call = getIncomingCall() else {
       return
     }
     OmiClient.answerIncommingCall(call.uuid)

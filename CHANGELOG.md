@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.2.5 [19/08/2026]
+
+### Fix — iOS: `joinCall()` answers the wrong call when multiple calls exist
+
+**Files:** `ios/CallProcess/CallManager.swift`
+
+- **[FIX] `joinCall()` now answers the *ringing* call, not the active one.** Previously `joinCall()` used `getAvailableCall()`, which prefers the *confirmed* (already-talking) call via `getCurrentConfirmCall()`. With more than one concurrent call (`maxCall > 1`) — e.g. answering a second incoming call while on an active one, or a PBX hunt-group re-allocating the call after a decline — it would answer the wrong leg. New `getIncomingCall()` scans `getAllCalls()` for an `Incoming`/`Early`/`Connecting` incoming leg and answers that; it reads the call list fresh on every invocation, so a re-allocated call (new UUID) is answered correctly. Falls back to `getAvailableCall()` when no ringing call is found, so `maxCall = 1` behaves exactly as before (fully backward-compatible). `joinCall()` still takes no UUID — selection stays closed inside the plugin.
+
 ## 4.2.4 [18/08/2026]
 
 ### Upgrade — native SDK
