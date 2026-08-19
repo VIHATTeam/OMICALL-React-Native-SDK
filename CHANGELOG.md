@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.2.6 [19/08/2026]
+
+### Upgrade — native SDK
+
+- **[UPGRADE] Android `omi-sdk 2.7.8 → 2.7.9`.**
+
+### Fix — iOS: repeated `joinCall()` taps drop the call (PJ_EINVALIDOP)
+
+**Files:** `ios/CallProcess/CallManager.swift`
+
+- **[FIX] `joinCall()` is now idempotent per call — repeated taps no longer drop an answered call.** When the JS UI does not reflect the connected state in time (call-state events can reach JS out of order — e.g. `Confirmed(5)` arriving before `Connecting(4)` because the two transitions are ~30 ms apart and the RN event bridge is async), the user may tap *Answer* two or three times while the call is still `Early`/`Connecting`. Answering the same leg again makes OmiKit return `PJ_EINVALIDOP` and remove the call, so a working call is dropped. `joinCall()` now records the UUID it asked OmiKit to answer (`answeringCallUUID`) and ignores a second request for that same UUID until the call is confirmed or disconnects; it also refuses to re-answer a `Confirmed` call. The guard is cleared (UUID-matched) on this call's confirm/disconnect only — a different concurrent leg ending never drops the guard on the call still being answered. Fully backward-compatible: a normal single answer is unchanged, and `maxCall = 1` is unaffected.
+
 ## 4.2.5 [19/08/2026]
 
 ### Fix — iOS: `joinCall()` answers the wrong call when multiple calls exist

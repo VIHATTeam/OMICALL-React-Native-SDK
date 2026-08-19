@@ -39,6 +39,13 @@ class CallManager {
   private var lastStatusCall : String?
   private var tempCallInfo : [String: Any]?
   private var lastTimeCall : Date = Date()
+  // UUID of the call we already asked OmiKit to answer. Guards joinCall() against
+  // repeated taps: if the UI hasn't yet reflected the confirmed state (e.g. the
+  // call-state events reached JS out of order) the user may tap Answer again while
+  // the call is still Early/Connecting. Answering the same leg twice makes OmiKit
+  // return PJ_EINVALIDOP and drop the call. Cleared when the call disconnects so a
+  // new call (new UUID, incl. a hunt-group re-allocation) can be answered normally.
+  private var answeringCallUUID : String?
   // Store original backgrounds to restore after video cleanup
   private var savedBackgrounds: [(UIView, UIColor?)] = []
 
@@ -460,6 +467,12 @@ class CallManager {
       isSpeaker = call.speaker
       lastStatusCall = "answered"
       OmikitPlugin.instance?.sendMuteStatus()
+      // Answer succeeded — the in-flight guard is no longer needed (further taps are
+      // stopped by the `.confirmed` check in joinCall). Clearing here also prevents a
+      // stuck guard if the disconnect event for this call is ever missed.
+      if answeringCallUUID == String(describing: call.uuid) {
+        answeringCallUUID = nil
+      }
       break
     case OMICallState.incoming.rawValue:
       guestPhone = call.callerNumber ?? ""
@@ -469,6 +482,12 @@ class CallManager {
       cleanupVideo()
       lastStatusCall = nil
       guestPhone = ""
+      // Clear the answer guard only when THIS disconnected call is the one we were
+      // answering — a different leg ending (e.g. a second concurrent call) must not
+      // drop the guard on the call still being answered.
+      if answeringCallUUID == String(describing: call.uuid) {
+        answeringCallUUID = nil
+      }
       var combinedDictionary: [String: Any] = dataToSend
       if (tempCallInfo != nil && tempCallInfo?.count ?? 0 > 0) {
         combinedDictionary.merge(tempCallInfo ?? [:], uniquingKeysWith: { (_, new) in new })
@@ -630,6 +649,17 @@ func startCall(_ phoneNumber: String, isVideo: Bool, completion: @escaping (_: S
     guard let call = getIncomingCall() else {
       return
     }
+    // Already talking — never re-answer a confirmed call.
+    if call.callState == .confirmed {
+      return
+    }
+    let uuid = String(describing: call.uuid)
+    // Already asked OmiKit to answer this exact call — ignore repeated taps while
+    // the answer is still in flight (call is Early/Connecting, not yet Confirmed).
+    if answeringCallUUID == uuid {
+      return
+    }
+    answeringCallUUID = uuid
     OmiClient.answerIncommingCall(call.uuid)
   }
   
