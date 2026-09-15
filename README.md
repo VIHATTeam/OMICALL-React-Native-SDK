@@ -55,8 +55,8 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | Platform | SDK | Version |
 |----------|-----|---------|
-| Android | OMICore | 2.7.4 |
-| iOS | OmiKit | 1.11.25 |
+| Android | omi-sdk | 2.8.17 |
+| iOS | OmiKit | 1.11.29 |
 
 ### Platform Requirements
 
@@ -411,6 +411,56 @@ To enable New Architecture on Android, in `android/gradle.properties`:
 
 ```properties
 newArchEnabled=true
+```
+
+### 6. Code Shrinking (R8 / ProGuard)
+
+**No configuration needed.** Turning on `minifyEnabled true` in your release build works
+out of the box from **v4.2.7** — the plugin ships its ProGuard rules through
+`consumerProguardFiles`, and the OMI Android SDK ships its own, so your app inherits both
+automatically:
+
+```gradle
+// android/app/build.gradle — this is enough
+buildTypes {
+    release {
+        minifyEnabled true
+        proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+    }
+}
+```
+
+Do **not** copy plugin rules into your own `proguard-rules.pro`; they are applied for you.
+
+<details>
+<summary>What the bundled rules protect (and why)</summary>
+
+R8 removes and renames code it believes is unused. Several things here are reached only by
+name at runtime, so R8 cannot see the reference and would strip them — the app then fails
+at runtime with no build-time warning:
+
+| Kept | Why |
+|------|-----|
+| `com.omikitplugin.**` | React Native instantiates native modules and view managers reflectively and looks them up by the string returned from `getName()` |
+| `com.omikitplugin.expo.OmikitExpoPackage` | Expo autolinking loads it by the class name written in `expo-module.config.json` |
+| `vn.vihat.omicall.**`, `net.gotev.sipservice.**`, `org.pjsip.**` | SIP stack and SDK entry points resolved by name (shipped by the OMI SDK) |
+| `retrofit2.Call`, `retrofit2.Response`, generic signatures | Retrofit reads the generic type argument at call time; stripping it throws `ClassCastException: java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType` |
+| SDK data models | Gson maps JSON keys to field **names**; renaming a field silently turns parsed values into `null` |
+
+</details>
+
+**If you are on a version older than 4.2.7** and cannot upgrade yet, add these to your app's
+`proguard-rules.pro` as a stopgap:
+
+```proguard
+-keep class com.omikitplugin.** { *; }
+-keep class vn.vihat.omicall.** { *; }
+-keep class net.gotev.sipservice.** { *; }
+-keep class org.pjsip.** { *; }
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+-keepattributes Signature, *Annotation*, InnerClasses, EnclosingMethod
 ```
 
 ---
@@ -2185,6 +2235,8 @@ if (initialCall) {
 | `Invalid local URI` in logs | Empty proxy/host in login | Pass `host` parameter in `initCallWithUserPassword` |
 | Build error with New Arch | Codegen not configured | Ensure `codegenConfig` exists in `package.json` |
 | iOS Simulator build fails (arm64) | OmiKit binary does not include simulator slice | **iOS Simulator is not supported.** OmiKit SDK is device-only (`arm64` real device). Always build and test on a physical iOS device |
+| Release build crashes / calls fail, debug is fine | `minifyEnabled true` and R8 stripped classes reached by name | Upgrade to **v4.2.7+** — rules ship with the plugin. See [Code Shrinking](#6-code-shrinking-r8--proguard) |
+| `ClassCastException: java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType` | R8 removed Retrofit's generic metadata, breaking every SDK API that returns `GeneralResponse<T>` (`getHasConfig`, `getOmiDevices`…) | Upgrade to **v4.2.7+** (Android SDK 2.8.17 fixes its own rules), or add the stopgap rules in [Code Shrinking](#6-code-shrinking-r8--proguard) |
 
 ---
 

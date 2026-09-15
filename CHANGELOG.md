@@ -2,6 +2,73 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.2.7 [15/09/2026]
+
+### Upgrade — native SDK
+
+- **[UPGRADE] Android `omi-sdk 2.7.9 → 2.8.17`.** 2.8.17 fixes the SDK breaking under R8: its `consumer-rules.pro` used to protect `com.omicrm.omisdk`, a package that does not exist (the real one is `vn.vihat.omicall.omisdk`), so with `minifyEnabled true` R8 stripped Retrofit's generic metadata and every API returning `GeneralResponse<T>` threw `ClassCastException: java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType` (`getHasConfig`, `getOmiDevices`, `getAccountInfo`…). It also adds an `OmiListener.onMissedCall(...)` callback with an empty default body — no plugin change required.
+
+### Fix — Android: the plugin now ships its own R8/ProGuard rules
+
+**Files:** `android/consumer-rules.pro` (new), `android/build.gradle`, `proguard-rules-template.pro` (removed)
+
+- **[FIX] Host apps with `minifyEnabled true` no longer need to copy any ProGuard rules.** The plugin carried `proguard-rules-template.pro` but never declared `consumerProguardFiles`, so nothing was applied automatically and R8 was free to rename the plugin's own classes. React Native resolves native modules and view managers by the name returned from `getName()`, and Expo autolinking loads `com.omikitplugin.expo.OmikitExpoPackage` by the string in `expo-module.config.json` — R8 cannot see either reference, so renaming them broke the app at runtime with no build warning. `android/consumer-rules.pro` now keeps `com.omikitplugin.**`, the RN base classes, bridge-crossing enums and native method names, and is wired through `consumerProguardFiles` so every consuming app inherits it. Verified by building the example app with `minifyEnabled true`: `OmikitPluginModule`, `OmikitPluginPackage`, `OmiClient`, `OmiListener`, `SipServiceCommand`, `retrofit2.Call` and `retrofit2.Response` all keep their names in `mapping.txt`.
+- **[CHORE] Removed `proguard-rules-template.pro`.** It was never shipped in the npm package and nothing referenced it — apps had to copy it by hand. The rules it carried are now either applied automatically (`android/consumer-rules.pro`) or shipped by the OMI SDK itself.
+
+### Fix — Android: four bridge methods rejected the arguments the JS API sends
+
+**Files:** `android/src/main/java/com/omikitplugin/OmikitPluginModule.kt`
+
+The TurboModule spec (`src/NativeOmikitPlugin.ts`) declares these methods as taking an
+object, and the JS wrappers send one, but the Kotlin `@ReactMethod`s declared a plain
+`String`/`Boolean`/`ReadableArray`. The bridge type-checks arguments, so every call threw
+`Expected argument 0 of method "<name>" to be a <type>, but got an object` and the promise
+rejected. iOS was unaffected — its bridge takes `id` and accepts both shapes. All four now
+take a `ReadableMap` and read the documented key; an audit of all 59 spec methods against
+the Kotlin and Objective-C bridges found no other mismatch.
+
+- **[FIX] `getUserInfo(phone)`** — spec sends `{ phone }`; Kotlin took `phone: String`. Looking up a number always failed.
+- **[FIX] `requestPermissionsByCodes(codes)`** — spec sends `{ codes: number[] }`; Kotlin took `codes: ReadableArray`. This one is Android-only (iOS resolves `true` immediately), so the permission-recovery flow for error codes 450/451/452 never worked.
+- **[FIX] `checkAndRequestPermissions(isVideo)`** — spec sends `{ isVideo }`; Kotlin took `isVideo: Boolean`. Requesting mic/camera permission before a call always failed, which could surface as an unexplained call failure.
+- **[FIX] `hideSystemNotificationAndUnregister(reason)`** — spec sends `{ reason }`; Kotlin took `reason: String`.
+
+### Docs — R8 / code shrinking
+
+**Files:** `README.md`
+
+- **[DOCS] New "Code Shrinking (R8 / ProGuard)" section** under Android Setup: `minifyEnabled true` needs no configuration from 4.2.7 on, what the bundled rules protect and why, plus stopgap rules for apps still on an older version. Two Troubleshooting rows added for the symptoms this caused (release build fails while debug works; `ClassCastException ... ParameterizedType`).
+- **[DOCS] Corrected the native SDK version table** — it still listed Android `2.7.4` / iOS `1.11.25`; now `2.8.17` / `1.11.29`, matching `android/build.gradle` and `omikit-plugin.podspec`.
+
+## 4.2.6 [19/08/2026]
+
+### Upgrade — native SDK
+
+- **[UPGRADE] Android `omi-sdk 2.7.8 → 2.7.9`.**
+
+### Fix — iOS: repeated `joinCall()` taps drop the call (PJ_EINVALIDOP)
+
+**Files:** `ios/CallProcess/CallManager.swift`
+
+- **[FIX] `joinCall()` is now idempotent per call — repeated taps no longer drop an answered call.** When the JS UI does not reflect the connected state in time (call-state events can reach JS out of order — e.g. `Confirmed(5)` arriving before `Connecting(4)` because the two transitions are ~30 ms apart and the RN event bridge is async), the user may tap *Answer* two or three times while the call is still `Early`/`Connecting`. Answering the same leg again makes OmiKit return `PJ_EINVALIDOP` and remove the call, so a working call is dropped. `joinCall()` now records the UUID it asked OmiKit to answer (`answeringCallUUID`) and ignores a second request for that same UUID until the call is confirmed or disconnects; it also refuses to re-answer a `Confirmed` call. The guard is cleared (UUID-matched) on this call's confirm/disconnect only — a different concurrent leg ending never drops the guard on the call still being answered. Fully backward-compatible: a normal single answer is unchanged, and `maxCall = 1` is unaffected.
+
+## 4.2.5 [19/08/2026]
+
+### Fix — iOS: `joinCall()` answers the wrong call when multiple calls exist
+
+**Files:** `ios/CallProcess/CallManager.swift`
+
+- **[FIX] `joinCall()` now answers the *ringing* call, not the active one.** Previously `joinCall()` used `getAvailableCall()`, which prefers the *confirmed* (already-talking) call via `getCurrentConfirmCall()`. With more than one concurrent call (`maxCall > 1`) — e.g. answering a second incoming call while on an active one, or a PBX hunt-group re-allocating the call after a decline — it would answer the wrong leg. New `getIncomingCall()` scans `getAllCalls()` for an `Incoming`/`Early`/`Connecting` incoming leg and answers that; it reads the call list fresh on every invocation, so a re-allocated call (new UUID) is answered correctly. Falls back to `getAvailableCall()` when no ringing call is found, so `maxCall = 1` behaves exactly as before (fully backward-compatible). `joinCall()` still takes no UUID — selection stays closed inside the plugin.
+
+## 4.2.4 [18/08/2026]
+
+### Upgrade — native SDK
+
+- **[UPGRADE] Android `omi-sdk 2.7.7 → 2.7.8`.**
+
+### Fix — Android
+
+- **[FIX] `isUserBusy` default `false → true`** (Android `configPushNotification`) to match iOS (`CallManager.swift: isUserBusy ?? true`). The prior `false` sent SIP `603 Decline` when the app omitted `isUserBusy`, which in a PBX hunt-group / call-criteria terminates the fork instead of advancing to the next user; `true` sends `486 Busy Here` so the call routes on.
+
 ## 4.2.3 [29/07/2026]
 
 ### Upgrade — native SDK

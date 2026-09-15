@@ -655,7 +655,10 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
                 val audioNotificationDescription = data.getString("audioNotificationDescription") ?: "Cuộc gọi audio"
                 val videoNotificationDescription = data.getString("videoNotificationDescription") ?: "Cuộc gọi video"
                 val representName = data.getString("representName") ?: ""
-                val isUserBusy = if (data.hasKey("isUserBusy")) data.getBoolean("isUserBusy") else false
+                // Default true (486 Busy Here) to match iOS (CallManager.swift: `isUserBusy ?? true`).
+                // Prior default `false` sent 603 Decline when the app omitted isUserBusy, which in a
+                // PBX hunt-group / call-criteria terminates the fork (does NOT advance to the next user).
+                val isUserBusy = if (data.hasKey("isUserBusy")) data.getBoolean("isUserBusy") else true
 
                 // Configure push notification with extracted parameters
                 OmiClient.getInstance(context).configPushNotification(
@@ -1224,8 +1227,17 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
     }
   }
 
+  /// Takes `{ phone: "..." }` — the shape declared in the TurboModule spec and
+  /// sent by the JS wrapper. Declaring a plain `String` here made the bridge
+  /// reject the call ("Expected argument 0 ... to be a string, but got an
+  /// object"). iOS accepts both shapes, so we do the same for parity.
   @ReactMethod
-  fun getUserInfo(phone: String, promise: Promise) {
+  fun getUserInfo(data: ReadableMap, promise: Promise) {
+    val phone = if (data.hasKey("phone")) data.getString("phone") else null
+    if (phone.isNullOrEmpty()) {
+      promise.reject("INVALID_DATA", "Expected a map with a non-empty `phone` key.")
+      return
+    }
     mainScope.launch {
       val callResult = withContext(Dispatchers.Default) {
         try {
@@ -1660,8 +1672,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
   }
 
   @ReactMethod
-  fun checkAndRequestPermissions(isVideo: Boolean, promise: Promise) {
+  fun checkAndRequestPermissions(data: ReadableMap, promise: Promise) {
     try {
+      val isVideo = data.hasKey("isVideo") && data.getBoolean("isVideo")
       val missingPermissions = getMissingPermissions(isVideo)
       
       if (missingPermissions.isEmpty()) {
@@ -1810,8 +1823,15 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
    * @param promise - Promise to resolve with request result
    */
   @ReactMethod
-  fun requestPermissionsByCodes(codes: ReadableArray, promise: Promise) {
+  fun requestPermissionsByCodes(data: ReadableMap, promise: Promise) {
     try {
+      // Spec/JS wrapper send `{ codes: number[] }`; reading the array directly
+      // made the bridge reject the call with a type error.
+      val codes = if (data.hasKey("codes")) data.getArray("codes") else null
+      if (codes == null) {
+        promise.reject("INVALID_DATA", "Expected a map with a `codes` array.")
+        return
+      }
       val permissionCodes = codes.toArrayList().map { it.toString().toInt() }
       val permissionsToRequest = mutableListOf<String>()
       
@@ -1984,8 +2004,9 @@ class OmikitPluginModule(reactContext: ReactApplicationContext?) :
 
   // ✅ Function để ẩn notification và unregister với custom reason
   @ReactMethod
-  fun hideSystemNotificationAndUnregister(reason: String, promise: Promise) {
+  fun hideSystemNotificationAndUnregister(data: ReadableMap, promise: Promise) {
     try {
+      val reason = (if (data.hasKey("reason")) data.getString("reason") else null) ?: ""
       OmiClient.getInstance(reactApplicationContext!!).hideSystemNotificationAndUnregister(reason)
       promise.resolve(true)
     } catch (e: Exception) {
