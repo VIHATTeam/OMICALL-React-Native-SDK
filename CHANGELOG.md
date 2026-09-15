@@ -32,6 +32,13 @@ the Kotlin and Objective-C bridges found no other mismatch.
 - **[FIX] `checkAndRequestPermissions(isVideo)`** — spec sends `{ isVideo }`; Kotlin took `isVideo: Boolean`. Requesting mic/camera permission before a call always failed, which could surface as an unexplained call failure.
 - **[FIX] `hideSystemNotificationAndUnregister(reason)`** — spec sends `{ reason }`; Kotlin took `reason: String`.
 
+### Docs — R8 / code shrinking
+
+**Files:** `README.md`
+
+- **[DOCS] New "Code Shrinking (R8 / ProGuard)" section** under Android Setup: `minifyEnabled true` needs no configuration from 4.2.7 on, what the bundled rules protect and why, plus stopgap rules for apps still on an older version. Two Troubleshooting rows added for the symptoms this caused (release build fails while debug works; `ClassCastException ... ParameterizedType`).
+- **[DOCS] Corrected the native SDK version table** — it still listed Android `2.7.4` / iOS `1.11.25`; now `2.8.17` / `1.11.29`, matching `android/build.gradle` and `omikit-plugin.podspec`.
+
 ## 4.2.6 [19/08/2026]
 
 ### Upgrade — native SDK
