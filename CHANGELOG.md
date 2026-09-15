@@ -10,9 +10,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fix — Android: the plugin now ships its own R8/ProGuard rules
 
-**Files:** `android/consumer-rules.pro` (new), `android/build.gradle`
+**Files:** `android/consumer-rules.pro` (new), `android/build.gradle`, `proguard-rules-template.pro` (removed)
 
 - **[FIX] Host apps with `minifyEnabled true` no longer need to copy any ProGuard rules.** The plugin carried `proguard-rules-template.pro` but never declared `consumerProguardFiles`, so nothing was applied automatically and R8 was free to rename the plugin's own classes. React Native resolves native modules and view managers by the name returned from `getName()`, and Expo autolinking loads `com.omikitplugin.expo.OmikitExpoPackage` by the string in `expo-module.config.json` — R8 cannot see either reference, so renaming them broke the app at runtime with no build warning. `android/consumer-rules.pro` now keeps `com.omikitplugin.**`, the RN base classes, bridge-crossing enums and native method names, and is wired through `consumerProguardFiles` so every consuming app inherits it. Verified by building the example app with `minifyEnabled true`: `OmikitPluginModule`, `OmikitPluginPackage`, `OmiClient`, `OmiListener`, `SipServiceCommand`, `retrofit2.Call` and `retrofit2.Response` all keep their names in `mapping.txt`.
+- **[CHORE] Removed `proguard-rules-template.pro`.** It was never shipped in the npm package and nothing referenced it — apps had to copy it by hand. The rules it carried are now either applied automatically (`android/consumer-rules.pro`) or shipped by the OMI SDK itself.
 
 ### Fix — Android: four bridge methods rejected the arguments the JS API sends
 
