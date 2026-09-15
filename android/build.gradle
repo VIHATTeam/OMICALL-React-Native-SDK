@@ -35,6 +35,10 @@ android {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+
+    // Shipped to the host app so `minifyEnabled true` keeps the plugin working
+    // without the app author copying any rules by hand.
+    consumerProguardFiles "consumer-rules.pro"
   }
 
   buildFeatures {
@@ -83,7 +87,7 @@ dependencies {
   // OMISDK
   implementation("androidx.work:work-runtime:2.8.1")
   implementation "androidx.security:security-crypto:1.1.0-alpha06"
-  api "io.omicrm.vihat:omi-sdk:2.8.14"
+  api "io.omicrm.vihat:omi-sdk:2.8.17"
 
   // React Native — resolved from consumer's node_modules
   implementation "com.facebook.react:react-native:+"

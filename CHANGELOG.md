@@ -6,7 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Upgrade — native SDK
 
-- **[UPGRADE] Android `omi-sdk 2.7.9 → 2.8.14`.**
+- **[UPGRADE] Android `omi-sdk 2.7.9 → 2.8.17`.** 2.8.17 fixes the SDK breaking under R8: its `consumer-rules.pro` used to protect `com.omicrm.omisdk`, a package that does not exist (the real one is `vn.vihat.omicall.omisdk`), so with `minifyEnabled true` R8 stripped Retrofit's generic metadata and every API returning `GeneralResponse<T>` threw `ClassCastException: java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType` (`getHasConfig`, `getOmiDevices`, `getAccountInfo`…). It also adds an `OmiListener.onMissedCall(...)` callback with an empty default body — no plugin change required.
+
+### Fix — Android: the plugin now ships its own R8/ProGuard rules
+
+**Files:** `android/consumer-rules.pro` (new), `android/build.gradle`
+
+- **[FIX] Host apps with `minifyEnabled true` no longer need to copy any ProGuard rules.** The plugin carried `proguard-rules-template.pro` but never declared `consumerProguardFiles`, so nothing was applied automatically and R8 was free to rename the plugin's own classes. React Native resolves native modules and view managers by the name returned from `getName()`, and Expo autolinking loads `com.omikitplugin.expo.OmikitExpoPackage` by the string in `expo-module.config.json` — R8 cannot see either reference, so renaming them broke the app at runtime with no build warning. `android/consumer-rules.pro` now keeps `com.omikitplugin.**`, the RN base classes, bridge-crossing enums and native method names, and is wired through `consumerProguardFiles` so every consuming app inherits it. Verified by building the example app with `minifyEnabled true`: `OmikitPluginModule`, `OmikitPluginPackage`, `OmiClient`, `OmiListener`, `SipServiceCommand`, `retrofit2.Call` and `retrofit2.Response` all keep their names in `mapping.txt`.
 
 ### Fix — Android: four bridge methods rejected the arguments the JS API sends
 
