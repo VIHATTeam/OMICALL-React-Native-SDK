@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.2.7 [15/09/2026]
+
+### Upgrade — native SDK
+
+- **[UPGRADE] Android `omi-sdk 2.7.9 → 2.8.14`.**
+
+### Fix — Android: four bridge methods rejected the arguments the JS API sends
+
+**Files:** `android/src/main/java/com/omikitplugin/OmikitPluginModule.kt`
+
+The TurboModule spec (`src/NativeOmikitPlugin.ts`) declares these methods as taking an
+object, and the JS wrappers send one, but the Kotlin `@ReactMethod`s declared a plain
+`String`/`Boolean`/`ReadableArray`. The bridge type-checks arguments, so every call threw
+`Expected argument 0 of method "<name>" to be a <type>, but got an object` and the promise
+rejected. iOS was unaffected — its bridge takes `id` and accepts both shapes. All four now
+take a `ReadableMap` and read the documented key; an audit of all 59 spec methods against
+the Kotlin and Objective-C bridges found no other mismatch.
+
+- **[FIX] `getUserInfo(phone)`** — spec sends `{ phone }`; Kotlin took `phone: String`. Looking up a number always failed.
+- **[FIX] `requestPermissionsByCodes(codes)`** — spec sends `{ codes: number[] }`; Kotlin took `codes: ReadableArray`. This one is Android-only (iOS resolves `true` immediately), so the permission-recovery flow for error codes 450/451/452 never worked.
+- **[FIX] `checkAndRequestPermissions(isVideo)`** — spec sends `{ isVideo }`; Kotlin took `isVideo: Boolean`. Requesting mic/camera permission before a call always failed, which could surface as an unexplained call failure.
+- **[FIX] `hideSystemNotificationAndUnregister(reason)`** — spec sends `{ reason }`; Kotlin took `reason: String`.
+
 ## 4.2.6 [19/08/2026]
 
 ### Upgrade — native SDK
