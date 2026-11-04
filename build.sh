@@ -43,20 +43,22 @@ fi
 # ---------------------------------------------------------------------------
 step "Verifying native SDK versions exist on their repos"
 
-# iOS: OmiKit "x.y.z" from the podspec → CocoaPods trunk (public CDN).
-OMIKIT_VERSION="$(grep -oE 's\.dependency "OmiKit", "[^"]+"' omikit-plugin.podspec | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)"
+# iOS: OmiKit is vendored (ios/Frameworks) — the binary must be the version the podspec
+# declares, and that tag must exist on GitHub for the Swift Package Manager path.
+OMIKIT_VERSION="$(sed -n 's/.*# Vendored version: \([0-9.]*\)\..*/\1/p' omikit-plugin.podspec)"
 if [ -n "$OMIKIT_VERSION" ]; then
-  H="$(printf '%s' OmiKit | md5)"   # CocoaPods shards specs by md5(name)[0..2]
-  OMIKIT_URL="https://cdn.cocoapods.org/Specs/${H:0:1}/${H:1:1}/${H:2:1}/OmiKit/${OMIKIT_VERSION}/OmiKit.podspec.json"
-  if curl -sfL -m 20 -o /dev/null "$OMIKIT_URL"; then
-    echo "  ✅ iOS  OmiKit $OMIKIT_VERSION on CocoaPods trunk"
+  if ! strings ios/Frameworks/OmiKit.xcframework/ios-arm64/OmiKit.framework/OmiKit | grep -x "$OMIKIT_VERSION" >/dev/null; then
+    echo "  ❌ iOS  vendored OmiKit.xcframework is not $OMIKIT_VERSION. Run scripts/update-omikit.sh $OMIKIT_VERSION."
+    exit 1
+  fi
+  if git ls-remote --exit-code --tags https://github.com/VIHATTeam/OmiKit.git "refs/tags/$OMIKIT_VERSION" >/dev/null; then
+    echo "  ✅ iOS  OmiKit $OMIKIT_VERSION vendored, tag on GitHub (SPM)"
   else
-    echo "  ❌ iOS  OmiKit $OMIKIT_VERSION NOT found on CocoaPods trunk."
-    echo "     Publish OmiKit $OMIKIT_VERSION (pod trunk push) before releasing."
+    echo "  ❌ iOS  OmiKit tag $OMIKIT_VERSION NOT found on GitHub (SPM installs would fail)."
     exit 1
   fi
 else
-  echo "  ⚠ Could not read OmiKit version from podspec — skipping iOS check."
+  echo "  ⚠ Could not read the vendored OmiKit version from the podspec — skipping iOS check."
 fi
 
 # Android: io.omicrm.vihat:omi-sdk:x.y.z from build.gradle → GitHub Packages

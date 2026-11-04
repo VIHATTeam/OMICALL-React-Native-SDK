@@ -1,0 +1,6 @@
+framework module OmiKit {
+  umbrella header "OmiKit-umbrella.h"
+
+  export *
+  module * { export * }
+}

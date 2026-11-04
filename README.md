@@ -55,8 +55,8 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | Platform | SDK | Version |
 |----------|-----|---------|
-| Android | omi-sdk | 2.8.17 |
-| iOS | OmiKit | 1.11.29 |
+| Android | omi-sdk | 2.9.5 |
+| iOS | OmiKit | 1.12.3 (CocoaPods or Swift Package Manager) |
 
 ### Platform Requirements
 
@@ -102,6 +102,26 @@ yarn add omikit-plugin
 ```bash
 cd ios && pod install
 ```
+
+#### OmiKit from Swift Package Manager (optional, RN 0.75+)
+
+By default the plugin links the OmiKit.xcframework it ships with (no extra download). To pull OmiKit
+from Swift Package Manager instead (`https://github.com/VIHATTeam/OmiKit.git`, 1.12.x), set the flag
+at the top of your `ios/Podfile`, before `use_native_modules!`:
+
+```ruby
+$OmikitUseSPM = true
+```
+
+or run `OMIKIT_USE_SPM=1 pod install` (handy for Expo/CI). Then run `pod install` and open the
+`.xcworkspace`; Xcode resolves the package on the first build. `pod install` also links the OmiKit
+package into your app target (OmiKit is a dynamic framework and must be embedded in the app), and
+removes it again when you switch the flag off — no manual Xcode step either way. App code is the
+same in both modes (`#import <OmiKit/OmiKit.h>` / `import OmiKit`). On React Native below 0.75 the
+flag is ignored with a warning and the bundled framework is used.
+
+> The first package resolve clones the OmiKit repository (several hundred MB); later builds reuse
+> Xcode's package cache.
 
 ### Android
 

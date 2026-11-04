@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.3.0 [04/11/2026]
+
+### Upgrade — native SDK
+
+No public API change on either platform; no plugin or app code change required.
+
+- **[UPGRADE] iOS `OmiKit 1.11.29 → 1.12.3`.** Public headers only gain APIs (consult transfer, Picture-in-Picture, remote-connection state, `OMICall.pushPayload`, `setLogWhitelist`). Behaviour changes worth knowing:
+  - Video calls show a remote-connection overlay ("reconnecting" / weak network) on the remote video by default.
+  - `call_secs` keeps counting while the call is on hold.
+  - Outgoing video is 540x960 on good networks.
+  - Fixes: Opus stays at 48 kHz on mid-call re-INVITE (distorted, delayed audio); no audio after a Wi-Fi ↔ cellular switch on incoming calls; the SDK log is uploaded when a VoIP push rings without a call.
+- **[UPGRADE] Android `omi-sdk 2.8.17 → 2.9.5`.** Calls survive network changes; fixes for lost uplink audio after a network switch, the SDK hanging up the active call when a second call arrives, the speaker on Android 12+ and with wired headsets, and stuck calls that blocked later incoming calls. Native crashes are now symbolicated on Crashlytics.
+
+### New — iOS: OmiKit from Swift Package Manager
+
+**Files:** `omikit-plugin.podspec`, `README.md`
+
+- **[FEAT] `$OmikitUseSPM = true` in the Podfile (or `OMIKIT_USE_SPM=1`)** makes the pod take OmiKit from `https://github.com/VIHATTeam/OmiKit.git` (up to next minor from 1.12.3) through React Native's `spm_dependency` instead of the bundled `ios/Frameworks/OmiKit.xcframework`. CocoaPods with the bundled framework stays the default. Needs React Native 0.75+; older versions fall back to the bundled framework with a warning.
+- **[FEAT] `pod install` links the OmiKit package into the app target as well.** `spm_dependency` only links it into the (static) plugin pod, and Xcode embeds a dynamic package framework only into targets that link it — without this the app built fine but crashed at launch with `dyld: Library not loaded: @rpath/OmiKit.framework/OmiKit`. Switching the flag off removes the package from the app project again. Verified on the example app (RN 0.76, New Architecture, iOS 26.5 simulator) in both modes: clean install, launch, JS bundle loaded, plugin module registered.
+- **[CHORE] `scripts/update-omikit.sh [version]`** (default: latest tag) vendors the OmiKit xcframework, refuses a tag whose binary is not that version, updates the podspec and README version, and prints the OmiKit changelog since the previous version.
+
 ## 4.2.7 [15/09/2026]
 
 ### Upgrade — native SDK
