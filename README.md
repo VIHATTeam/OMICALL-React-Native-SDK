@@ -55,8 +55,8 @@ The [omikit-plugin](https://www.npmjs.com/package/omikit-plugin) enables VoIP/SI
 
 | Platform | SDK | Version |
 |----------|-----|---------|
-| Android | omi-sdk | 2.9.5 |
-| iOS | OmiKit | 1.12.3 (CocoaPods or Swift Package Manager) |
+| Android | omi-sdk | 2.9.9 |
+| iOS | OmiKit | 1.12.5 (CocoaPods or Swift Package Manager) |
 
 ### Platform Requirements
 

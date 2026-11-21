@@ -38,13 +38,15 @@ static NSString * OMICALL_IS_PROXY_DEV = @"omikit/isProxyDev";
 
 /**
  * How the SDK masks a phone number when displaying it on CallKit / native UI.
- * - OMIPhoneMaskPolicyKeepLeading3    (default): "0987654321" -> "090*******"
+ * - OMIPhoneMaskPolicyKeepLeading3    (default): "0987654321" -> "098*******"
  * - OMIPhoneMaskPolicyHideLast3                : "0987654321" -> "0987654***"
- * - OMIPhoneMaskPolicyKeepLeading4             : "0987654321" -> "0987*******"
+ * - OMIPhoneMaskPolicyKeepLeading4             : "0987654321" -> "0987******"
  * - OMIPhoneMaskPolicyHideMiddleKeepLast       : "0987654321" -> "098****321"
  *
  * Set via [OmiClient setPhoneMaskPolicy:].
- * Maps 1-to-1 with the app's `hide_phone_type` field from the role API.
+ * The role API's `hide_phone_type` is a string; map it as:
+ * "hide_last_keep_first_3" -> KeepLeading3, "hide_last_3" -> HideLast3,
+ * "hide_last_keep_first_4" -> KeepLeading4, "hide_middle_keep_last" -> HideMiddleKeepLast.
  */
 typedef NS_ENUM(NSInteger, OMIPhoneMaskPolicy) {
     OMIPhoneMaskPolicyKeepLeading3       = 0,

@@ -36,7 +36,7 @@ Pod::Spec.new do |s|
   #  simulator binary, which broke the Expo lifecycle subscriber's +load.)
   #
   # OmiKit is vendored (no CocoaPods Trunk dependency; Trunk goes read-only 2026-12-02).
-  # Vendored version: 1.12.3. Update with: scripts/update-omikit.sh <version>
+  # Vendored version: 1.12.5. Update with: scripts/update-omikit.sh <version>
   #
   # Swift Package Manager instead of the vendored copy: set `$OmikitUseSPM = true`
   # in the Podfile (or OMIKIT_USE_SPM=1) before `use_native_modules!`. Needs RN 0.75+
@@ -44,7 +44,7 @@ Pod::Spec.new do |s|
   omikit_spm = ($OmikitUseSPM == true || ENV["OMIKIT_USE_SPM"] == "1")
   omikit_spm_url = "https://github.com/VIHATTeam/OmiKit.git"
   # upToNextMinor: take 1.12.x fixes, never 1.13 automatically
-  omikit_spm_requirement = { kind: "upToNextMinorVersion", minimumVersion: "1.12.3" }
+  omikit_spm_requirement = { kind: "upToNextMinorVersion", minimumVersion: "1.12.5" }
 
   # spm_dependency links OmiKit into this (static) pod only. OmiKit is a dynamic framework and
   # Xcode embeds package frameworks only into targets that link them, so without the app target

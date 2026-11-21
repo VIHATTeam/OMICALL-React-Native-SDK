@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## 4.3.1 [21/11/2026]
+
+### Upgrade — native SDK
+
+No public API change on either platform; no plugin or app code change required.
+
+- **[UPGRADE] Android `omi-sdk 2.9.5 → 2.9.9`.**
+  - Fixes: native crash when the TCP connection to the PBX fails; ANRs on answer / DNS lookup / service stop; incoming calls lost when they hit a stopping SIP stack (ghost ringing, answer does nothing); on Android 15+ the incoming call screen not showing while the app is in the background; double ringtone.
+  - Connecting to the PBX no longer stalls ~38 s when the network blocks STUN.
+  - Call log upload: an outgoing call no longer sends an empty `refId` (the log server rejected it with `invalidParams`), and a rejected upload is now reported as a failure instead of "sent successfully".
+  - The telephony hardware feature is no longer required.
+- **[UPGRADE] iOS `OmiKit 1.12.3 → 1.12.5`.**
+  - Clearer push log entries; the full VoIP push payload is no longer printed to the console; the SDK log file is excluded from iCloud and computer backups.
+  - Behaviour change, only for apps that call `[OmiClient setIsPartialPhoneNumber:YES]` natively (the plugin does not expose it): incoming calls now store the masked number as the CallKit handle, so iPhone Recents no longer leaks the real number. Calling back from Recents then dials the masked number, and iOS no longer matches the call to a saved contact. Calls with masking off are unchanged.
+
 ## 4.3.0 [04/11/2026]
 
 ### Upgrade — native SDK
